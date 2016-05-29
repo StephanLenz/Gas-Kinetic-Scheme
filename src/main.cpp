@@ -176,8 +176,6 @@ int main(int argc, char* argv[])
 
     //cout << mesh->toString();
 
-    // test 3
-
     mesh->iterate();
 
     //mesh->writeTimeSteps("out/timeSteps.dat");
