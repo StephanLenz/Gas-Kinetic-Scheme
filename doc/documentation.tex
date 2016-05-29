@@ -1,0 +1,629 @@
+\documentclass[
+	pdftex,             % Ausgabe des Latex-Dokuments als PDF
+	12pt,				% Schriftgroesse 12pt
+	a4paper,		   	% Seiten Layout
+	english,				% Sprache, global
+	oneside,			% Einseitiger Druck
+]{article}
+
+% Seitenränder
+\usepackage{geometry}
+\geometry{a4paper, top=30mm, left=15mm, right=15mm, bottom=25mm,
+headsep=15mm}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+
+% Erweiterte Mathematikbibliotheken
+\usepackage[fleqn]{amsmath}
+\usepackage{amssymb}
+
+% Zum einbinden von Grafiken  
+\usepackage{graphicx}
+\usepackage{epstopdf}
+\usepackage{wrapfig}
+
+% Benutzerdefinierte Kopf- und Fußzeile
+\usepackage{scrpage2}
+\pagestyle{scrheadings}
+\setheadsepline{1pt} % Linie unter dem Header
+\ihead{Gas-Kinetic-Scheme \\ Documentation}
+\ohead{Stephan Lenz \\ IRMB -- TU Braunschweig}
+
+% Einr�cken nach Absatz verhinder
+\setlength{\parindent}{0pt}
+
+% =====================================================
+
+\newcommand{\mom}[1]{\langle #1 \rangle}
+\newcommand{\uu}[1]{\underline{#1}}
+\newcommand{\uuu}[1]{\underline{\underline{#1}}}
+\newcommand{\vv}[1]{\vec{#1}}
+
+% =====================================================
+
+\begin{document}
+
+\section{Flux Computation}
+
+The main part of the Gas-Kinetic-Scheme Implementation, is the Flux Computation. This Computation starts with the analytical solution of the BGK-Equation by the method of characteristics. The solution consists of two part. The first part is the way towards equilibrium, whereas the second part is the decay of the initial distribution. 
+
+\begin{equation}
+\begin{split}
+\begin{array}{lcll}
+f(x_{i+1/2}, y_j, t,u,v,\xi) 
+&=&
+ \frac{1}{\tau} \int \limits_0^t
+g(x', y', t', u, v, \xi) &e^{-\tfrac{t-t'}{\tau}} dt'
+\\
+&+& f_0(x_{i+1/2} - ut, y_j - vt) &e^{-\tfrac{t}{\tau}}
+\end{array}
+\end{split}
+\end{equation}
+
+In this equation, $g$ denotes the equilibrium distribution function of the interface and $f_0$ is the distribution function at the interface at the beginning of the time step. 
+
+\begin{equation}
+f_0 = g_0 \cdot
+\Big( 
+\underbrace{ 1 + a~x + b~y }_{\text{equilibrium}}
+-
+\underbrace{ \tau \left( a~u + b~v + A \right) }_{\text{non-equilibrium}}
+\Big)
+\end{equation}
+
+\begin{equation}
+g = g_0 \cdot \left( 1 + a~x + b~y + A~t \right)
+\end{equation}
+
+\begin{equation}
+g_0 = \rho \left( \frac{\lambda}{\pi} \right)^{\frac{K+2}{2}}
+           e^{-\lambda ((u-U)^2 + (v-V)^2 + \xi^2)}
+\end{equation}
+
+The coefficients $a$, $b$ and $A$ are the normalized gradients of the equilibrium distribution:
+
+\begin{equation}
+a = \frac{1}{g_0} \frac{\partial g_0}{\partial x} ~~~~~~,~~~~~~
+b = \frac{1}{g_0} \frac{\partial g_0}{\partial y} ~~~~~~,~~~~~~
+A = \frac{1}{g_0} \frac{\partial g_0}{\partial t}
+\end{equation}
+
+These coefficients are than itself expressed as expansions of the microscopic variables:
+
+\begin{equation}
+\begin{array}{lclllll}
+a &=& a_1 &+ a_2~u &+ a_3~v &+ a_4~&\frac{1}{2}~(u^2 + v^2 + \xi^2) \\
+b &=& b_1 &+ b_2~u &+ b_3~v &+ b_4~&\frac{1}{2}~(u^2 + v^2 + \xi^2) \\
+A &=& A_1 &+ A_2~u &+ A_3~v &+ A_4~&\frac{1}{2}~(u^2 + v^2 + \xi^2) \\
+\end{array}
+\end{equation}
+
+\clearpage
+
+\subsection*{Integration of the Analytical Solution}
+
+These are inserted into the analytical solution with $x' = -u(t-t')$, $x = -ut$, $y' = -v(t-t')$ and $y = -vt$:
+
+\begin{equation}
+\begin{split}
+\begin{array}{lcll}
+f
+&=&
+\dfrac{g_0}{\tau} \int \limits_0^t
+\left( 1 - a~u(t-t') - b~v(t-t') + A~t' \right) e^{-\tfrac{t-t'}{\tau}} dt'
+\\
+&+&
+g_0 \left( 1 - a~ut - b~vt - \tau \left( a~u + b~v + A \right) \right) e^{-\tfrac{t}{\tau}}
+\end{array}
+\end{split}
+\end{equation}
+
+The Integral can be solved with integration by parts:
+
+\begin{equation}
+\begin{split}
+\begin{array}{lcll}
+f
+&=&
+\dfrac{g_0}{\tau} 
+\left[
+\tau
+\left( 1 - a~u(t-t') - b~v(t-t') + A~t' \right)
+e^{-\tfrac{t-t'}{\tau}}
+\right]_0^t
+\\
+&-&
+\dfrac{g_0}{\tau} \int \limits_0^t
+\tau
+\left( a~u + b~v + A\right) e^{-\tfrac{t-t'}{\tau}} dt'
+\\
+&+&
+g_0 \left( 1 - a~ut - b~vt - \tau \left( a~u + b~v + A \right) \right) e^{-\tfrac{t}{\tau}}
+\end{array}
+\end{split}
+\end{equation}
+
+The remaining integral can than be solved directly:
+
+\begin{equation}
+\begin{split}
+\begin{array}{lcll}
+f
+&=&
+\dfrac{g_0}{\tau} 
+\left[
+	\tau
+	\left( 1 - a~u(t-t') - b~v(t-t') + A~t' \right)e^{-\tfrac{t-t'}{\tau}}
+\right]_0^t
+\\
+&-&
+\dfrac{g_0}{\tau} 
+\left[
+	\tau^2
+	\left( a~u + b~v + A\right) e^{-\tfrac{t-t'}{\tau}} 
+\right]_0^t
+\\
+&+&
+g_0 \left( 1 - a~ut - b~vt - \tau \left( a~u + b~v + A \right) \right) e^{-\tfrac{t}{\tau}}
+\end{array}
+\end{split}
+\end{equation}
+
+Then the limits of the integrals are applied.
+
+\begin{equation}
+\begin{split}
+\begin{array}{lcll}
+f
+&=&
+g_0 \left( 1 + A~t \right)
+-
+g_0 \left( 1 - a~ut - b~vt \right)e^{-\tfrac{t}{\tau}}
+\\
+&-&
+g_0 \tau (a~u + b~v + A)
++
+g_0 \tau (a~u + b~v + A) e^{-\tfrac{t}{\tau}}
+\\
+&+& g_0 \left( 1 - a~ut - b~vt - \tau \left( a~u + b~v + A \right) \right) e^{-\tfrac{t}{\tau}}
+\end{array}
+\end{split}
+\end{equation}
+
+After sorting
+
+\begin{equation}
+\begin{split}
+\begin{array}{lcll}
+f
+&=&
+g_0 \left( 1 - \tau (a~u + b~v + A) + A~t \right)
+\\
+&-&
+g_0 \left( 1 - a~ut - b~vt - \tau(a~u + b~v + A) \right) e^{-t\tfrac{t}{\tau}}
+\\
+&+& 
+g_0 \left( 1 - a~ut - b~vt - \tau \left( a~u + b~v + A \right) \right) e^{-\tfrac{t}{\tau}}
+\end{array}
+\end{split}
+\end{equation}
+
+the last terms cancel out and the distribution function on the interface can be computed as:
+
+\begin{equation}
+\begin{array}{lcl}
+f &=& g_0 \left( 1 - \tau (a~u + b~v) + (t-\tau)A \right)
+\end{array}
+\end{equation}
+
+\clearpage
+
+\subsection*{Computation of Expansion Coefficients}
+
+The constants $a_i$, $b_i$ and $A_i$ in the Taylor expansion of the Maxwellian distribution function are computed as:
+
+\begin{eqnarray}
+\begin{split}
+\arraycolsep=1.4pt\def\arraystretch{2.2}
+\begin{array}{lcll}
+A &=& 2 \dfrac{\partial (\rho E)}{\partial x} 
+  - ( U^2 + V^2 + \dfrac{K+2}{2\lambda} \dfrac{\partial\rho}{\partial x} ) &
+\\
+B &=& \dfrac{\partial (\rho U)}{\partial x} - U\dfrac{\partial \rho}{\partial x}
+	&\left( = \rho \dfrac{\partial U}{\partial x} \right)
+\\
+C &=& \dfrac{\partial (\rho V)}{\partial x} - V\dfrac{\partial \rho}{\partial x}
+	&\left( = \rho \dfrac{\partial V}{\partial x} \right)
+\end{array}
+\end{split}
+\end{eqnarray}
+
+\begin{eqnarray}
+\begin{split}
+\arraycolsep=1.4pt\def\arraystretch{2.2}
+\begin{array}{lcl}
+a_4 &=& \dfrac{4 \lambda^2}{K+2} ( A - 2 U B - 2 V C )
+\\
+a_3 &=& 2 \lambda C - V a_4
+\\
+a_2 &=& 2 \lambda B - U a_4
+\\
+a_1 &=& \dfrac{\partial \rho}{\partial x} - U a-2 - V a_3 - \dfrac{1}{2} \left( U^2 + V^2 + \dfrac{K+2}{2\lambda} \right)
+\end{array}
+\end{split}
+\end{eqnarray}
+
+This computation is here only shown for the normal variation constant $a_i$. For the tangential and time variation the tangential and time derivatives of the macroscopic variables need to be used in the above formulas. The spacial derivatives are computed from finite differences between then cell values. For the time derivative a more complex computation is needed. The time derivatives can be expressed as:
+
+\begin{equation}
+\begin{pmatrix}
+	\frac{\partial \rho    }{\partial t} \\
+	\frac{\partial (\rho V)}{\partial t} \\
+	\frac{\partial (\rho U)}{\partial t} \\
+	\frac{\partial (\rho E)}{\partial t}
+\end{pmatrix}
+ =
+ -\frac{1}{\rho}
+\int \limits^{\infty}_{-\infty}
+\begin{pmatrix}
+	1 \\
+	u \\
+	v \\
+	\frac{1}{2} ( u^2 + v^2 + \xi^2 )
+\end{pmatrix}
+(a u + b v) ~g~
+du dv d\xi
+\end{equation}
+
+The integral over all velocities can be computed analytically, since it is just a linear combination of different moments of the Maxwellian distribution function.
+
+\begin{equation}
+\rho \mom{u} = \int \limits^{\infty}_{-\infty} u ~g~ du dv d\xi
+~~~\textnormal{,} ~~~
+\rho \mom{u^2} = \int \limits^{\infty}_{-\infty} u^2 ~g~ du dv d\xi
+~~~\textnormal{, ...}
+\end{equation}
+
+\begin{equation}
+\rho \mom{u^\alpha v^\beta}
+= 
+\int \limits^{\infty}_{-\infty} u^\alpha v^\beta ~g~ du dv d\xi
+=
+\int \limits^{\infty}_{-\infty} u^\alpha ~g~ du dv d\xi ~ 
+\int \limits^{\infty}_{-\infty} v^\beta  ~g~ du dv d\xi
+=
+\rho \mom{u^\alpha}\mom{v^\beta}
+\end{equation}
+
+With these relations the integral can be computed as:
+
+\begin{eqnarray*}
+\frac{\partial \rho}{\partial t}
+=
+-\frac{1}{\rho}
+\Bigg(
+ &~&a_1 \mom{u} + a_2 \mom{u^2} + a_3 \mom{u}\mom{v}
++   a_4 \frac{1}{2} \Big( \mom{u^3} + \mom{u}\mom{v^2} + \mom{u}\mom{\xi^2} \Big)
+\\
++&~&b_1 \mom{v} + b_2 \mom{u}\mom{v} + b_3 \mom{v^2}
++   b_4  \frac{1}{2} \Big( \mom{u^2}\mom{v} + \mom{v^3} + \mom{v}\mom{\xi^2} \Big)
+\Bigg)
+\end{eqnarray*}
+
+\begin{eqnarray*}
+\frac{\partial (\rho U)}{\partial t}
+=
+-\frac{1}{\rho}
+\Bigg(
+&~&a_1 \mom{u^2} + a_2 \mom{u^3} + a_3 \mom{u^2}\mom{v}
++  a_4 \frac{1}{2} \Big( \mom{u^4} + \mom{u^2}\mom{v^2} + \mom{u^2}\mom{\xi^2} \Big)
+\\
+&~&b_1 \mom{u}\mom{v} + b_2 \mom{u^2}\mom{v} + b_3 \mom{u}\mom{v^2}
++  b_4 \frac{1}{2} \Big( \mom{u^3}\mom{v} + \mom{u}\mom{v^3} + \mom{u}\mom{v}\mom{\xi^2} \Big)
+\Bigg)
+\end{eqnarray*}
+
+\begin{eqnarray*}
+\frac{\partial (\rho V)}{\partial t}
+=
+-\frac{1}{\rho}
+\Bigg(
+&~&a_1 \mom{u}\mom{v} + a_2 \mom{u^2}\mom{v} + a_3 \mom{u}\mom{v^2}
++  a_4 \frac{1}{2} \Big( \mom{u^3}\mom{v} + \mom{u}\mom{v^3} + \mom{u}\mom{v}\mom{\xi^2} \Big)
+\\
+&~&b_1 \mom{v^2} + b_2 \mom{u}\mom{v^2} + b_3 \mom{v^3}
++  b_4 \frac{1}{2} \Big( \mom{u^2}\mom{v^2} + \mom{v^4} + \mom{v^2}\mom{\xi^2} \Big)
+\Bigg)
+\end{eqnarray*}
+
+\begin{eqnarray*}
+\frac{\partial (\rho E)}{\partial t}
+=
+-\frac{1}{\rho}
+\Bigg(
+ &a_1& \frac{1}{2}~ \Big(~ \mom{u^3} + \mom{u}\mom{v^2} + \mom{u}\mom{\xi^2} ~\Big) \\
++&a_2& \frac{1}{2}~ \Big(~ \mom{u^4} + \mom{u^2}\mom{v^2} + \mom{u^2}\mom{\xi^2} ~\Big) \\
++&a_3& \frac{1}{2}~ \Big(~ \mom{u^3}\mom{v} + \mom{u}\mom{v^3} + \mom{u}\mom{v}\mom{\xi^2} ~\Big) \\
++&a_4& \frac{1}{2}~ \Big(~ \frac{1}{2}~
+					\big(~ \mom{u^5} + \mom{u}\mom{v^4} + \mom{u}\mom{\xi^4} \big)
+						 + \mom{u^3}\mom{v^2} + \mom{u^3}\mom{\xi^2} + \mom{u}\mom{v^2}\mom{\xi^2}
+					~\Big)
+\\
++&b_1& \frac{1}{2}~ \Big(~ \mom{u^2}\mom{v} + \mom{v^3} + \mom{v}\mom{\xi^2} ~\Big) \\
++&b_2& \frac{1}{2}~ \Big(~ \mom{u^3}\mom{v} + \mom{u}\mom{v^2} + \mom{u}\mom{v}\mom{\xi^2} ~\Big) \\
++&b_3& \frac{1}{2}~ \Big(~ \mom{u^2}\mom{v^2} + \mom{v^4} + \mom{v^2}\mom{\xi^2} ~\Big) \\
++&b_4& \frac{1}{2}~ \Big(~ \frac{1}{2}~
+					\big(~  \mom{u^4}\mom{v} +\mom{v^5} + \mom{v}\mom{\xi^4} \big)
+						 + \mom{u^2}\mom{v^3} + \mom{u^2}\mom{v}\mom{\xi^2} + \mom{v^3}\mom{\xi^2}
+					~\Big)
+\Bigg)
+\end{eqnarray*}
+
+\clearpage
+
+The Flux over the interface is computed from the distribution function on the interface. 
+
+\begin{math}
+\uu{F} = 
+\int \limits_{-\infty}^{\infty}
+u~
+\begin{pmatrix}
+	1 \\ u \\ v \\ \frac{1}{2} (u^2 + v^2 + \xi^2)
+\end{pmatrix}
+\Big(
+	1 - \tau (a~u + b~v) + (t-\tau)A
+\Big)
+~g~ du dv d\xi
+\end{math}
+
+~\\
+
+\begin{math}
+\uu{F} = \uu{F}^1 - \tau \uu{F}^2 + (t - \tau) \uu{F}^3
+\end{math}
+
+~\\
+
+\begin{math}
+\uu{F}^1 =
+\begin{pmatrix}
+\mom{u} \\ 
+\mom{u^2} \\ 
+\mom{uv} \\ 
+\frac{1}{2} \big(\mom{u^3} + \mom{u}\mom{v^2} + \mom{u}\mom{\xi^2} \big)
+\end{pmatrix}
+\end{math}
+
+~\\
+% ======================================================================================
+
+\begin{math}
+\begin{array}{l}
+\uu{F}^2 
+=
+\\
+\left(
+\begin{array}{l}
+\left[
+\begin{array}{ll}
+  & a_1 \mom{u^2} + 
+    a_2 \mom{u^3} +
+    a_3 \mom{u^2}\mom{v} +
+    a_4 ~\tfrac{1}{2}~\big( \mom{u^4} + \mom{u^2}\mom{v^2} + \mom{u^2}\mom{\xi^2} \big)
+\\	
++ & b_1 \mom{u}\mom{v} +
+b_2 \mom{u^2}\mom{v} +
+b_3 \mom{u}\mom{v^2} +
+b_4 ~\tfrac{1}{2}~\big( \mom{u^3}\mom{v} + \mom{u}\mom{v^3} + \mom{u}\mom{v}\mom{\xi^2} \big)
+\end{array}
+\right]
+\\ ~\\
+\left[
+\begin{array}{ll}
+&
+a_1 \mom{u^3} +
+a_2 \mom{u^4} +
+a_3 \mom{u^3}\mom{v} +
+a_4 ~\tfrac{1}{2}~\big( \mom{u^5} + \mom{u^3}\mom{v^2} + \mom{u^3}\mom{\xi^2} \big)
+\\	
++&
+b_1 \mom{u^2}\mom{v} +
+b_2 \mom{u^3}\mom{v}+
+b_3 \mom{u^2}\mom{v^2}+
+b_4 ~\tfrac{1}{2}~\big( \mom{u^4}\mom{v} + \mom{u^2}\mom{v^3} + \mom{u^2}\mom{v}\mom{\xi^2} \big)
+\end{array}
+\right]
+\\ ~ \\
+\left[
+\begin{array}{ll}
+&
+a_1 \mom{u^2}\mom{v} +
+a_2 \mom{u^3}\mom{v} +
+a_3 \mom{u^2}\mom{v^2} +
+a_4 ~\tfrac{1}{2}~\big( \mom{u^4}\mom{v} + \mom{u^2}\mom{v^3} + \mom{u^2}\mom{v}\mom{\xi^2} \big)
+\\	
++ &
+b_1 \mom{u}\mom{v^2} +
+b_2 \mom{u^2}\mom{v^2}+
+b_3 \mom{u}\mom{v^3}+
+b_4 ~\tfrac{1}{2}~\big( \mom{u^3}\mom{v^2} + \mom{u}\mom{v^4} + \mom{u}\mom{v^2}\mom{\xi^2} \big)
+\end{array}
+\right]
+\\ ~ \\
+\left[
+\begin{array}{ll}
+\frac{1}{2} ~ \Big( 
+   & a_1~ \big( \mom{u^4} + \mom{u^2}\mom{v^2} + \mom{u^2}\mom{\xi^2} \big) \\
+ + & a_2~ \big( \mom{u^5} + \mom{u^3}\mom{v^2} + \mom{u^3}\mom{\xi^2} \big) \\
+ + & a_3~ \big( \mom{u^4}\mom{v} + \mom{u^2}\mom{v^3} + \mom{u^2}\mom{v}\mom{\xi^2} \big) \\
+ + & a_4~ \big(~ \tfrac{1}{2} \big( \mom{u^6} + \mom{u^2}\mom{v^4} + \mom{u^2}\mom{\xi^4} \big)
+ 				+ \mom{u^4}\mom{v^2} + \mom{u^4}\mom{\xi^2} + \mom{u^2}\mom{v^2}\mom{\xi^2} ~\big) \\
+ + & b_1~ \big( \mom{u^3}\mom{v} + \mom{u}\mom{v^3} + \mom{u}\mom{v}\mom{\xi^2} \big) \\
+ + & b_2~ \big( \mom{u^4}\mom{v} + \mom{u^2}\mom{v^3} + \mom{u^2}\mom{v}\mom{\xi^2} \big) \\
+ + & b_3~ \big( \mom{u^3}\mom{v^2} + \mom{u}\mom{v^4} + \mom{u}\mom{v^2}\mom{\xi^2} \big) \\
+ + & b_4~ \big(~ \tfrac{1}{2} \big( \mom{u^5}\mom{v} + \mom{u}\mom{v^5} + \mom{u}\mom{v}\mom{\xi^4} \big)
+ 				+ \mom{u^3}\mom{v^3} + \mom{u^3}\mom{v}\mom{\xi^2} + \mom{u}\mom{v^3}\mom{\xi^2} ~\big) 
+\Big)
+\end{array}
+\right]
+\end{array}
+\right)
+\end{array}
+\end{math}
+
+~\\
+% ======================================================================================
+
+\begin{math}
+\uu{F}^3
+=
+\left(
+\begin{array}{l}
+A_1 \mom{u} + 
+A_2 \mom{u^2} + 
+A_3 \mom{u}\mom{v}+ 
+A_4 ~\tfrac{1}{2} \big( \mom{u^3} + \mom{u}\mom{v^2} + \mom{u}\mom{\xi^2} \big)
+\\
+A_1 \mom{u^2} + 
+A_2 \mom{u^3} + 
+A_3 \mom{u^2}\mom{v}+ 
+A_4 ~\tfrac{1}{2} \big( \mom{u^4} + \mom{u^2}\mom{v^2} + \mom{u^2}\mom{\xi^2} \big)
+\\
+A_1 \mom{u}\mom{v} + 
+A_2 \mom{u^2}\mom{v} + 
+A_3 \mom{u}\mom{v^2}+ 
+A_4 ~\tfrac{1}{2} \big( \mom{u^3}\mom{v} + \mom{u}\mom{v^3} + \mom{u}\mom{v}\mom{\xi^2} \big)
+\\~\\
+\left[
+\begin{array}{ll}
+  &	A_1 ~\tfrac{1}{2} \big( \mom{u^3} + \mom{u}\mom{v^2} + \mom{u}\mom{\xi^2} \big) \\
++ &	A_2 ~\tfrac{1}{2} \big( \mom{u^4} + \mom{u^2}\mom{v^2} + \mom{u^2}\mom{\xi^2} \big) \\
++ & A_3 ~\tfrac{1}{2} \big( \mom{u^3}\mom{v} + \mom{u}\mom{v^3} + \mom{u}\mom{v}\mom{\xi^2} \big) \\
++ & A_4 ~\tfrac{1}{2} \big( \tfrac{1}{2} \big( \mom{u^5} + \mom{u}\mom{v^4} + \mom{u}\mom{\xi^4} \big)
+						  + \mom{u^3}\mom{v^2} + \mom{u^3}\mom{\xi^2} + \mom{u}\mom{v^2}\mom{\xi^2} \big)
+\end{array}
+\right]
+\end{array}
+\right)
+\end{math}
+
+\clearpage
+
+\subsection*{Update of conservative variables and time Integration}
+
+The Gas-Kinetic Scheme is a Finite Volume method, which uses the Gas-Kinetic to compute the interface fluxes. The Computation of the Fluxes was shown in the previous sections. The values of the conservative variables in the cells are then updated with these Fluxes:
+
+\begin{equation}
+\uu{W}_{i,j}^{n+1}
+=
+\uu{W}_{i,j}^{n}
++ \dfrac{1}{\Delta V}
+\sum \limits_l
+\int \limits_{t^n}^{t^{+1}}
+\uu{\vv{F}}_l \cdot \vv{\Delta}S_l
+dt
+\hfill\textnormal{with}\hspace{0.5cm}
+\uu{W} = \Big[ \rho, \rho U, \rho V, \rho E \Big]^T
+\end{equation}
+
+For the implementation the time integration can be solved explicitly. Moreover the Flux density tensor $\uu{\vv{F}}_l$ is formulated in a local coordinate system and has only the form of a Vector of the Fluxes in Interface normal direction. The current implementation supports only structured rectangular grids. Therefore only vertical and horizontal interfaces occur. The projection of the Flux density tensor on the interface normal then simplifies to a swap of the momentum fluxes for the horizontal interfaces and a projection of the interface normal (positive coordinate direction) onto the outward facing normal of the cell face. the latter one results only in a positive (right and top) or negative (left and bottom) sign $s$.
+
+\begin{equation}
+\uu{W}_{i,j}^{n+1}
+=
+\uu{W}_{i,j}^{n}
++ \dfrac{1}{\Delta V}
+\sum \limits_l
+s ~
+\uuu{R}
+\left[
+\uu{F}^1 t - \tau t \uu{F}^2 + (\tfrac{1}{2} t^2 - \tau t) \uu{F}^3
+\right]_0^{\Delta t}
+\end{equation}
+
+
+\begin{equation}
+\uu{W}_{i,j}^{n+1}
+=
+\uu{W}_{i,j}^{n}
++ \dfrac{1}{\Delta V}
+\sum \limits_l
+s ~
+\uuu{R}
+\left(
+\uu{F}^1 \Delta t - \tau \Delta t \uu{F}^2 + (\tfrac{1}{2} \Delta t^2 - \tau \Delta t) \uu{F}^3
+\right)
+\end{equation}
+
+The swap of the momentum components in shown by the Rotation Matrix $\uuu{R}$ which just rotates the second and third component.
+
+\clearpage
+
+\section{Some Formulas}
+
+From the Rayleigh-Bernard-Paper (Xu, Lui, 1999):
+
+\begin{equation}
+\lambda = \frac{1}{2RT}
+\end{equation}
+
+\begin{equation}
+\tau = \frac{\nu}{RT} = 2\lambda\nu
+\end{equation}
+
+From the GKS-Book (Xu, 2015):
+
+\begin{equation}
+\lambda =\frac{(K+2)\rho}
+{4\left( \rho E - \dfrac{1}{2} \dfrac{(\rho U)^2 + (\rho V)^2}{\rho}  \right)}
+\end{equation}
+
+The first moments of the Maxwell distribution:
+
+\begin{equation}
+\arraycolsep=1.4pt\def\arraystretch{2.2}
+\begin{array}{lcl}
+\mom{1} &=& 1 \\
+\mom{u} &=& U \\
+\mom{u^2} &=& U^2 + \dfrac{1}{2\lambda} \\
+\mom{u^3} = U^3 + U\dfrac{1}{2\lambda} + \dfrac{1}{\lambda} U &=& U^2 + \dfrac{3}{2\lambda} U \\
+\mom{u^4} = U^4 + \dfrac{3}{2\lambda} U^2 + \dfrac{3}{2\lambda} \left(U^2 + \dfrac{1}{2\lambda} \right)
+		  &=& U^4 + \dfrac{3}{\lambda} U^2 + \dfrac{3}{4\lambda^2}
+\end{array}
+\end{equation}
+
+\clearpage
+
+\section{Poiseulle Flow}
+
+\begin{eqnarray}
+\begin{split}
+\arraycolsep=1.4pt\def\arraystretch{2.2}
+\begin{array}{lcl}
+u\dfrac{\partial u}{\partial x} + v\dfrac{\partial u}{\partial v}
+&=& 
+-\dfrac{1}{\rho} \dfrac{\partial p}{\partial x}
++ \nu \left( \dfrac{\partial^2 u}{\partial x^2} + \dfrac{\partial^2 u}{\partial y^2} \right)
+\\
+0 &=& -\dfrac{1}{\rho} \dfrac{\partial p}{\partial x} + \nu \dfrac{\partial^2 u}{\partial y^2}
+\\
+\dfrac{\partial^2 u}{\partial y^2} 
+&=&
+-\dfrac{1}{\nu} \left( -\dfrac{1}{\rho} \dfrac{\partial p}{\partial x} \right)
+\\
+u(y) &=& \dfrac{1}{2\nu} \left( Hy - y^2 \right) 
+         \left( -\dfrac{1}{\rho} \dfrac{\partial p}{\partial x} \right)
+\\
+u(y) &=& \dfrac{1}{2\nu} \left( Hy - y^2 \right) \dfrac{G}{\rho}
+\\
+u_{max} &=& \dfrac{GH^2}{8\nu\rho}
+\end{array}
+\end{split}
+\end{eqnarray}
+
+
+
+
+\end{document}
