@@ -9,3 +9,5 @@
 /GKS.VC.db
 /out
 /x64/Release
+/x64/Debug
+/.vs/GKS/v14

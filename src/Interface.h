@@ -14,6 +14,7 @@ private:
 	Cell* negCell;
 	Cell* posCell;
 
+    float2 center;
     float2 normal;
     int axis;
 
@@ -22,7 +23,7 @@ private:
     double Flux[4];
 public:
 	Interface();
-	Interface(Cell* negCell, Cell* posCell, int axis, float2 normal, FluidParameter fluidParam);
+	Interface(Cell* negCell, Cell* posCell, float2 center, float2 normal, FluidParameter fluidParam);
 	~Interface();
 
 	void computeFlux(double dt);
@@ -31,6 +32,7 @@ public:
     ConservedVariable getFlux();
 
     bool isGhostInterface();
+    bool isBoundaryInterface();
 
 	string toString();
 
@@ -51,8 +53,6 @@ private:
 
     void computeMicroSlope(double* prim, double* macroSlope, double* microSlope);
     void computeMoments(double* prim, double* MomentU, double* MomentV, double* MomentXi, int numberMoments);
-    void computeMomentUV(double* MomentU, double* MomentV, int alpha, int beta, double* MomentUV);
-    void computeMomentAU(double* a, double* MomentU, double* MomentV, int alpha, int beta, double* MomentAU);
 };
 
 #endif

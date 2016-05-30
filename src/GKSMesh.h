@@ -69,6 +69,8 @@ public:
 
     void writeVelocityProfile(string filename);
 
+    void writeMeshAsText(string filename);
+
 private:
 
     void writeCellGeometry(ofstream& file);

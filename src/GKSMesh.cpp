@@ -36,6 +36,7 @@ void GKSMesh::generateRectMesh(double lengthX, double lengthY, int nx, int ny)
 	Cell*		tmpCell;
 	Interface*  tmpInterface;
     float2      normal;
+    float2      center;
 
 	//=========================================================================
 	//=========================================================================
@@ -73,8 +74,14 @@ void GKSMesh::generateRectMesh(double lengthX, double lengthY, int nx, int ny)
 	{
 		for (int j = 0; j < nx + 1; j++)    // X-Direction
 		{
+            center.x = (double)j*dx;
+            center.y = ( (double)i - 0.5 )*dy;
+
+            Cell* posCell = this->CellList[i*(nx + 2) + (j + 1)];
+            Cell* negCell = this->CellList[i*(nx + 2) + j];
+
 			// create a new interface with the adjacent cells
-			tmpInterface = new Interface(CellList[i*(nx + 2) + j], CellList[i*(nx + 2) + (j + 1)], 0, normal, this->fluidParam);
+			tmpInterface = new Interface(negCell, posCell, center, normal, this->fluidParam);
 			// add itnerface to list
 			this->InterfaceList.push_back(tmpInterface);
 		}
@@ -91,8 +98,14 @@ void GKSMesh::generateRectMesh(double lengthX, double lengthY, int nx, int ny)
 	{
 		for (int j = 0; j <= nx + 1; j++)   // X-Direction
 		{
+            center.x = ( (double)j - 0.5 )*dx;
+            center.y = (double)i*dy;
+
+            Cell* posCell = this->CellList[(i + 1)*(nx + 2) + j];
+            Cell* negCell = this->CellList[i*(nx + 2) + j];
+
 			// create a new interface with the adjacent cells
-			tmpInterface = new Interface(CellList[i*(nx + 2) + j], CellList[(i + 1)*(nx + 2) + j], 1, normal, this->fluidParam);
+			tmpInterface = new Interface(negCell, posCell, center, normal, this->fluidParam);
 			// add itnerface to list
 			this->InterfaceList.push_back(tmpInterface);
 		}
@@ -113,6 +126,7 @@ void GKSMesh::generateRectMeshPeriodic(double lengthX, double lengthY, int nx, i
     Cell*		tmpCell;
     Interface*  tmpInterface;
     float2      normal;
+    float2      center;
 
     //=========================================================================
     //=========================================================================
@@ -148,6 +162,9 @@ void GKSMesh::generateRectMeshPeriodic(double lengthX, double lengthY, int nx, i
     {
         for (int j = 0; j < nx; j++)    // X-Direction
         {
+            center.x = (double)j * dx;
+            center.y = ( (double)i - 0.5 )*dy;
+
             Cell* negCell;
             Cell* posCell;
 
@@ -162,7 +179,7 @@ void GKSMesh::generateRectMeshPeriodic(double lengthX, double lengthY, int nx, i
                 posCell = CellList[i*(nx) + j];
 
             // create a new interface with the adjacent cells
-            tmpInterface = new Interface( negCell, posCell, 0, normal, this->fluidParam);
+            tmpInterface = new Interface( negCell, posCell, center, normal, this->fluidParam);
             // add itnerface to list
             this->InterfaceList.push_back(tmpInterface);
         }
@@ -179,13 +196,18 @@ void GKSMesh::generateRectMeshPeriodic(double lengthX, double lengthY, int nx, i
     {
         for (int j = 0; j < nx; j++)        // X-Direction
         {
+            center.x = ( (double)j + 0.5 ) * dx;
+            center.y = (double)i * dy;
+
+            Cell* posCell = CellList[( i + 1 )*(nx)+j];
+            Cell* negCell = CellList[i*(nx)+j];
+
             // create a new interface with the adjacent cells
-            tmpInterface = new Interface(CellList[i*(nx) + j], CellList[(i + 1)*(nx) + j], 1, normal, this->fluidParam);
+            tmpInterface = new Interface(negCell, posCell, center, normal, this->fluidParam);
             // add itnerface to list
             this->InterfaceList.push_back(tmpInterface);
         }
     }
-
 
     return;
 }
@@ -298,7 +320,7 @@ void GKSMesh::timeStep()
 
     // ========================================================================
 
-    if (this->param.verbose) cout << "  Apply Boundary Conditions ..." << endl;
+    if ( this->param.verbose ) cout << "  Apply Boundary Conditions ..." << endl;
     this->applyBoundaryCondition();
     
     
@@ -312,6 +334,8 @@ void GKSMesh::iterate()
     ostringstream filenameFlux;
     filenameFlux << "out/resultFlux_0.vtk";
     writeVTKFileFlux(filenameFlux.str(), true, false);
+
+    this->applyBoundaryCondition();
 
     while (this->iter < this->param.numberOfIterations)
     {
@@ -437,6 +461,38 @@ void GKSMesh::writeVelocityProfile(string filename)
 
     file.close();
 
+}
+
+void GKSMesh::writeMeshAsText(string filename)
+{
+    cout << "Wrinting file " << filename << " ... ";
+    // open file stream
+    ofstream file;
+    file.open(filename.c_str());
+
+    if ( !file.is_open() ) {
+        cout << " File cound not be opened.\n\nERROR!\n\n\n";
+        return;
+    }
+
+    file << " ========== Cells: ========== \n\n";
+
+    for ( vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i )
+    {
+        file << (*i)->toString();
+        if ( ( *i )->isGhostCell() )
+            file << ", Ghostcell";
+        file << "\n";
+    }
+
+    file << "\n\n ========== Interfaces: ========== \n\n";
+
+    for ( vector<Interface*>::iterator i = this->InterfaceList.begin(); i != this->InterfaceList.end(); ++i )
+    {
+        file << ( *i )->toString();
+    }
+
+    file.close();
 }
 
 void GKSMesh::writeCellGeometry(ofstream& file)

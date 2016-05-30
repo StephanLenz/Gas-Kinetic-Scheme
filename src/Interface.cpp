@@ -7,10 +7,18 @@ Interface::Interface()
 {
 }
 
-Interface::Interface(Cell* negCell, Cell* posCell, int axis, float2 normal, FluidParameter fluidParam)
+Interface::Interface(Cell* negCell, Cell* posCell, float2 center, float2 normal, FluidParameter fluidParam)
 {
 	this->negCell = negCell;
 	this->posCell = posCell;
+
+    this->center = center;
+    this->normal = normal;
+
+    if      ( (fabs(this->normal.x - 1.0) < 1e-6) && (fabs(this->normal.y - 0.0) < 1.0e-6) )
+        this->axis = 0;
+    else if ( (fabs(this->normal.x - 0.0) < 1e-6) && (fabs(this->normal.y - 1.0) < 1.0e-6) )
+        this->axis = 1;
     
     // links to interfaces
     //    ---------------------
@@ -33,10 +41,10 @@ Interface::Interface(Cell* negCell, Cell* posCell, int axis, float2 normal, Flui
 	this->negCell->addInterface(this,axis+2);
 	this->posCell->addInterface(this,axis+0);
 
-    this->normal = normal;
-    this->axis = axis;
-
     this->fluidParam = fluidParam;
+
+    for ( int i = 0; i < 4; i++ )
+        this->Flux[i] = 0.0;
 }
 
 Interface::~Interface()
@@ -125,33 +133,48 @@ ConservedVariable Interface::getFlux()
 
 bool Interface::isGhostInterface()
 {
+    if (this->isBoundaryInterface()) return false;
+
     return this->posCell->isGhostCell() && this->negCell->isGhostCell();
+}
+
+bool Interface::isBoundaryInterface()
+{
+    return this->negCell == NULL || this->posCell == NULL;
 }
 
 string Interface::toString()
 {
 	ostringstream tmp;
-	tmp << "Interface between: \n";
-	tmp << this->negCell->toString();
-	tmp << "\n";
-	tmp << this->posCell->toString();
-	tmp << "\n";
-    //tmp << this->Flux[0] << " " << this->Flux[1] << " " << this->Flux[2] << " " << this->Flux[3];
-    if (this->isGhostInterface())
-        tmp << "GhostInterface";
-    tmp << "\n";
-    tmp << "\n";
+    if (this->isBoundaryInterface())
+    {
+        tmp << "Boundary Interface at: \n";
+        tmp << "(" << this->center.x << "," << this->center.y << ") \n";
+        tmp << "Connected Cell: \n";
+        if (negCell == NULL) 
+            tmp << this->posCell->toString() << "\n";
+        else
+            tmp << this->negCell->toString() << "\n";
+        tmp << "\n";
+    }
+    else
+    {
+        tmp << "Interface at: \n";
+        tmp << "(" << this->center.x << "," << this->center.y << ") \n";
+        tmp << "Connected Cell: \n";
+        tmp << this->negCell->toString() << "\n";
+        tmp << this->posCell->toString() << "\n";
+        if (this->isGhostInterface())
+            tmp << "GhostInterface\n";
+        tmp << "\n";
+    }
 	return tmp.str();
 }
 
 string Interface::writeCenter()
 {
-    double x = 0.5 * ( this->posCell->getCenter().x + this->negCell->getCenter().x );
-    double y = 0.5 * ( this->posCell->getCenter().y + this->negCell->getCenter().y );
-
     ostringstream tmp;
-    tmp << x << " " << y << " 0.0\n";
-
+    tmp << this->center.x << " " << this->center.y << " 0.0\n";
     return tmp.str();
 }
 
@@ -465,38 +488,5 @@ void Interface::computeMoments(double * prim, double * MomentU, double* MomentV,
     MomentXi[4] = ( 2.0*this->fluidParam.K + 1.0*this->fluidParam.K*this->fluidParam.K ) / (4.0 * prim[3] * prim[3]);
     MomentXi[5] = 0.0;
     MomentXi[6] = 0.0;
-}
-
-void Interface::computeMomentUV(double * MomentU, double * MomentV, int alpha, int beta, double * MomentUV)
-{
-    /*
-    // compute <u^alpha v^beta>         for rho
-    //         <u^alpha+1 v^beta>       for rhoU
-    //         <u^alpha v^beta + 1>     for rhoV
-    MomentUV[0] = MomentU[alpha]   * MomentV[beta];
-    MomentUV[1] = MomentU[alpha+1] * MomentV[beta];
-    MomentUV[2] = MomentU[alpha]   * MomentV[beta+1];
-    MomentUV[3] = MomentU[alpha+2] * MomentV[beta]
-                + MomentU[alpha]   * MomentV[beta+2];
-    */
-}
-
-void Interface::computeMomentAU(double * a, double * MomentU, double * MomentV, int alpha, int beta, double* MomentAU)
-{
-    /*
-    double MomentUV_0[3];
-    double MomentUV_1[3];
-    double MomentUV_2[3];
-
-    this->computeMomentUV(MomentU, MomentV, alpha  , beta  , MomentUV_0);
-    this->computeMomentUV(MomentU, MomentV, alpha+1, beta  , MomentUV_1);
-    this->computeMomentUV(MomentU, MomentV, alpha  , beta+1, MomentUV_2);
-
-    for (int i = 0; i < 3; i++)
-        MomentAU[i] = a[0] * MomentUV_0[i] 
-                    + a[1] * MomentUV_1[i] 
-                    + a[2] * MomentUV_2[i]
-                    + a[3] * ;
-    */
 }
 
