@@ -633,25 +633,29 @@ void GKSMesh::writeInterfaceData(ofstream & file)
     file << "F_rho 1 " << this->InterfaceList.size() << " double\n";
     for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
     {
-        file << (*i)->getFluxDensity().rho << endl;
+        //file << (*i)->getTimeIntegratedFlux().rho << endl;
+        file << ( *i )->getFluxDensity().rho << endl;
     }
 
     file << "F_rhoU 1 " << this->InterfaceList.size() << " double\n";
     for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
     {
-        file << (*i)->getFluxDensity().rhoU << endl;
+        //file << (*i)->getTimeIntegratedFlux().rhoU << endl;
+        file << ( *i )->getFluxDensity().rhoU << endl;
     }
 
     file << "F_rhoV 1 " << this->InterfaceList.size() << " double\n";
     for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
     {
-        file << (*i)->getFluxDensity().rhoV << endl;
+        //file << (*i)->getTimeIntegratedFlux().rhoV << endl;
+        file << ( *i )->getFluxDensity().rhoV << endl;
     }
 
     file << "F_rhoE 1 " << this->InterfaceList.size() << " double\n";
     for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
     {
-        file << (*i)->getFluxDensity().rhoE << endl;
+        //file << (*i)->getTimeIntegratedFlux().rhoE << endl;
+        file << ( *i )->getFluxDensity().rhoE << endl;
     }
 
     file << "GhostInterface 1 " << this->InterfaceList.size() << " int\n";

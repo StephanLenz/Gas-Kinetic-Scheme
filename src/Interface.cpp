@@ -98,6 +98,18 @@ void Interface::computeFlux(double dt)
     this->computeMicroSlope(prim, normalGradCons,     a);
     this->computeMicroSlope(prim, tangentialGradCons, b);
 
+
+    // This Block can turn off the usage of tangential Derivatives
+    // ========================================================================
+    // ========================================================================
+    // ========================================================================
+    //for ( int i = 0; i < 4; i++ )
+    //    b[i] = 0.0;
+    // ========================================================================
+    // ========================================================================
+    // ========================================================================
+
+
     // temporal micro slopes A = A1 + A2 u + A3 v
 
     this->computeMoments(prim, MomentU, MomentV, MomentXi, NUMBER_OF_MOMENTS);
