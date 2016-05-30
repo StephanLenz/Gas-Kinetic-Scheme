@@ -39,28 +39,28 @@ void Cell::update(double dt)
 {
     // negative interfaces = in flux
     // positive interfaces = out flux
-    this->cons[0] += ( this->InterfaceList[0]->getFlux().rho
-                     + this->InterfaceList[1]->getFlux().rho
-                     - this->InterfaceList[2]->getFlux().rho
-                     - this->InterfaceList[3]->getFlux().rho
+    this->cons[0] += ( this->InterfaceList[0]->getTimeIntegratedFlux().rho
+                     + this->InterfaceList[1]->getTimeIntegratedFlux().rho
+                     - this->InterfaceList[2]->getTimeIntegratedFlux().rho
+                     - this->InterfaceList[3]->getTimeIntegratedFlux().rho
                      ) / (this->dx*this->dy);
 
-    this->cons[1] += ( this->InterfaceList[0]->getFlux().rhoU
-                     + this->InterfaceList[1]->getFlux().rhoU
-                     - this->InterfaceList[2]->getFlux().rhoU
-                     - this->InterfaceList[3]->getFlux().rhoU
+    this->cons[1] += ( this->InterfaceList[0]->getTimeIntegratedFlux().rhoU
+                     + this->InterfaceList[1]->getTimeIntegratedFlux().rhoU
+                     - this->InterfaceList[2]->getTimeIntegratedFlux().rhoU
+                     - this->InterfaceList[3]->getTimeIntegratedFlux().rhoU
                      ) / (this->dx*this->dy);
 
-    this->cons[2] += ( this->InterfaceList[0]->getFlux().rhoV
-                     + this->InterfaceList[1]->getFlux().rhoV
-                     - this->InterfaceList[2]->getFlux().rhoV
-                     - this->InterfaceList[3]->getFlux().rhoV
+    this->cons[2] += ( this->InterfaceList[0]->getTimeIntegratedFlux().rhoV
+                     + this->InterfaceList[1]->getTimeIntegratedFlux().rhoV
+                     - this->InterfaceList[2]->getTimeIntegratedFlux().rhoV
+                     - this->InterfaceList[3]->getTimeIntegratedFlux().rhoV
                      ) / (this->dx*this->dy);
 
-    this->cons[3] += ( this->InterfaceList[0]->getFlux().rhoE
-                     + this->InterfaceList[1]->getFlux().rhoE
-                     - this->InterfaceList[2]->getFlux().rhoE
-                     - this->InterfaceList[3]->getFlux().rhoE
+    this->cons[3] += ( this->InterfaceList[0]->getTimeIntegratedFlux().rhoE
+                     + this->InterfaceList[1]->getTimeIntegratedFlux().rhoE
+                     - this->InterfaceList[2]->getTimeIntegratedFlux().rhoE
+                     - this->InterfaceList[3]->getTimeIntegratedFlux().rhoE
                      ) / (this->dx*this->dy);
 
     // Apply Forcing

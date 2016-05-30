@@ -44,7 +44,10 @@ Interface::Interface(Cell* negCell, Cell* posCell, float2 center, float2 normal,
     this->fluidParam = fluidParam;
 
     for ( int i = 0; i < 4; i++ )
-        this->Flux[i] = 0.0;
+    {
+        this->timeIntegratedFlux[i] = 0.0;
+        this->FluxDensity[i] = 0.0;
+    }
 }
 
 Interface::~Interface()
@@ -105,11 +108,14 @@ void Interface::computeFlux(double dt)
 
     // compute mass and momentum fluxes
 
-    this->assembleFlux(MomentU, MomentV, MomentXi, a, b, A, timeCoefficients, dy, prim);
+    this->assembleFlux(MomentU, MomentV, MomentXi, a, b, A, timeCoefficients, dy, prim, tau);
 
     // in case of horizontal interface (G interface), swap velocity fluxes
-    if (this->axis == 1)
-        this->rotate(this->Flux);
+    if ( this->axis == 1 )
+    {
+        this->rotate(this->timeIntegratedFlux);
+        this->rotate(this->FluxDensity);
+    }
 
 }
 
@@ -121,13 +127,23 @@ Cell * Interface::getNeigborCell(Cell * askingCell)
         return posCell;
 }
 
-ConservedVariable Interface::getFlux()
+ConservedVariable Interface::getTimeIntegratedFlux()
 {
     ConservedVariable tmp;
-    tmp.rho  = this->Flux[0];
-    tmp.rhoU = this->Flux[1];
-    tmp.rhoV = this->Flux[2];
-    tmp.rhoE = this->Flux[3];
+    tmp.rho  = this->timeIntegratedFlux[0];
+    tmp.rhoU = this->timeIntegratedFlux[1];
+    tmp.rhoV = this->timeIntegratedFlux[2];
+    tmp.rhoE = this->timeIntegratedFlux[3];
+    return tmp;
+}
+
+ConservedVariable Interface::getFluxDensity()
+{
+    ConservedVariable tmp;
+    tmp.rho =  this->FluxDensity[0];
+    tmp.rhoU = this->FluxDensity[1];
+    tmp.rhoV = this->FluxDensity[2];
+    tmp.rhoE = this->FluxDensity[3];
     return tmp;
 }
 
@@ -359,7 +375,7 @@ void Interface::computeTimeDerivative(double * prim, double * MomentU, double * 
     timeGrad[3] /= -prim[0];
 }
 
-void Interface::assembleFlux(double * MomentU, double * MomentV, double * MomentXi, double * a, double * b, double * A, double * timeCoefficients, double dy, double* prim)
+void Interface::assembleFlux(double * MomentU, double * MomentV, double * MomentXi, double * a, double * b, double * A, double * timeCoefficients, double dy, double* prim, double tau)
 {
     double Flux_1[4];
     double Flux_2[4];
@@ -431,8 +447,11 @@ void Interface::assembleFlux(double * MomentU, double * MomentV, double * Moment
                                +       ( MomentU[3] * MomentV[2] + MomentU[3] * MomentXi[2] + MomentU[1] * MomentV[2] * MomentXi[2] ) )
                       );
 
-    for(int i = 0; i < 4; i++)
-        this->Flux[i] = ( timeCoefficients[0]*Flux_1[i] + timeCoefficients[1]*Flux_2[i] + timeCoefficients[2]*Flux_3[i] ) * dy;
+    for ( int i = 0; i < 4; i++ )
+    {
+        this->timeIntegratedFlux[i] = ( timeCoefficients[0] * Flux_1[i] + timeCoefficients[1] * Flux_2[i] + timeCoefficients[2] * Flux_3[i] ) * dy;
+        this->FluxDensity[i] = Flux_1[i] - tau*( Flux_2[i] + Flux_3[i] );
+    }
 }
 
 void Interface::rotate(double * vector)

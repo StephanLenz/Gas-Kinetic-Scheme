@@ -20,7 +20,8 @@ private:
 
     FluidParameter fluidParam;
 
-    double Flux[4];
+    double timeIntegratedFlux[4];
+    double FluxDensity[4];
 public:
 	Interface();
 	Interface(Cell* negCell, Cell* posCell, float2 center, float2 normal, FluidParameter fluidParam);
@@ -29,7 +30,8 @@ public:
 	void computeFlux(double dt);
 
     Cell* getNeigborCell(Cell* askingCell);
-    ConservedVariable getFlux();
+    ConservedVariable getTimeIntegratedFlux();
+    ConservedVariable getFluxDensity();
 
     bool isGhostInterface();
     bool isBoundaryInterface();
@@ -47,7 +49,7 @@ private:
                                double* a, double* b, double * timeGrad);
 
     void assembleFlux(double* MomentU, double* MomentV, double* MomentXi, 
-                      double* a, double* b, double* A, double* timeCoefficients, double dy, double* prim);
+                      double* a, double* b, double* A, double* timeCoefficients, double dy, double* prim, double tau);
 
     void rotate(double* vector);
 
