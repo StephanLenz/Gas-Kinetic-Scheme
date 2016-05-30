@@ -100,6 +100,32 @@ A &=& A_1 &+ A_2~u &+ A_3~v &+ A_4~&\frac{1}{2}~(u^2 + v^2 + \xi^2) \\
 \end{array}
 \end{equation}
 
+Explanation from Prendergast and Xu (1993):
+\begin{equation}
+\chi_\alpha ~=~ \left( -\ln(A), -2\lambda U, -2\lambda V, 2\lambda \right)^T
+\hfill
+\textnormal{with}
+A ~=~ \dfrac{1}{\rho} \left( \frac{\lambda}{\pi} \right)^{-\frac{K+2}{2}}
+\hspace{2cm}
+\end{equation}
+\begin{equation}
+\psi_\alpha = \left( 1, u, v, \tfrac{1}{2} (u^2 + v^2 + \xi^2 ) \right)^T
+\end{equation}
+\begin{equation}
+g ~=~ e^{\chi_\alpha \psi_\alpha}
+  ~=~ \dfrac{1}{A} e^{ \lambda ( u^2 + v^2 + \xi^2 - 2uU - 2vV) }
+\hfill
+\textnormal{which is not equivalent to the above definition of $g$}
+\end{equation}
+\begin{equation}
+a ~=~ \dfrac{1}{g} \dfrac{\partial g}{\partial x}
+  ~=~ \dfrac{1}{g} \dfrac{\partial g}{\partial \chi_\alpha}\dfrac{\partial \chi_\alpha}{\partial x}
+  ~=~ \dfrac{1}{g} \psi_\alpha g \dfrac{\partial \chi_\alpha}{\partial x}
+  ~=~ \psi_\alpha \dfrac{\partial \chi_\alpha}{\partial x}
+  ~=~ a_\alpha \psi_\alpha
+\end{equation}
+
+
 \clearpage
 
 \subsection*{Integration of the Analytical Solution}
@@ -563,6 +589,12 @@ The swap of the momentum components in shown by the Rotation Matrix $\uuu{R}$ wh
 
 \section{Some Formulas}
 
+The ideal gas law:
+
+\begin{equation}
+p = \rho RT
+\end{equation}
+
 From the Rayleigh-Bernard-Paper (Xu, Lui, 1999):
 
 \begin{equation}
@@ -580,18 +612,42 @@ From the GKS-Book (Xu, 2015):
 {4\left( \rho E - \dfrac{1}{2} \dfrac{(\rho U)^2 + (\rho V)^2}{\rho}  \right)}
 \end{equation}
 
+\begin{equation}
+\rho E = \dfrac{(K+2)\rho}{4\lambda} + \dfrac{1}{2} \dfrac{(\rho U)^2 + (\rho V)^2}{\rho}
+\end{equation}
+
 The first moments of the Maxwell distribution:
 
 \begin{equation}
 \arraycolsep=1.4pt\def\arraystretch{2.2}
-\begin{array}{lcl}
-\mom{1} &=& 1 \\
-\mom{u} &=& U \\
-\mom{u^2} &=& U^2 + \dfrac{1}{2\lambda} \\
-\mom{u^3} = U^3 + U\dfrac{1}{2\lambda} + \dfrac{1}{\lambda} U &=& U^2 + \dfrac{3}{2\lambda} U \\
+\begin{array}{lcll}
+\mom{1} &=& 1 &\\
+\mom{u} &=& U &\\
+\mom{u^2} &=& U^2 + \dfrac{1}{2\lambda} & = \dfrac{1}{\rho} \left( \rho U^2 + p \right) \\
+\mom{u^3} = U^3 + U\dfrac{1}{2\lambda} + \dfrac{1}{\lambda} U &=& U^2 + \dfrac{3}{2\lambda} U &\\
 \mom{u^4} = U^4 + \dfrac{3}{2\lambda} U^2 + \dfrac{3}{2\lambda} \left(U^2 + \dfrac{1}{2\lambda} \right)
-		  &=& U^4 + \dfrac{3}{\lambda} U^2 + \dfrac{3}{4\lambda^2}
+		  &=& U^4 + \dfrac{3}{\lambda} U^2 + \dfrac{3}{4\lambda^2}&
 \end{array}
+\end{equation}
+
+Euler equation in flux formulation from Xu (2001):
+
+\begin{equation}
+\dfrac{\partial}{\partial t}
+\begin{pmatrix}
+\rho \\ \rho U \\ \rho V \\ \rho E
+\end{pmatrix}
++
+\dfrac{\partial}{\partial x}
+\begin{pmatrix}
+\rho U \\ \rho U^2 + p \\ \rho U V \\ (\rho E + p)U
+\end{pmatrix}
++
+\dfrac{\partial}{\partial y}
+\begin{pmatrix}
+\rho V \\ \rho U V \\ \rho V^2 + p \\ (\rho E + p)V
+\end{pmatrix}
+=0
 \end{equation}
 
 \clearpage
@@ -601,24 +657,28 @@ The first moments of the Maxwell distribution:
 \begin{eqnarray}
 \begin{split}
 \arraycolsep=1.4pt\def\arraystretch{2.2}
-\begin{array}{lcl}
-u\dfrac{\partial u}{\partial x} + v\dfrac{\partial u}{\partial v}
+\begin{array}{lcll}
+u\dfrac{\partial u}{\partial x} + v\dfrac{\partial u}{\partial y}
 &=& 
 -\dfrac{1}{\rho} \dfrac{\partial p}{\partial x}
 + \nu \left( \dfrac{\partial^2 u}{\partial x^2} + \dfrac{\partial^2 u}{\partial y^2} \right)
++ \dfrac{G}{\rho}&
 \\
-0 &=& -\dfrac{1}{\rho} \dfrac{\partial p}{\partial x} + \nu \dfrac{\partial^2 u}{\partial y^2}
+0 &=& -\dfrac{1}{\rho} \dfrac{\partial p}{\partial x} + \nu \dfrac{\partial^2 u}{\partial y^2} + \dfrac{G}{\rho}
+&\textnormal{~~~with~~~} v = 0 \textnormal{,} \dfrac{\partial u}{\partial x} = 0
 \\
 \dfrac{\partial^2 u}{\partial y^2} 
 &=&
--\dfrac{1}{\nu} \left( -\dfrac{1}{\rho} \dfrac{\partial p}{\partial x} \right)
+-\dfrac{1}{\nu} \left( -\dfrac{1}{\rho} \dfrac{\partial p}{\partial x} + \dfrac{G}{\rho}\right)&
 \\
 u(y) &=& \dfrac{1}{2\nu} \left( Hy - y^2 \right) 
-         \left( -\dfrac{1}{\rho} \dfrac{\partial p}{\partial x} \right)
+         \left( -\dfrac{1}{\rho} \dfrac{\partial p}{\partial x} + \dfrac{G}{\rho} \right)&
 \\
 u(y) &=& \dfrac{1}{2\nu} \left( Hy - y^2 \right) \dfrac{G}{\rho}
+&\textnormal{~~~with~~~}
+\dfrac{\partial p}{\partial x} = 0
 \\
-u_{max} &=& \dfrac{GH^2}{8\nu\rho}
+u_{max} &=& \dfrac{GH^2}{8\nu\rho}&
 \end{array}
 \end{split}
 \end{eqnarray}

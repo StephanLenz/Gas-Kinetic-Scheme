@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
     fluidParam.K  = 1;
     fluidParam.nu = 1e-2;
     fluidParam.R = 200.0;
-    fluidParam.Force.x = 0.0;
+    fluidParam.Force.x = 1e-4;
     fluidParam.Force.y = 0.0;
 
     // ========================================================================
@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
     mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.005, 0.0, 0.0);
 
     // Generate Mesh
-    mesh->generateRectMeshPeriodic(W, H, 1, 64);
+    mesh->generateRectMeshPeriodic(W, H, 1, 32);
 
     // Initialize Values
     mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0);
