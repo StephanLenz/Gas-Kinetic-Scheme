@@ -3,6 +3,7 @@
 #define INTERFACE_H
 
 #include "Cell.h"
+#include "InterfaceBC.h"
 //class Cell;
 #include <string>
 
@@ -18,13 +19,15 @@ private:
     float2 normal;
     int axis;
 
+    InterfaceBC* BoundaryConditionPointer;
+
     FluidParameter fluidParam;
 
     double timeIntegratedFlux[4];
     double FluxDensity[4];
 public:
 	Interface();
-	Interface(Cell* negCell, Cell* posCell, float2 center, float2 normal, FluidParameter fluidParam);
+	Interface(Cell* negCell, Cell* posCell, float2 center, float2 normal, FluidParameter fluidParam, InterfaceBC* BC);
 	~Interface();
 
 	void computeFlux(double dt);
