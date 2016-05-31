@@ -11,12 +11,13 @@ InterfaceBC::~InterfaceBC()
 {
 }
 
-ConservedVariable InterfaceBC::computeBoundaryInterfaceFlux(Cell * CellInDomain)
+ConservedVariable InterfaceBC::computeBoundaryInterfaceFlux(PrimaryVariable prim, double dx, double nu)
 {
+
     ConservedVariable Flux;
     Flux.rho = 0.0;
-    Flux.rhoU = 0.0;
-    Flux.rhoV = 0.0;
+    Flux.rhoU = 1.0 / ( 2.0 * prim.L );
+    Flux.rhoV = -nu * prim.V / ( 0.5 *dx );
     Flux.rhoE = 0.0;
 
     return Flux;

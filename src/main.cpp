@@ -25,10 +25,10 @@ int main(int argc, char* argv[])
     Parameters param;
 
     double H = 1.0;
-    double W = 1.0;
+    double W = 0.25;
 
-    param.numberOfIterations = 500000;
-    param.outputInterval = 500000;
+    param.numberOfIterations = 10000;
+    param.outputInterval = 10000;
     param.CFL = 0.5;
 
     param.verbose = false;
@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
     mesh->addInterfaceBoundaryCondition(0.0);
 
     // Generate Mesh
-    mesh->generateRectMeshPeriodic(W, H, 1, 8);
+    mesh->generateRectMeshPeriodicInterfaceBCs(W, H, 3, 3);
 
     // Initialize Values
     mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0);
@@ -174,15 +174,12 @@ int main(int argc, char* argv[])
 
     //cout << mesh->toString();
 
-    mesh->writeMeshAsText("out/Mesh.txt");
+    //mesh->writeMeshAsText("out/Mesh.txt");
 
-    //esh->iterate();
+    mesh->iterate();
 
     //mesh->writeTimeSteps("out/timeSteps.dat");
-
-    ostringstream filename;
-    filename << "out/VelocityProfilePresGrad" << ny << ".dat";
-    mesh->writeVelocityProfile(filename.str(), 0.5);
+    //mesh->writeVelocityProfile("out/VelocityProfile.dat");
     
     //char a; cin >> a;
 }

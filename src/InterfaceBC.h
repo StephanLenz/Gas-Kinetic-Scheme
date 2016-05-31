@@ -16,7 +16,7 @@ public:
     InterfaceBC(double wallVelocity);
     ~InterfaceBC();
 
-    ConservedVariable computeBoundaryInterfaceFlux(Cell* CellInDomain);
+    ConservedVariable computeBoundaryInterfaceFlux(PrimaryVariable prim, double dx, double nu);
 };
 
 
