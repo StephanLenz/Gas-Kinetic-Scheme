@@ -15,70 +15,11 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-    /*
+    ///*
 
     // ========================================================================
     //
     //                  Couette-Flow (Periodic)
-    //
-    // ========================================================================
-
-    Parameters param;
-
-    double H = 1.0;
-    double W = 0.5;
-
-    param.numberOfIterations = 10000;
-    param.outputIntervalVTK = 250000;
-    param.outputInterval = 10;
-
-    param.convergenceCriterium = 1.0e-7;
-
-    param.CFL = 0.5;
-    param.fluxOutput = false;
-
-    param.verbose = false;
-
-    // ========================================================================
-
-    FluidParameter fluidParam;
-
-    fluidParam.K  = 1;
-    fluidParam.nu = 1e-2;
-    fluidParam.R = 200.0;
-    fluidParam.Force.x = 0.0;
-    fluidParam.Force.y = 0.0;
-
-    // ========================================================================
-
-    GKSMesh* mesh = new GKSMesh(param, fluidParam);
-
-    // Define Boundary Conditions
-    //    -----------
-    //    |    1    |
-    //    |         |
-    //    |    0    |
-    //    -----------
-    mesh->addBoundaryCondition(1, 1, 1, 1,  1.0, 0.0, 0.0, 0.0);
-    mesh->addBoundaryCondition(1, 1, 1, 1,  1.0, 0.0, 0.0, 0.0);
-
-    // Generate Mesh
-    mesh->generateRectMeshPeriodic(W, H, 1, 8);
-
-    // Initialize Values
-    //mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0);
-
-    double rho[] = { 1.0, 1.0 + 1.0e-3 };
-
-    mesh->initMeshLinearDensity(rho, 0.0, 0.0, 1.0);
-
-    */
-    
-    /*
-
-    // ========================================================================
-    //
-    //                  Poiseuille-Flow (non periodic)
     //
     // ========================================================================
 
@@ -92,76 +33,6 @@ int main(int argc, char* argv[])
     param.outputInterval = 10000;
 
     param.convergenceCriterium = 1.0e-6;
-
-    param.CFL = 0.5;
-    param.fluxOutput = false;
-
-    param.verbose = false;
-
-    // ========================================================================
-
-    FluidParameter fluidParam;
-
-    fluidParam.K = 1;
-    fluidParam.nu = 1e-2;
-    fluidParam.R = 200.0;
-    fluidParam.Force.x = 0.0;
-    fluidParam.Force.y = 0.0;
-
-    double dp   = 1.0e-4;
-    double lambda = 1.0;
-    double drho = 2.0*dp*lambda;
-    // ========================================================================
-
-    GKSMesh* mesh = new GKSMesh(param, fluidParam);
-
-    // Define Boundary Conditions
-    //    -----------
-    //    |    3    |
-    //    | 0     2 |
-    //    |    1    |
-    //    -----------
-    //mesh->addBoundaryCondition(1, 1, 1, 1, 0.0, 0.0, 0.0, 0.0);
-    //mesh->addBoundaryCondition(1, 1, 1, 1, 0.0, 0.0, 0.0, 0.0);
-    //mesh->addBoundaryCondition(1, 1, 1, 1, 0.0, 0.0, 0.0, 0.0);
-    //mesh->addBoundaryCondition(1, 1, 1, 1, 0.0, 0.0, 0.0, 0.0);
-
-    mesh->addBoundaryCondition(0, 1, 1, 1, 1.0+drho, 0.0, 0.0, 0.0);
-    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0     , 0.0, 0.0, 0.0);
-    mesh->addBoundaryCondition(0, 1, 1, 1, 1.0     , 0.0, 0.0, 0.0);
-    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0     , 0.0, 0.0, 0.0);
-
-    // Generate Mesh
-    int ny = 32;
-    mesh->generateRectMesh(W, H, 33, ny);
-
-    // Initialize Values
-    mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
-
-    //double rho[] = { 1.0, 1.0 + 1.0e-3 };
-
-    //mesh->initMeshLinearDensity(rho, 0.0, 0.0, 1.0);
-
-    */
-
-    /*
-
-    // ========================================================================
-    //
-    //                  Poiseuille-Flow (Force driven)
-    //
-    // ========================================================================
-
-    Parameters param;
-
-    double H = 1.0;
-    double W = 1.0;
-
-    param.numberOfIterations = 1000000;
-    param.outputIntervalVTK = 1000000;
-    param.outputInterval = 100000;
-
-    param.convergenceCriterium = 1.0e-9;
 
     param.CFL = 0.5;
     param.fluxOutput = false;
@@ -188,126 +59,21 @@ int main(int argc, char* argv[])
     //    |         |
     //    |    0    |
     //    -----------
-    mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0);
-    mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0);
+    mesh->addInterfaceBoundaryCondition(0.0);
+    mesh->addInterfaceBoundaryCondition(0.0);
 
     // Generate Mesh
-    int ny = 512;
-    mesh->generateRectMeshPeriodic(W, H, 1, ny);
+    mesh->generateRectMeshPeriodicInterfaceBCs(W, H, 3, 3);
 
     // Initialize Values
     mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0);
 
-    */
-
-    ///*
-
-    // ========================================================================
-    //
-    //                  Driven-Cavity
-    //
-    // ========================================================================
-
-    Parameters param;
-
-    double H = 1.0;
-    double W = 1.0;
-
-    param.numberOfIterations = 5000000;
-    param.outputIntervalVTK = 10000;
-    param.outputInterval = 10000;
-
-    param.convergenceCriterium = 1.0e-5;
-
-    param.CFL = 0.1;
-    param.fluxOutput = false;
-
-    param.verbose = false;
-
-    // ========================================================================
-
-    FluidParameter fluidParam;
-
-    fluidParam.K = 0;
-    fluidParam.R = 208.0;
-
-    double Re = 2000;
-    double Ma = 0.15;
-    double T = 313.15;
-
-    double cs = sqrt(fluidParam.R * T);
-    double uTop = cs*Ma;
-
-    fluidParam.nu = uTop / Re;
-
-    double lambda = 1.0 / ( 2.0 * fluidParam.R * T );
-
-    cout << "Re = " << uTop / fluidParam.nu << endl;
-    cout << "Ma = " << uTop / sqrt(fluidParam.R * T) << endl;
-
-    // ========================================================================
-
-    GKSMesh* mesh = new GKSMesh(param, fluidParam);
-
-    // Define Boundary Conditions
-    //    -----------
-    //    |    3    |
-    //    | 0     2 |
-    //    |    1    |
-    //    -----------
-    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, 0.0,  0.0, 1.0);
-    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, 0.0,  0.0, 1.0);
-    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, 0.0,  0.0, 1.0);
-    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, uTop, 0.0, 1.0);
-
-    // Generate Mesh
-    int nx = 64;
-    mesh->generateRectMesh(W, H, nx, nx);
-
-    // Initialize Values
-    mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
-    
     //*/
-        
-    /*
-
+    
     // ========================================================================
-    //
-    //                  Test
-    //
     // ========================================================================
-
-        Parameters param;
-
-    double H = 1.0;
-    double W = 1.0;
-
-    param.numberOfIterations = 10000;
-    param.outputIntervalVTK = 250000;
-    param.outputInterval = 10;
-
-    param.convergenceCriterium = 1.0e-7;
-
-    param.CFL = 0.1;
-    param.fluxOutput = false;
-
-    param.verbose = false;
-
     // ========================================================================
-
-    FluidParameter fluidParam;
-
-    fluidParam.K = 1;
-    fluidParam.nu = 1.0e-2;
-    fluidParam.R = 208.0;
-
-    double uTop = 1.0;
-    double T = 293.15;
-    double lambda = 1.0 / ( 2.0 * fluidParam.R * T );
-
-    cout << "Re = " << uTop / fluidParam.nu << endl;
-    cout << "Ma = " << uTop / sqrt(fluidParam.R * T) << endl;
-
+    // ========================================================================
     // ========================================================================
 
     GKSMesh* mesh = new GKSMesh(param, fluidParam);
@@ -343,9 +109,9 @@ int main(int argc, char* argv[])
 
     //cout << mesh->toString();
 
-    //mesh->writeMeshAsText("out/Mesh.txt");
+    mesh->writeMeshAsText("out/Mesh.txt");
 
-    mesh->iterate();
+    //esh->iterate();
 
     //mesh->writeTimeSteps("out/timeSteps.dat");
 

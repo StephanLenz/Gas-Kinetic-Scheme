@@ -82,7 +82,7 @@ void GKSMesh::generateRectMesh(double lengthX, double lengthY, int nx, int ny)
             Cell* negCell = this->CellList[i*(nx + 2) + j];
 
 			// create a new interface with the adjacent cells
-			tmpInterface = new Interface(negCell, posCell, center, normal, this->fluidParam);
+			tmpInterface = new Interface(negCell, posCell, center, normal, this->fluidParam, NULL);
 			// add itnerface to list
 			this->InterfaceList.push_back(tmpInterface);
 		}
@@ -106,7 +106,7 @@ void GKSMesh::generateRectMesh(double lengthX, double lengthY, int nx, int ny)
             Cell* negCell = this->CellList[i*(nx + 2) + j];
 
 			// create a new interface with the adjacent cells
-			tmpInterface = new Interface(negCell, posCell, center, normal, this->fluidParam);
+			tmpInterface = new Interface(negCell, posCell, center, normal, this->fluidParam, NULL);
 			// add itnerface to list
 			this->InterfaceList.push_back(tmpInterface);
 		}
@@ -180,7 +180,7 @@ void GKSMesh::generateRectMeshPeriodic(double lengthX, double lengthY, int nx, i
                 posCell = CellList[i*(nx) + j];
 
             // create a new interface with the adjacent cells
-            tmpInterface = new Interface( negCell, posCell, center, normal, this->fluidParam);
+            tmpInterface = new Interface( negCell, posCell, center, normal, this->fluidParam, NULL);
             // add itnerface to list
             this->InterfaceList.push_back(tmpInterface);
         }
@@ -204,7 +204,115 @@ void GKSMesh::generateRectMeshPeriodic(double lengthX, double lengthY, int nx, i
             Cell* negCell = CellList[i*(nx)+j];
 
             // create a new interface with the adjacent cells
-            tmpInterface = new Interface(negCell, posCell, center, normal, this->fluidParam);
+            tmpInterface = new Interface(negCell, posCell, center, normal, this->fluidParam, NULL);
+            // add itnerface to list
+            this->InterfaceList.push_back(tmpInterface);
+        }
+    }
+
+    return;
+}
+
+void GKSMesh::generateRectMeshPeriodicInterfaceBCs(double lengthX, double lengthY, int nx, int ny)
+{
+    double dx = lengthX / (double)nx;
+    double dy = lengthY / (double)ny;
+
+    this->lengthX = lengthX;
+    this->lengthY = lengthY;
+
+    Cell*		tmpCell;
+    Interface*  tmpInterface;
+    float2      normal;
+    float2      center;
+
+    //=========================================================================
+    //=========================================================================
+    //		Cell generation
+    //			including ghost cells in y-direction
+    //=========================================================================
+    //=========================================================================
+    BoundaryCondition* currentBC = NULL;
+    for ( int i = 0; i < ny; i++ )       // Y-Direction
+    {
+
+        for ( int j = 0; j < nx; j++ )   // X-Direction
+        {
+            //                      cell centerX         cell centerY
+            tmpCell = new Cell(( (double)j + 0.5 )*dx, ( (double)i + 0.5 )*dy, dx, dy, currentBC, this->fluidParam);
+            // add interface to list
+            this->CellList.push_back(tmpCell);
+        }
+    }
+
+    //=========================================================================
+    //=========================================================================
+    //						F interface generation
+    //=========================================================================
+    //=========================================================================
+    normal.x = 1;
+    normal.y = 0;
+    for ( int i = 0; i < ny; i++ )       // Y-Direction
+    {
+        for ( int j = 0; j < nx; j++ )    // X-Direction
+        {
+            center.x = (double)j * dx;
+            center.y = ( (double)i + 0.5 )*dy;
+
+            Cell* negCell;
+            Cell* posCell;
+
+            // periodic Boundary Conditions
+            if ( j == 0 )
+                negCell = CellList[i*(nx)+( nx - 1 )];
+            else
+                negCell = CellList[i*(nx)+( j - 1 )];
+
+            if ( j == nx )
+                posCell = CellList[i*( nx )];
+            else
+                posCell = CellList[i*(nx)+j];
+
+            // create a new interface with the adjacent cells
+            tmpInterface = new Interface(negCell, posCell, center, normal, this->fluidParam, NULL);
+            // add itnerface to list
+            this->InterfaceList.push_back(tmpInterface);
+        }
+    }
+
+    //=========================================================================
+    //=========================================================================
+    //						G interface generation
+    //=========================================================================
+    //=========================================================================
+    normal.x = 0;
+    normal.y = 1;
+    for ( int i = 0; i < ny + 1; i++ )        // Y-Direction
+    {
+        for ( int j = 0; j < nx; j++ )        // X-Direction
+        {
+            center.x = ( (double)j + 0.5 ) * dx;
+            center.y = (double)i * dy;
+
+            Cell* posCell = NULL;
+            Cell* negCell = NULL;
+
+            if( i != 0 )
+                negCell = CellList[(i-1)*(nx)+j];
+            if( i != ny )
+                posCell = CellList[i*(nx)+j];
+
+            InterfaceBC* currentInterfaceBC = NULL;
+
+            if ( i == 0 )
+                currentInterfaceBC = this->InterfaceBoundaryConditionsList[0];
+            else if ( i == ny )
+                currentInterfaceBC = this->InterfaceBoundaryConditionsList[1];
+            else
+                currentInterfaceBC = NULL;
+
+            // create a new interface with the adjacent cells
+            tmpInterface = new Interface(negCell, posCell, center, normal, this->fluidParam, currentInterfaceBC);
             // add itnerface to list
             this->InterfaceList.push_back(tmpInterface);
         }
@@ -269,6 +377,12 @@ void GKSMesh::addBoundaryCondition( int rhoType, int UType, int VType, int TType
     BoundaryCondition* tmp = new BoundaryCondition( rhoType, UType, VType, TType,
                                                     rho, U, V, T);
     BoundaryConditionList.push_back(tmp);
+}
+
+void GKSMesh::addInterfaceBoundaryCondition(double wallVelocity)
+{
+    InterfaceBC* tmp = new InterfaceBC(wallVelocity);
+    this->InterfaceBoundaryConditionsList.push_back(tmp);
 }
 
 void GKSMesh::applyBoundaryCondition()

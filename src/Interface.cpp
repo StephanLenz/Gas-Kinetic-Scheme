@@ -7,13 +7,15 @@ Interface::Interface()
 {
 }
 
-Interface::Interface(Cell* negCell, Cell* posCell, float2 center, float2 normal, FluidParameter fluidParam)
+Interface::Interface(Cell* negCell, Cell* posCell, float2 center, float2 normal, FluidParameter fluidParam, InterfaceBC* BC)
 {
 	this->negCell = negCell;
 	this->posCell = posCell;
 
     this->center = center;
     this->normal = normal;
+
+    this->BoundaryConditionPointer = BC;
 
     if      ( (fabs(this->normal.x - 1.0) < 1e-6) && (fabs(this->normal.y - 0.0) < 1.0e-6) )
         this->axis = 0;
@@ -38,8 +40,10 @@ Interface::Interface(Cell* negCell, Cell* posCell, float2 center, float2 normal,
     //    |    1    |
     //    -----------
 
-	this->negCell->addInterface(this,axis+2);
-	this->posCell->addInterface(this,axis+0);
+    if(this->negCell != NULL )
+	    this->negCell->addInterface(this,axis+2);
+    if(this->posCell != NULL )
+	    this->posCell->addInterface(this,axis+0);
 
     this->fluidParam = fluidParam;
 
@@ -167,6 +171,20 @@ void Interface::computeFlux(double dt)
 
 Cell * Interface::getNeigborCell(Cell * askingCell)
 {
+    // ========================================================================
+    // ============= This is only Experimental and not really correct =========
+    // ========================================================================
+    // In the case of an Boundary Interface, the  Cell in the Domain is 
+    // virtually copied to a ghost Cell. This is wrong because this does not
+    // satisfy the correct velocity at the wall. Better would be to create a
+    // temporal GhostCell with the correct values!
+    // ========================================================================l.
+    if ( this->isBoundaryInterface() )
+        return askingCell;
+    // ========================================================================
+    // ========================================================================
+    // ========================================================================
+
     if (posCell == askingCell)
         return negCell;
     else
