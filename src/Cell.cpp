@@ -148,10 +148,16 @@ double Cell::getLocalTimestep()
 {
     double velocitySquare = this->getPrim().U*this->getPrim().U
                           + this->getPrim().V*this->getPrim().V;
-    double localTimestep =  min(dx, dy) 
-                         / ( velocitySquare
-                           + 1.0/sqrt(3.0) 
-                           + 2.0*this->fluidParam.nu/min(dx, dy) );
+    //double localTimestep =  min(dx, dy) 
+    //                     / ( velocitySquare
+    //                       + 1.0/sqrt(3.0) 
+    //                       + 2.0*this->fluidParam.nu/min(dx, dy) );
+
+    double localTimestep = min(dx, dy) / ( max( fabs(this->getPrim().U), fabs(this->getPrim().V) ) 
+                                         + sqrt( 5.0/(3.0*2.0*this->getPrim().L) )
+                                         + 2.0*this->fluidParam.nu/min(dx, dy)
+                                         );
+
     return localTimestep;
 }
 

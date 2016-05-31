@@ -60,6 +60,19 @@ Interface::~Interface()
 
 void Interface::computeFlux(double dt)
 {
+    if ( this->isBoundaryInterface() )
+    {
+        this->computeBoundaryFlux(dt);
+    }
+    else
+    {
+        this->computeInternalFlux(dt);
+    }
+
+}
+
+void Interface::computeInternalFlux(double dt)
+{
     const int NUMBER_OF_MOMENTS = 7;
 
     double prim[4];
@@ -77,7 +90,7 @@ void Interface::computeFlux(double dt)
 
     // compute the length of the interface
     double dy = this->posCell->getDx().x * normal.y
-              + this->posCell->getDx().y * normal.x;
+        + this->posCell->getDx().y * normal.x;
 
     this->interpolatePrim(prim);
     this->differentiateCons(normalGradCons, tangentialGradCons, prim);
@@ -89,7 +102,7 @@ void Interface::computeFlux(double dt)
     double timeCoefficients[3] = { dt, -tau*dt, 0.5*dt*dt - tau*dt };
 
     // in case of horizontal interface (G interface), swap velocity directions
-    if (this->axis == 1)
+    if ( this->axis == 1 )
     {
         this->rotate(prim);
         this->rotate(normalGradCons);
@@ -99,7 +112,7 @@ void Interface::computeFlux(double dt)
     // spacial micro slopes a = a1 + a2 u + a3 v
     //                      b = b1 + b2 u + b3 v
 
-    this->computeMicroSlope(prim, normalGradCons,     a);
+    this->computeMicroSlope(prim, normalGradCons, a);
     this->computeMicroSlope(prim, tangentialGradCons, b);
 
 
@@ -135,6 +148,51 @@ void Interface::computeFlux(double dt)
 
 }
 
+void Interface::computeBoundaryFlux(double dt)
+{
+    PrimaryVariable prim = this->getCellInDomain()->getPrim();
+
+    if ( this->axis == 1 )
+    {
+        this->rotate((double*)&prim);
+    }
+    
+    double distance = this->distance( this->getCellInDomain()->getCenter() );
+
+    // compute the length of the interface
+    double dy = this->getCellInDomain()->getDx().x * normal.y
+              + this->getCellInDomain()->getDx().y * normal.x;
+
+    //ConservedVariable FluxDensity = this->BoundaryConditionPointer->computeBoundaryInterfaceFlux(prim, dx, this->fluidParam.nu);
+    ConservedVariable FluxDensity;
+    double sign = 1.0;
+
+    if ( posCell == NULL )
+        sign = -1.0;
+
+    FluxDensity.rho  = 0.0;
+    FluxDensity.rhoU = prim.rho / ( 2.0 * prim.L );
+    FluxDensity.rhoV = - sign * this->fluidParam.nu * prim.rho * prim.V / distance;
+    FluxDensity.rhoE = 0.0;
+    
+    this->timeIntegratedFlux[0] = FluxDensity.rho  * dt * dy;
+    this->timeIntegratedFlux[1] = FluxDensity.rhoU * dt * dy;
+    this->timeIntegratedFlux[2] = FluxDensity.rhoV * dt * dy;
+    this->timeIntegratedFlux[3] = FluxDensity.rhoE * dt * dy;
+
+    this->FluxDensity[0] = FluxDensity.rho;
+    this->FluxDensity[1] = FluxDensity.rhoU;
+    this->FluxDensity[2] = FluxDensity.rhoV;
+    this->FluxDensity[3] = FluxDensity.rhoE;
+
+    if ( this->axis == 1 )
+    {
+        this->rotate(this->FluxDensity);
+        this->rotate(this->timeIntegratedFlux);
+    }
+
+}
+
 Cell * Interface::getNeigborCell(Cell * askingCell)
 {
     // ========================================================================
@@ -155,6 +213,16 @@ Cell * Interface::getNeigborCell(Cell * askingCell)
         return negCell;
     else
         return posCell;
+}
+
+Cell * Interface::getCellInDomain()
+{
+    if( !this->isBoundaryInterface() )
+        return NULL;
+    if ( posCell != NULL )
+        return posCell;
+    if ( negCell != NULL )
+        return negCell;
 }
 
 ConservedVariable Interface::getTimeIntegratedFlux()
@@ -186,7 +254,7 @@ bool Interface::isGhostInterface()
 
 bool Interface::isBoundaryInterface()
 {
-    return this->negCell == NULL || this->posCell == NULL;
+    return this->BoundaryConditionPointer != NULL;
 }
 
 string Interface::toString()
@@ -489,6 +557,12 @@ void Interface::rotate(double * vector)
     double tmp = vector[1];
     vector[1] = vector[2];
     vector[2] = tmp;
+}
+
+double Interface::distance(float2 point)
+{
+    return sqrt( ( this->center.x - point.x )*( this->center.x - point.x )
+               + ( this->center.y - point.y )*( this->center.y - point.y ) );
 }
 
 void Interface::computeMicroSlope(double * prim, double * macroSlope, double * microSlope)
