@@ -32,7 +32,13 @@ public:
 
 	void computeFlux(double dt);
 
+    void computeInternalFlux(double dt);
+
+    void computeBoundaryFlux(double dt);
+
     Cell* getNeigborCell(Cell* askingCell);
+    Cell* getCellInDomain();
+
     ConservedVariable getTimeIntegratedFlux();
     ConservedVariable getFluxDensity();
 
@@ -64,6 +70,7 @@ private:
 
     void rotate(double* vector);
     void cons2prim(double* prim, double*cons);
+    double distance(float2 point);
 
     void computeMicroSlope(double* prim, double* macroSlope, double* microSlope);
     void computeMoments(double* prim, double* MomentU, double* MomentV, double* MomentXi, int numberMoments);

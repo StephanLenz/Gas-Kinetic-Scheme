@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
     Parameters param;
 
     double H = 1.0;
-    double W = 1.0;
+    double W = 0.25;
 
     param.numberOfIterations = 1000000;
     param.outputIntervalVTK = 1000000;
@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
     mesh->addInterfaceBoundaryCondition(0.0);
 
     // Generate Mesh
-    mesh->generateRectMeshPeriodicInterfaceBCs(W, H, 3, 3);
+    mesh->generateRectMeshPeriodicInterfaceBCs(W, H, 1, 64);
 
     // Initialize Values
     mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0);
@@ -109,9 +109,9 @@ int main(int argc, char* argv[])
 
     //cout << mesh->toString();
 
-    mesh->writeMeshAsText("out/Mesh.txt");
+    //mesh->writeMeshAsText("out/Mesh.txt");
 
-    //esh->iterate();
+    mesh->iterate();
 
     //mesh->writeTimeSteps("out/timeSteps.dat");
 
