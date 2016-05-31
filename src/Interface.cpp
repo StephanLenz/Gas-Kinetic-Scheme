@@ -716,6 +716,12 @@ void Interface::rotate(double * vector)
     vector[2] = tmp;
 }
 
+double Interface::distance(float2 point)
+{
+    return sqrt( ( this->center.x - point.x )*( this->center.x - point.x )
+               + ( this->center.y - point.y )*( this->center.y - point.y ) );
+}
+
 void Interface::cons2prim(double * prim, double * cons)
 {
     prim[0] = cons[0];

@@ -160,9 +160,9 @@ int main(int argc, char* argv[])
 
     //cout << mesh->toString();
 
-    mesh->writeMeshAsText("out/Mesh.txt");
+    //mesh->writeMeshAsText("out/Mesh.txt");
 
-    //esh->iterate();
+    mesh->iterate();
 
     //mesh->writeTimeSteps("out/timeSteps.dat");
 
