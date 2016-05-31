@@ -23,5 +23,9 @@
     <ArrayOfString>
       <string>C:\Users\Stephan\Documents\Studium\12. Semester SS 16\Masterarbeit\Work\GasKineticScheme\src\Types.h</string>
     </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\Users\Stephan\Documents\Studium\12. Semester SS 16\Masterarbeit\Work\GasKineticScheme\src\InterfaceBC.cpp</string>
+      <string>c:\Users\Stephan\Documents\Studium\12. Semester SS 16\Masterarbeit\Work\GasKineticScheme\src\InterfaceBC.h</string>
+    </ArrayOfString>
   </ArrayOfArrayOfString>
 </ArrayOfArrayOfArrayOfString>
