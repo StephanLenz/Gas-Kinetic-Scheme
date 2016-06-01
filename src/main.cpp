@@ -128,8 +128,8 @@ int main(int argc, char* argv[])
     double H = 1.0;
     double W = 1.0;
 
-    param.numberOfIterations = 100;
-    param.outputInterval = 1;
+    param.numberOfIterations = 10000;
+    param.outputInterval = 10000;
     param.CFL = 0.5;
 
     param.verbose = false;
@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
     mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0);
 
     // Generate Mesh
-    mesh->generateRectMeshPeriodic(W, H, 1, 8);
+    mesh->generateRectMeshPeriodic(W, H, 1, 128);
 
     // Initialize Values
     mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0);
