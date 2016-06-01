@@ -427,6 +427,7 @@ void GKSMesh::writeTimeSteps(string filename)
     cout << "Wrinting file " << filename << " ... ";
     // open file stream
     ofstream file;
+    file.precision(15);
     file.open(filename.c_str());
 
     if (!file.is_open()) {
@@ -446,6 +447,7 @@ void GKSMesh::writeVelocityProfile(string filename)
     cout << "Wrinting file " << filename << " ... ";
     // open file stream
     ofstream file;
+    file.precision(15);
     file.open(filename.c_str());
 
     if (!file.is_open()) {
