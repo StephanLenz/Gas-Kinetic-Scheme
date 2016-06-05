@@ -381,10 +381,15 @@ void Interface::computeTimeDerivative(double * prim, double * MomentU, double * 
                                 + 2.0 * MomentU[2] * MomentV[1] * MomentXi[2]
                                 + 2.0 * MomentV[3] * MomentXi[2] );
 
-    timeGrad[0] /= -prim[0];
-    timeGrad[1] /= -prim[0];
-    timeGrad[2] /= -prim[0];
-    timeGrad[3] /= -prim[0];
+    //timeGrad[0] /= -prim[0];
+    //timeGrad[1] /= -prim[0];
+    //timeGrad[2] /= -prim[0];
+    //timeGrad[3] /= -prim[0];
+
+    timeGrad[0] *= -1.0;
+    timeGrad[1] *= -1.0;
+    timeGrad[2] *= -1.0;
+    timeGrad[3] *= -1.0;
 }
 
 void Interface::assembleFlux(double * MomentU, double * MomentV, double * MomentXi, double * a, double * b, double * A, double * timeCoefficients, double dy, double* prim, double tau)

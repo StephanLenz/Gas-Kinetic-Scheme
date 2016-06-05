@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
 
     // ========================================================================
     //
-    //                  Couette-Flow (non periodic)
+    //                  Poiseuille-Flow (non periodic)
     //
     // ========================================================================
 
@@ -81,7 +81,7 @@ int main(int argc, char* argv[])
     double W = 1.0;
 
     param.numberOfIterations = 10000;
-    param.outputInterval = 100;
+    param.outputInterval = 1000;
     param.CFL = 0.5;
 
     param.verbose = false;
@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
     fluidParam.K = 1;
     fluidParam.nu = 1e-2;
     fluidParam.R = 200.0;
-    fluidParam.Force.x = 1e-6;
+    fluidParam.Force.x = 0.0;
     fluidParam.Force.y = 0.0;
 
     // ========================================================================
@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
     mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, 0.0, 0.0, 0.0);
 
     // Generate Mesh
-    mesh->generateRectMesh(W, H, 16, 16);
+    mesh->generateRectMesh(W, H, 32, 32);
 
     // Initialize Values
     mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0);
@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
 
     */
 
-    ///*
+    /*
 
     // ========================================================================
     //
@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
     double W = 1.0;
 
     param.numberOfIterations = 100000;
-    param.outputInterval = 100000;
+    param.outputInterval = 10000;
     param.CFL = 0.5;
 
     param.verbose = false;
@@ -176,9 +176,9 @@ int main(int argc, char* argv[])
     // Initialize Values
     mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0);
 
-    //*/
+    */
 
-    /*
+    ///*
 
     // ========================================================================
     //
@@ -202,11 +202,10 @@ int main(int argc, char* argv[])
     FluidParameter fluidParam;
 
     fluidParam.K = 1;
-    fluidParam.nu = 1e-4;
+    fluidParam.nu = 1e-2;
     fluidParam.R = 200.0;
 
     double uTop = 0.01;
-    double TAve = 10.0;
 
     // ========================================================================
 
@@ -227,9 +226,8 @@ int main(int argc, char* argv[])
     mesh->generateRectMesh(W, H, 32, 32);
 
     // Initialize Values
-    mesh->initMeshConstant(10.0, 0.0, 0.0, TAve);
-
-    */
+    mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0);
+    //*/
 
     // ========================================================================
     // ========================================================================
