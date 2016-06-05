@@ -65,7 +65,7 @@ g(x', y', t', u, v, \xi) &e^{-\tfrac{t-t'}{\tau}} dt'
 In this equation, $g$ denotes the equilibrium distribution function of the interface and $f_0$ is the distribution function at the interface at the beginning of the time step. 
 
 \begin{equation}
-f_0 = g_0 \cdot
+f_0(x,y,u,v,\xi) = g_0(u,v,\xi) \cdot
 \Big( 
 \underbrace{ 1 + a~x + b~y }_{\text{equilibrium}}
 -
@@ -74,20 +74,20 @@ f_0 = g_0 \cdot
 \end{equation}
 
 \begin{equation}
-g = g_0 \cdot \left( 1 + a~x + b~y + A~t \right)
+g(x,y,t,u,v,\xi) = g_0(u,v,\xi) \cdot \left( 1 + a~x + b~y + A~t \right)
 \end{equation}
 
 \begin{equation}
-g_0 = \rho \left( \frac{\lambda}{\pi} \right)^{\frac{K+2}{2}}
-           e^{-\lambda ((u-U)^2 + (v-V)^2 + \xi^2)}
+g_0(u,v,\xi) = \rho_0 \left( \frac{\lambda_0}{\pi} \right)^{\frac{K+2}{2}}
+           e^{-\lambda ((u-U_0)^2 + (v-V_0)^2 + \xi^2)}
 \end{equation}
 
 The coefficients $a$, $b$ and $A$ are the normalized gradients of the equilibrium distribution:
 
 \begin{equation}
-a = \frac{1}{g_0} \frac{\partial g_0}{\partial x} ~~~~~~,~~~~~~
-b = \frac{1}{g_0} \frac{\partial g_0}{\partial y} ~~~~~~,~~~~~~
-A = \frac{1}{g_0} \frac{\partial g_0}{\partial t}
+a = \left. \frac{1}{g} \frac{\partial g}{\partial x} \right|_{x=0} ~~~~~~,~~~~~~
+b = \left. \frac{1}{g} \frac{\partial g}{\partial y} \right|_{y=0} ~~~~~~,~~~~~~
+A = \left. \frac{1}{g} \frac{\partial g}{\partial t} \right|_{t=0}
 \end{equation}
 
 These coefficients are than itself expressed as expansions of the microscopic variables:
@@ -112,8 +112,8 @@ A ~=~ \dfrac{1}{\rho} \left( \frac{\lambda}{\pi} \right)^{-\frac{K+2}{2}}
 \psi_\alpha = \left( 1, u, v, \tfrac{1}{2} (u^2 + v^2 + \xi^2 ) \right)^T
 \end{equation}
 \begin{equation}
-g ~=~ e^{\chi_\alpha \psi_\alpha}
-  ~=~ \dfrac{1}{A} e^{ \lambda ( u^2 + v^2 + \xi^2 - 2uU - 2vV) }
+g ~=~ e^{-\chi_\alpha \psi_\alpha}
+  ~=~ \dfrac{1}{A} e^{-\lambda ( u^2 + v^2 + \xi^2 - 2uU - 2vV) }
 \hfill
 \textnormal{which is not equivalent to the above definition of $g$}
 \end{equation}
@@ -255,7 +255,8 @@ The constants $a_i$, $b_i$ and $A_i$ in the Taylor expansion of the Maxwellian d
 \arraycolsep=1.4pt\def\arraystretch{2.2}
 \begin{array}{lcll}
 A &=& 2 \dfrac{\partial (\rho E)}{\partial x} 
-  - ( U^2 + V^2 + \dfrac{K+2}{2\lambda} \dfrac{\partial\rho}{\partial x} ) &
+  - \overbrace{ \left( U^2 + V^2 + \dfrac{K+2}{2\lambda} \right) }^{2E} \dfrac{\partial\rho}{\partial x}
+    &\left( = 2 \rho \dfrac{\partial E}{\partial x} \right)
 \\
 B &=& \dfrac{\partial (\rho U)}{\partial x} - U\dfrac{\partial \rho}{\partial x}
 	&\left( = \rho \dfrac{\partial U}{\partial x} \right)
@@ -276,7 +277,7 @@ a_3 &=& 2 \lambda C - V a_4
 \\
 a_2 &=& 2 \lambda B - U a_4
 \\
-a_1 &=& \dfrac{\partial \rho}{\partial x} - U a-2 - V a_3 - \dfrac{1}{2} \left( U^2 + V^2 + \dfrac{K+2}{2\lambda} \right)
+a_1 &=& \dfrac{\partial \rho}{\partial x} - U a_2 - V a_3 - \dfrac{1}{2} \left( U^2 + V^2 + \dfrac{K+2}{2\lambda} \right) a_4
 \end{array}
 \end{split}
 \end{eqnarray}

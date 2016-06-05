@@ -328,14 +328,15 @@ void GKSMesh::timeStep()
 
 void GKSMesh::iterate()
 {
+
+    this->applyBoundaryCondition();
+
     ostringstream filename;
     filename << "out/result_0.vtk";
     writeVTKFile(filename.str(), true, false);
     ostringstream filenameFlux;
     filenameFlux << "out/resultFlux_0.vtk";
     writeVTKFileFlux(filenameFlux.str(), true, false);
-
-    this->applyBoundaryCondition();
 
     while (this->iter < this->param.numberOfIterations)
     {
@@ -385,6 +386,7 @@ void GKSMesh::writeVTKFile(string filename, bool data, bool BC)
     cout << "Wrinting file " << filename << " ... ";
 	// open file stream
 	ofstream file;
+    file.precision(15);
 	file.open(filename.c_str());
 
 	if (!file.is_open()) {
@@ -406,6 +408,7 @@ void GKSMesh::writeVTKFileFlux(string filename, bool data, bool BC)
     cout << "Wrinting file " << filename << " ... ";
     // open file stream
     ofstream file;
+    file.precision(15);
     file.open(filename.c_str());
 
     if (!file.is_open()) {
