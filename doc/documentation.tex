@@ -79,15 +79,22 @@ g(x,y,t,u,v,\xi) = g_0(u,v,\xi) \cdot \left( 1 + a~x + b~y + A~t \right)
 
 \begin{equation}
 g_0(u,v,\xi) = \rho_0 \left( \frac{\lambda_0}{\pi} \right)^{\frac{K+2}{2}}
-           e^{-\lambda ((u-U_0)^2 + (v-V_0)^2 + \xi^2)}
+           e^{-\lambda_0 ((u-U_0)^2 + (v-V_0)^2 + \xi^2)}
+\hfill
+\int \limits_{-\infty}^{\infty} g dudvd\xi = \left[ \dfrac{kg}{m^3} \right]
 \end{equation}
 
 The coefficients $a$, $b$ and $A$ are the normalized gradients of the equilibrium distribution:
 
 \begin{equation}
-a = \left. \frac{1}{g} \frac{\partial g}{\partial x} \right|_{x=0} ~~~~~~,~~~~~~
-b = \left. \frac{1}{g} \frac{\partial g}{\partial y} \right|_{y=0} ~~~~~~,~~~~~~
+a = \left. \frac{1}{g} \frac{\partial g}{\partial x} \right|_{x=0}
+= \left[ \dfrac{kg}{m^4} \right]
+~~~~~~,~~~~~~
+b = \left. \frac{1}{g} \frac{\partial g}{\partial y} \right|_{y=0}
+= \left[ \dfrac{kg}{m^4} \right] 
+~~~~~~,~~~~~~
 A = \left. \frac{1}{g} \frac{\partial g}{\partial t} \right|_{t=0}
+= \left[ \dfrac{kg}{m^3 s} \right]
 \end{equation}
 
 These coefficients are than itself expressed as expansions of the microscopic variables:
@@ -253,16 +260,19 @@ The constants $a_i$, $b_i$ and $A_i$ in the Taylor expansion of the Maxwellian d
 \begin{eqnarray}
 \begin{split}
 \arraycolsep=1.4pt\def\arraystretch{2.2}
-\begin{array}{lcll}
+\begin{array}{lclll}
 A &=& 2 \dfrac{\partial (\rho E)}{\partial x} 
   - \overbrace{ \left( U^2 + V^2 + \dfrac{K+2}{2\lambda} \right) }^{2E} \dfrac{\partial\rho}{\partial x}
     &\left( = 2 \rho \dfrac{\partial E}{\partial x} \right)
+    & \hspace{0.5cm} = \left[\dfrac{kg}{m^2s^2} \right]
 \\
 B &=& \dfrac{\partial (\rho U)}{\partial x} - U\dfrac{\partial \rho}{\partial x}
 	&\left( = \rho \dfrac{\partial U}{\partial x} \right)
+    & \hspace{0.5cm} = \left[\dfrac{kg}{m^3s} \right]
 \\
 C &=& \dfrac{\partial (\rho V)}{\partial x} - V\dfrac{\partial \rho}{\partial x}
 	&\left( = \rho \dfrac{\partial V}{\partial x} \right)
+    & \hspace{0.5cm} = \left[\dfrac{kg}{m^3s} \right]
 \end{array}
 \end{split}
 \end{eqnarray}
@@ -270,14 +280,18 @@ C &=& \dfrac{\partial (\rho V)}{\partial x} - V\dfrac{\partial \rho}{\partial x}
 \begin{eqnarray}
 \begin{split}
 \arraycolsep=1.4pt\def\arraystretch{2.2}
-\begin{array}{lcl}
+\begin{array}{lcll}
 a_4 &=& \dfrac{4 \lambda^2}{K+2} ( A - 2 U B - 2 V C )
+    & \hspace{0.5cm} = \left[\dfrac{kg s^2}{m^6} \right]
 \\
 a_3 &=& 2 \lambda C - V a_4
+    & \hspace{0.5cm} = \left[\dfrac{kg s}{m^5} \right]
 \\
 a_2 &=& 2 \lambda B - U a_4
+    & \hspace{0.5cm} = \left[\dfrac{kg s}{m^5} \right]
 \\
 a_1 &=& \dfrac{\partial \rho}{\partial x} - U a_2 - V a_3 - \dfrac{1}{2} \left( U^2 + V^2 + \dfrac{K+2}{2\lambda} \right) a_4
+    & \hspace{0.5cm} = \left[\dfrac{kg}{m^4} \right]
 \end{array}
 \end{split}
 \end{eqnarray}
@@ -400,7 +414,7 @@ u~
 	1 \\ u \\ v \\ \frac{1}{2} (u^2 + v^2 + \xi^2)
 \end{pmatrix}
 \Big(
-	1 - \tau (a~u + b~v) + (t-\tau)A
+	\rho - \tau (a~u + b~v) + (t-\tau)A
 \Big)
 ~g~ du dv d\xi
 \end{math}
@@ -599,7 +613,7 @@ p = \rho RT
 From the Rayleigh-Bernard-Paper (Xu, Lui, 1999):
 
 \begin{equation}
-\lambda = \frac{1}{2RT}
+\lambda = \frac{1}{2RT} = \dfrac{s^2}{m^2}
 \end{equation}
 
 \begin{equation}
@@ -625,7 +639,7 @@ The first moments of the Maxwell distribution:
 \mom{1} &=& 1 &\\
 \mom{u} &=& U &\\
 \mom{u^2} &=& U^2 + \dfrac{1}{2\lambda} & = \dfrac{1}{\rho} \left( \rho U^2 + p \right) \\
-\mom{u^3} = U^3 + U\dfrac{1}{2\lambda} + \dfrac{1}{\lambda} U &=& U^2 + \dfrac{3}{2\lambda} U &\\
+\mom{u^3} = U^3 + U\dfrac{1}{2\lambda} + \dfrac{1}{\lambda} U &=& U^3 + \dfrac{3}{2\lambda} U &\\
 \mom{u^4} = U^4 + \dfrac{3}{2\lambda} U^2 + \dfrac{3}{2\lambda} \left(U^2 + \dfrac{1}{2\lambda} \right)
 		  &=& U^4 + \dfrac{3}{\lambda} U^2 + \dfrac{3}{4\lambda^2}&
 \end{array}

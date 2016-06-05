@@ -461,8 +461,8 @@ void Interface::assembleFlux(double * MomentU, double * MomentV, double * Moment
 
     for ( int i = 0; i < 4; i++ )
     {
-        this->timeIntegratedFlux[i] = ( timeCoefficients[0] * Flux_1[i] + timeCoefficients[1] * Flux_2[i] + timeCoefficients[2] * Flux_3[i] ) * dy;
-        this->FluxDensity[i] = Flux_1[i] - tau*( Flux_2[i] + Flux_3[i] );
+        this->timeIntegratedFlux[i] = ( prim[0]*timeCoefficients[0] * Flux_1[i] + timeCoefficients[1] * Flux_2[i] + timeCoefficients[2] * Flux_3[i] ) * dy;
+        this->FluxDensity[i] = prim[0]*Flux_1[i] - tau*( Flux_2[i] + Flux_3[i] );
     }
 }
 
@@ -477,9 +477,9 @@ void Interface::computeMicroSlope(double * prim, double * macroSlope, double * m
 {
     double A, B, C, U_2_V_2;
 
-    U_2_V_2 = prim[1] * prim[1] + prim[2] * prim[2];
+    U_2_V_2 = prim[1] * prim[1] + prim[2] * prim[2] + ( this->fluidParam.K + 2.0 ) / ( 2.0*prim[3] );
 
-    A = 2.0*macroSlope[3] - ( U_2_V_2  + (this->fluidParam.K + 2.0) / (2.0*prim[3]) * macroSlope[0] );
+    A = 2.0*macroSlope[3] - U_2_V_2  * macroSlope[0];
 
     // the product rule of derivations is used here!
     B = macroSlope[1] - prim[1] * macroSlope[0];
@@ -494,7 +494,7 @@ void Interface::computeMicroSlope(double * prim, double * macroSlope, double * m
     microSlope[1] = 2.0 * prim[3] * B - prim[1] * microSlope[3];
 
     microSlope[0] = macroSlope[0] - prim[1]*microSlope[1] - prim[2]*microSlope[2] 
-                                  - 0.5 * ( U_2_V_2 + (this->fluidParam.K + 2.0) / (2.0*prim[3]) )* microSlope[3];
+                                  - 0.5 * U_2_V_2* microSlope[3];
 }
 
 void Interface::computeMoments(double * prim, double * MomentU, double* MomentV, double * MomentXi, int numberMoments)
