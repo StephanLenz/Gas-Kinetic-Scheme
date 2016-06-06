@@ -75,11 +75,17 @@ void Interface::computeFlux(double dt)
     double dy = this->posCell->getDx().x * normal.y
               + this->posCell->getDx().y * normal.x;
 
+    // ========================================================================
+    // interpolated primary variables at the interface
     this->interpolatePrim(prim);
+    // spacial gradients of the conservative varibles
     this->differentiateCons(normalGradCons, tangentialGradCons, prim);
+    // ========================================================================
 
+    // ========================================================================
     // Formular as in the Rayleigh-Bernard-Paper (Xu, Lui, 1999)
     double tau = 2.0*prim[3] * this->fluidParam.nu;
+    // ========================================================================
 
     // time integration Coefficients
     double timeCoefficients[3] = { dt, -tau*dt, 0.5*dt*dt - tau*dt };
@@ -92,12 +98,13 @@ void Interface::computeFlux(double dt)
         this->rotate(tangentialGradCons);
     }
 
+    // ========================================================================
     // spacial micro slopes a = a1 + a2 u + a3 v
     //                      b = b1 + b2 u + b3 v
-
+    // The microslopes contain the density (in opposition to Weidong Li's Code)
     this->computeMicroSlope(prim, normalGradCons,     a);
     this->computeMicroSlope(prim, tangentialGradCons, b);
-
+    // ========================================================================
 
     // This Block can turn off the usage of tangential Derivatives
     // ========================================================================
@@ -110,17 +117,24 @@ void Interface::computeFlux(double dt)
     // ========================================================================
 
 
-    // temporal micro slopes A = A1 + A2 u + A3 v
-
+    // ========================================================================
+    // The Moments are computed without the density
+    // Therefore their dimensions are powers of velocity
     this->computeMoments(prim, MomentU, MomentV, MomentXi, NUMBER_OF_MOMENTS);
+    // ========================================================================
 
+    // ========================================================================
+    // temporal micro slopes A = A1 + A2 u + A3 v
+    // The temporal macro slopes (timeGrad) also contain the density by explicit multiplication
     this->computeTimeDerivative(prim, MomentU, MomentV, MomentXi, a, b, timeGrad);
 
     this->computeMicroSlope(prim, timeGrad, A);
+    // ========================================================================
 
+    // ========================================================================
     // compute mass and momentum fluxes
-
     this->assembleFlux(MomentU, MomentV, MomentXi, a, b, A, timeCoefficients, dy, prim, tau);
+    // ========================================================================
 
     // in case of horizontal interface (G interface), swap velocity fluxes
     if ( this->axis == 1 )
@@ -208,6 +222,8 @@ string Interface::writeCenter()
 
 void Interface::interpolatePrim(double * prim)
 {
+    // This method computes the Values of the primary variables at the interface
+    // with linear interpolation
 
     prim[0] = 0.5*( this->negCell->getPrim().rho
                   + this->posCell->getPrim().rho );
@@ -221,6 +237,9 @@ void Interface::interpolatePrim(double * prim)
 
 void Interface::differentiateCons(double* normalGradCons, double* tangentialGradCons, double* prim)
 {
+    // This method computes the spacial derivatives of the conservative Variables.
+    // The derivatives are computed by central finite differences.
+
     // ========================================================================
     // normal direction
     // ========================================================================
@@ -386,23 +405,29 @@ void Interface::computeTimeDerivative(double * prim, double * MomentU, double * 
     //timeGrad[2] /= -prim[0];
     //timeGrad[3] /= -prim[0];
 
-    timeGrad[0] *= -1.0;
-    timeGrad[1] *= -1.0;
-    timeGrad[2] *= -1.0;
-    timeGrad[3] *= -1.0;
+    // The above computed Moments do not contain the density.
+    // Therefore the density is applied seperately.
+
+    timeGrad[0] *= -prim[0];
+    timeGrad[1] *= -prim[0];
+    timeGrad[2] *= -prim[0];
+    timeGrad[3] *= -prim[0];
 }
 
 void Interface::assembleFlux(double * MomentU, double * MomentV, double * MomentXi, double * a, double * b, double * A, double * timeCoefficients, double dy, double* prim, double tau)
 {
-    double Flux_1[4];
-    double Flux_2[4];
-    double Flux_3[4];
-
+    double Flux_1[4];   // this part does not contain the density (dimension of velocity powers)
+    double Flux_2[4];   // this part contains the density by the micro slopes a and b
+    double Flux_3[4];   // this part contains the density by the micro slope A
+    
+    // ========================================================================
     Flux_1[0] = MomentU[1];
     Flux_1[1] = MomentU[2];
     Flux_1[2] = MomentU[1] * MomentV[1];
     Flux_1[3] = 0.5 * (MomentU[3] + MomentU[1] * MomentV[2] + MomentU[1] * MomentXi[2]);
+    // ========================================================================
 
+    // ========================================================================
     Flux_2[0] = ( a[0] * MomentU[2] 
                 + a[1] * MomentU[3]
                 + a[2] * MomentU[2] * MomentV[1]
@@ -441,7 +466,9 @@ void Interface::assembleFlux(double * MomentU, double * MomentV, double * Moment
                       + b[3] * ( 0.5 * ( MomentU[5] * MomentV[1] + MomentU[1] * MomentV[5] + MomentU[1] * MomentV[1] * MomentXi[4] )
                                +       ( MomentU[3] * MomentV[3] + MomentU[3] * MomentV[1] * MomentXi[2] + MomentU[1] * MomentV[3] * MomentXi[2] ) )
                       );
+    // ========================================================================
 
+    // ========================================================================
     Flux_3[0] = ( A[0] * MomentU[1] * MomentV[0]
                 + A[1] * MomentU[2] * MomentV[0]
                 + A[2] * MomentU[1] * MomentV[1]
@@ -463,12 +490,19 @@ void Interface::assembleFlux(double * MomentU, double * MomentV, double * Moment
                       + A[3] * ( 0.5 * ( MomentU[5] * MomentV[0] + MomentU[1] * MomentV[4] + MomentU[1] * MomentV[0] * MomentXi[4] )
                                +       ( MomentU[3] * MomentV[2] + MomentU[3] * MomentXi[2] + MomentU[1] * MomentV[2] * MomentXi[2] ) )
                       );
+    // ========================================================================
 
+    // ========================================================================
     for ( int i = 0; i < 4; i++ )
     {
+        // Flux_2 and Flux_3 alrdy contain the density implicitly by the micro slopes a, b and A
+        // Flux_1 depends only on the moments, in which the density is cancelt out.#
+        // Therefore Flux_1 must also be multiplied with the density
         this->timeIntegratedFlux[i] = ( prim[0]*timeCoefficients[0] * Flux_1[i] + timeCoefficients[1] * Flux_2[i] + timeCoefficients[2] * Flux_3[i] ) * dy;
+        // The Flux density in the Flux per unit area of the interface at one instant in time
         this->FluxDensity[i] = prim[0]*Flux_1[i] - tau*( Flux_2[i] + Flux_3[i] );
     }
+    // ========================================================================
 }
 
 void Interface::rotate(double * vector)
@@ -480,15 +514,23 @@ void Interface::rotate(double * vector)
 
 void Interface::computeMicroSlope(double * prim, double * macroSlope, double * microSlope)
 {
-    double A, B, C, U_2_V_2;
+    // this method computes the micro slopes from the slopes of the conservative variables
+    // the resulting microslopes contain the density, since they are computed from the slopes
+    // of the conservative variables, which are rho, rhoU, rhoV and rhoE
 
-    U_2_V_2 = prim[1] * prim[1] + prim[2] * prim[2] + ( this->fluidParam.K + 2.0 ) / ( 2.0*prim[3] );
+    double A, B, C, E;
 
-    A = 2.0*macroSlope[3] - U_2_V_2  * macroSlope[0];
+    // ========================================================================
+    // this is the total energy density E = rhoE / rho
+    E = prim[1] * prim[1] + prim[2] * prim[2] + ( this->fluidParam.K + 2.0 ) / ( 2.0*prim[3] );
+    // ========================================================================
 
+    // ========================================================================
     // the product rule of derivations is used here!
-    B = macroSlope[1] - prim[1] * macroSlope[0];
-    C = macroSlope[2] - prim[2] * macroSlope[0];
+    A = 2.0*macroSlope[3] - E       * macroSlope[0];    // = 2 rho dE/dx
+    B =     macroSlope[1] - prim[1] * macroSlope[0];    // =   rho dU/dx
+    C =     macroSlope[2] - prim[2] * macroSlope[0];    // =   rho dV/dx
+    // ========================================================================
 
     // compute micro slopes of primitive variables from macro slopes of conservatice variables
     microSlope[3] = (4.0 * prim[3]*prim[3])/(this->fluidParam.K + 2.0)
@@ -498,8 +540,7 @@ void Interface::computeMicroSlope(double * prim, double * macroSlope, double * m
 
     microSlope[1] = 2.0 * prim[3] * B - prim[1] * microSlope[3];
 
-    microSlope[0] = macroSlope[0] - prim[1]*microSlope[1] - prim[2]*microSlope[2] 
-                                  - 0.5 * U_2_V_2* microSlope[3];
+    microSlope[0] = macroSlope[0] - prim[1]*microSlope[1] - prim[2]*microSlope[2] - 0.5 * E* microSlope[3];
 }
 
 void Interface::computeMoments(double * prim, double * MomentU, double* MomentV, double * MomentXi, int numberMoments)
