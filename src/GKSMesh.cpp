@@ -573,7 +573,7 @@ void GKSMesh::writeCellData(ofstream& file)
 {
     // write cell data ( ID and stress )
     file << "CELL_DATA " << this->CellList.size() << endl;
-    file << "FIELD Lable 8\n";
+    file << "FIELD Lable 9\n";
 
     file << "rho 1 " << this->CellList.size() << " double\n";
     for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
@@ -624,6 +624,12 @@ void GKSMesh::writeCellData(ofstream& file)
     for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
     {
         file << (*i)->getCons().rhoE << endl;
+    }
+
+    file << "p 1 " << this->CellList.size() << " double\n";
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+    {
+        file << ( *i )->getPrim().rho / ( 2.0 * ( *i )->getPrim().L ) << endl;
     }
 
 

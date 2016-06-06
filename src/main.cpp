@@ -8,6 +8,7 @@
 #include "GKSMesh.h"
 #include "BoundaryCondition.h"
 #include <iostream>
+#include <sstream>
 
 using namespace std;
 
@@ -80,7 +81,7 @@ int main(int argc, char* argv[])
     double H = 1.0;
     double W = 1.0;
 
-    param.numberOfIterations = 10000;
+    param.numberOfIterations = 100000;
     param.outputInterval = 1000;
     param.CFL = 0.5;
 
@@ -96,6 +97,9 @@ int main(int argc, char* argv[])
     fluidParam.Force.x = 0.0;
     fluidParam.Force.y = 0.0;
 
+    double dp   = 1.0e-4;
+    double lambda = 1.0;
+    double drho = 2.0*dp*lambda;
     // ========================================================================
 
     GKSMesh* mesh = new GKSMesh(param, fluidParam);
@@ -111,16 +115,17 @@ int main(int argc, char* argv[])
     //mesh->addBoundaryCondition(1, 1, 1, 1, 0.0, 0.0, 0.0, 0.0);
     //mesh->addBoundaryCondition(1, 1, 1, 1, 0.0, 0.0, 0.0, 0.0);
 
-    mesh->addBoundaryCondition(0, 1, 1, 1, 1.0+1.0e-3, 0.0, 0.0, 0.0);
-    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, 0.0, 0.0, 0.0);
-    mesh->addBoundaryCondition(0, 1, 1, 1, 1.0, 0.0, 0.0, 0.0);
-    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, 0.0, 0.0, 0.0);
+    mesh->addBoundaryCondition(0, 1, 1, 1, 1.0+drho, 0.0, 0.0, 0.0);
+    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0     , 0.0, 0.0, 0.0);
+    mesh->addBoundaryCondition(0, 1, 1, 1, 1.0     , 0.0, 0.0, 0.0);
+    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0     , 0.0, 0.0, 0.0);
 
     // Generate Mesh
-    mesh->generateRectMesh(W, H, 32, 32);
+    int ny = 16;
+    mesh->generateRectMesh(W, H, 32, ny);
 
     // Initialize Values
-    mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0);
+    mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
 
     //double rho[] = { 1.0, 1.0 + 1.0e-3 };
 
@@ -141,8 +146,8 @@ int main(int argc, char* argv[])
     double H = 1.0;
     double W = 1.0;
 
-    param.numberOfIterations = 100000;
-    param.outputInterval = 10000;
+    param.numberOfIterations = 1000000;
+    param.outputInterval = 1000000;
     param.CFL = 0.5;
 
     param.verbose = false;
@@ -171,7 +176,8 @@ int main(int argc, char* argv[])
     mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0);
 
     // Generate Mesh
-    mesh->generateRectMeshPeriodic(W, H, 8, 128);
+    int ny = 512;
+    mesh->generateRectMeshPeriodic(W, H, 1, ny);
 
     // Initialize Values
     mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0);
@@ -243,7 +249,10 @@ int main(int argc, char* argv[])
     mesh->iterate();
 
     //mesh->writeTimeSteps("out/timeSteps.dat");
-    //mesh->writeVelocityProfile("out/VelocityProfile.dat");
+
+    //ostringstream filename;
+    //filename << "out/VelocityProfile" << ny << ".dat";
+    //mesh->writeVelocityProfile(filename.str());
     
     //char a; cin >> a;
 }
