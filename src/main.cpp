@@ -15,7 +15,7 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-    ///*
+    /*
 
     // ========================================================================
     //
@@ -82,10 +82,10 @@ int main(int argc, char* argv[])
     Parameters param;
 
     double H = 1.0;
-    double W = 1.0;
+    double W = 0.1;
 
-    param.numberOfIterations = 100;
-    param.outputInterval = 1;
+    param.numberOfIterations = 100000;
+    param.outputInterval = 100;
     param.CFL = 0.5;
 
     param.verbose = false;
