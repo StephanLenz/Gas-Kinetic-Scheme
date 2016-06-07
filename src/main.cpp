@@ -81,8 +81,8 @@ int main(int argc, char* argv[])
     double H = 1.0;
     double W = 1.0;
 
-    param.numberOfIterations = 100000;
-    param.outputInterval = 1000;
+    param.numberOfIterations = 500000;
+    param.outputInterval = 500000;
     param.CFL = 0.5;
 
     param.verbose = false;
@@ -121,8 +121,8 @@ int main(int argc, char* argv[])
     mesh->addBoundaryCondition(1, 0, 0, 1, 0.0     , 0.0, 0.0, 0.0);
 
     // Generate Mesh
-    int ny = 16;
-    mesh->generateRectMesh(W, H, 32, ny);
+    int ny = 512;
+    mesh->generateRectMesh(W, H, 33, ny);
 
     // Initialize Values
     mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
@@ -198,8 +198,8 @@ int main(int argc, char* argv[])
     double W = 1.0;
 
     param.numberOfIterations = 100000;
-    param.outputInterval = 10000;
-    param.CFL = 0.5;
+    param.outputInterval = 100000;
+    param.CFL = 0.1;
 
     param.verbose = false;
 
@@ -211,7 +211,7 @@ int main(int argc, char* argv[])
     fluidParam.nu = 1e-2;
     fluidParam.R = 200.0;
 
-    double uTop = 0.01;
+    double uTop = 0.1;
 
     // ========================================================================
 
@@ -250,9 +250,9 @@ int main(int argc, char* argv[])
 
     //mesh->writeTimeSteps("out/timeSteps.dat");
 
-    //ostringstream filename;
-    //filename << "out/VelocityProfile" << ny << ".dat";
-    //mesh->writeVelocityProfile(filename.str());
+    ostringstream filename;
+    filename << "out/VelocityProfilePresGrad" << ny << ".dat";
+    mesh->writeVelocityProfile(filename.str(), 0.5);
     
     //char a; cin >> a;
 }

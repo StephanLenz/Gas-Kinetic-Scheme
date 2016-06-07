@@ -342,6 +342,9 @@ void GKSMesh::iterate()
     {
         this->timeStep();
 
+        if ( this->iter%10000 == 0 )
+            cout << "timestep: " << this->iter << endl;
+
         if (this->iter%this->param.outputInterval == 0)
         {
             ostringstream filename;
@@ -444,7 +447,7 @@ void GKSMesh::writeTimeSteps(string filename)
     file.close();
 }
 
-void GKSMesh::writeVelocityProfile(string filename)
+void GKSMesh::writeVelocityProfile(string filename, double x)
 {
 
     cout << "Wrinting file " << filename << " ... ";
@@ -460,8 +463,14 @@ void GKSMesh::writeVelocityProfile(string filename)
 
     for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
     {
-        if (!(*i)->isGhostCell())
-            file << (*i)->getCenter().y << " " << (*i)->getPrim().U << "\n";
+        if ( !( *i )->isGhostCell() )
+        {
+            // check wether the profile location x is located in this cell
+            if ( fabs( ( *i )->getCenter().x - x ) <= 0.5 * ( *i )->getDx().x )
+            {
+                file << ( *i )->getCenter().y << " " << ( *i )->getPrim().U << "\n";
+            }
+        }
     }
 
     file.close();
