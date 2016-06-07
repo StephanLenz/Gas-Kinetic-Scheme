@@ -154,7 +154,7 @@ double Cell::getLocalTimestep()
     //                       + 2.0*this->fluidParam.nu/min(dx, dy) );
 
     double localTimestep = min(dx, dy) / ( max( fabs(this->getPrim().U), fabs(this->getPrim().V) ) 
-                                         + sqrt( 5.0/(3.0*2.0*this->getPrim().L) )
+                                         + sqrt( 5.0/(3.0*2.0*this->getPrim().L) )                  // c_s = sqrt( kappa RT ) = sqrt( 5/3 * 1/2lambda )
                                          + 2.0*this->fluidParam.nu/min(dx, dy)
                                          );
 

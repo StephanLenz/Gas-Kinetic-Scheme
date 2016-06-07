@@ -14,7 +14,7 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-    ///*
+    /*
 
     // ========================================================================
     //
@@ -74,10 +74,10 @@ int main(int argc, char* argv[])
     Parameters param;
 
     double H = 1.0;
-    double W = 1.0;
+    double W = 0.1;
 
-    param.numberOfIterations = 100;
-    param.outputInterval = 1;
+    param.numberOfIterations = 100000;
+    param.outputInterval = 100;
     param.CFL = 0.5;
 
     param.verbose = false;
@@ -106,7 +106,8 @@ int main(int argc, char* argv[])
     mesh->addInterfaceBoundaryCondition(0.0);
 
     // Generate Mesh
-    mesh->generateRectMeshPeriodicInterfaceBCs(W, H, 3, 3);
+    int ny = 64;
+    mesh->generateRectMeshPeriodicInterfaceBCs(W, H, 6, ny);
 
     // Initialize Values
     mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0);
@@ -125,8 +126,9 @@ int main(int argc, char* argv[])
 
     mesh->iterate();
 
-    //mesh->writeTimeSteps("out/timeSteps.dat");
-    //mesh->writeVelocityProfile("out/VelocityProfile512.dat");
+    ostringstream filename;
+    filename << "out/VelocityProfileForcingInterfaceBC" << ny << ".dat";
+    mesh->writeVelocityProfile(filename.str(), 0.05);
     
     //char a; cin >> a;
 }
