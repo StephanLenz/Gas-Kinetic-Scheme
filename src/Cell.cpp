@@ -146,12 +146,43 @@ void Cell::computeCons()
 
 double Cell::getLocalTimestep()
 {
-    double velocitySquare = this->getPrim().U*this->getPrim().U
-                          + this->getPrim().V*this->getPrim().V;
-    double localTimestep =  min(dx, dy) 
-                         / ( velocitySquare
-                           + 1.0/sqrt(3.0) 
-                           + 2.0*this->fluidParam.nu/min(dx, dy) );
+
+    // ========================================================================
+    //                  CFL-Condition as in Weidong Li's Code
+    // ========================================================================
+    // The speed of sound is fixed as 1/sqrt(3) here
+    // The use of velocity squares is unclear
+    // The inclusion of the viscosity is not really complete (compare to code below)
+
+    //double velocitySquare = this->getPrim().U*this->getPrim().U
+    //                      + this->getPrim().V*this->getPrim().V;
+    //double localTimestep =  min(dx, dy) 
+    //                     / ( velocitySquare
+    //                       + 1.0/sqrt(3.0) 
+    //                       + 2.0*this->fluidParam.nu/min(dx, dy) );
+
+
+    // ========================================================================
+
+    //double localTimestep = min(dx, dy) / ( max( fabs(this->getPrim().U), fabs(this->getPrim().V) ) 
+    //                                     + sqrt( 5.0/(3.0*2.0*this->getPrim().L) )                  // c_s = sqrt( kappa RT ) = sqrt( 5/3 * 1/2lambda )
+    //                                     + 2.0*this->fluidParam.nu/min(dx, dy)
+    //                                     );
+
+    // ========================================================================
+    //                  CFL-Condition as in Guo, Liu et al. (2008)
+    // ========================================================================
+    // The formular for the speed of sound in Guo, Liu et al (2008) differs
+    // from the one at Wikipedia sqrt(RT) != sqrt(kappa RT)
+
+    double U_max = max(fabs(this->getPrim().U), fabs(this->getPrim().V));
+    double c_s   = sqrt( 1.0 / (2.0*this->getPrim().L ) );                      // c_s = sqrt(RT) = c_s = sqrt(1/2lambda)
+    double Re    = U_max * this->fluidParam.nu / min(dx, dy);
+
+    double localTimestep = min(dx, dy) / ( ( U_max + c_s ) * ( 1.0 + 2.0 / Re ) );
+
+    // ========================================================================
+    
     return localTimestep;
 }
 
