@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
 
     */
     
-    ///*
+    /*
 
     // ========================================================================
     //
@@ -81,8 +81,8 @@ int main(int argc, char* argv[])
     double H = 1.0;
     double W = 1.0;
 
-    param.numberOfIterations = 500000;
-    param.outputInterval = 500000;
+    param.numberOfIterations = 250000;
+    param.outputInterval = 250000;
     param.CFL = 0.5;
 
     param.verbose = false;
@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
 
     //mesh->initMeshLinearDensity(rho, 0.0, 0.0, 1.0);
 
-    //*/
+    */
 
     /*
 
@@ -248,7 +248,7 @@ int main(int argc, char* argv[])
 
     mesh->iterate();
 
-    //mesh->writeTimeSteps("out/timeSteps.dat");
+    mesh->writeTimeSteps("out/timeSteps.dat");
 
     ostringstream filename;
     filename << "out/VelocityProfilePresGrad" << ny << ".dat";

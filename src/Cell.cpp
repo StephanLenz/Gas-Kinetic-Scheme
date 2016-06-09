@@ -175,11 +175,12 @@ double Cell::getLocalTimestep()
     // The formular for the speed of sound in Guo, Liu et al (2008) differs
     // from the one at Wikipedia sqrt(RT) != sqrt(kappa RT)
 
-    double U_max = max(fabs(this->getPrim().U), fabs(this->getPrim().V));
-    double c_s   = sqrt( 1.0 / (2.0*this->getPrim().L ) );                      // c_s = sqrt(RT) = c_s = sqrt(1/2lambda)
-    double Re    = U_max * this->fluidParam.nu / min(dx, dy);
+    double U_max = max( fabs(this->getPrim().U), fabs(this->getPrim().V) );
+    double c_s   = sqrt( 1.0 / ( 2.0*this->getPrim().L ) );                      // c_s = sqrt(RT) = c_s = sqrt(1/2lambda)
+    double Re    = U_max * min(dx, dy) / this->fluidParam.nu;
 
-    double localTimestep = min(dx, dy) / ( ( U_max + c_s ) * ( 1.0 + 2.0 / Re ) );
+    //double localTimestep = min(dx, dy) / ( ( U_max + c_s ) * ( 1.0 + 2.0 / Re ) );
+    double localTimestep = min(dx, dy) / ( ( U_max + c_s + 2.0*this->fluidParam.nu / min(dx, dy) ) );
 
     // ========================================================================
     
