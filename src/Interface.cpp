@@ -59,6 +59,7 @@ void Interface::computeFlux(double dt)
     const int NUMBER_OF_MOMENTS = 7;
 
     double prim[4];
+    double cons[4];
     double normalGradCons[4];
     double tangentialGradCons[4];
     double timeGrad[4];
@@ -85,6 +86,21 @@ void Interface::computeFlux(double dt)
     this->differentiateConsNormalThirdOrder(normalGradCons, prim);
     this->differentiateConsTangential(tangentialGradCons, prim);
     // ========================================================================
+    
+
+    /*
+    // ========================================================================
+    // interpolated primary variables at the interface
+    //this->interpolatePrim(cons);
+    this->interpolateConsThirdOrder(cons);
+    this->cons2prim(prim, cons);
+
+    // spacial gradients of the conservative varibles
+    //this->differentiateConsNormal(normalGradCons, prim);
+    this->differentiateConsNormalThirdOrder(normalGradCons, prim);
+    this->differentiateConsTangential(tangentialGradCons, prim);
+    // ========================================================================
+    */
 
     // ========================================================================
     // Formular as in the Rayleigh-Bernard-Paper (Xu, Lui, 1999)
@@ -248,17 +264,57 @@ void Interface::interpolatePrimThirdOrder(double * prim)
         return;
     }
 
-    prim[0] = 7.0 / 12.0 * ( this->posCell->getPrim().rho + this->negCell->getPrim().rho )
+    prim[0] = 7.0 / 12.0 * ( this->posCell->getPrim().rho                        + this->negCell->getPrim().rho )
             - 1.0 / 12.0 * ( this->posCell->getOpposingCell(this)->getPrim().rho + this->negCell->getOpposingCell(this)->getPrim().rho );
 
-    prim[1] = 7.0 / 12.0 * ( this->posCell->getPrim().U + this->negCell->getPrim().U )
+    prim[1] = 7.0 / 12.0 * ( this->posCell->getPrim().U                        + this->negCell->getPrim().U )
             - 1.0 / 12.0 * ( this->posCell->getOpposingCell(this)->getPrim().U + this->negCell->getOpposingCell(this)->getPrim().U );
 
-    prim[2] = 7.0 / 12.0 * ( this->posCell->getPrim().V + this->negCell->getPrim().V )
+    prim[2] = 7.0 / 12.0 * ( this->posCell->getPrim().V                        + this->negCell->getPrim().V )
             - 1.0 / 12.0 * ( this->posCell->getOpposingCell(this)->getPrim().V + this->negCell->getOpposingCell(this)->getPrim().V );
 
-    prim[3] = 7.0 / 12.0 * ( this->posCell->getPrim().L + this->negCell->getPrim().L )
+    prim[3] = 7.0 / 12.0 * ( this->posCell->getPrim().L                        + this->negCell->getPrim().L )
             - 1.0 / 12.0 * ( this->posCell->getOpposingCell(this)->getPrim().L + this->negCell->getOpposingCell(this)->getPrim().L );
+}
+
+void Interface::interpolateCons(double * cons)
+{
+    // This method computes the rhoValues of the consary variables at the interface
+    // with linear interpolation
+
+    cons[0] = 0.5*( this->negCell->getCons().rho
+                  + this->posCell->getCons().rho );
+
+    cons[1] = 0.5*( this->negCell->getCons().rhoU
+                  + this->posCell->getCons().rhoU );
+
+    cons[2] = 0.5*( this->negCell->getCons().rhoV
+                  + this->posCell->getCons().rhoV );
+
+    cons[3] = 0.5*( this->negCell->getCons().rhoE
+                  + this->posCell->getCons().rhoE );
+}
+
+void Interface::interpolateConsThirdOrder(double * cons)
+{
+    // For Boundary Interfaces use only linear Interpolation
+    if ( this->negCell->isGhostCell() || this->posCell->isGhostCell() )
+    {
+        this->interpolateCons(cons);
+        return;
+    }
+
+    cons[0] = 7.0 / 12.0 * ( this->posCell->getCons().rho                        + this->negCell->getCons().rho )
+            - 1.0 / 12.0 * ( this->posCell->getOpposingCell(this)->getCons().rho + this->negCell->getOpposingCell(this)->getCons().rho );
+
+    cons[1] = 7.0 / 12.0 * ( this->posCell->getCons().rhoU                        + this->negCell->getCons().rhoU )
+            - 1.0 / 12.0 * ( this->posCell->getOpposingCell(this)->getCons().rhoU + this->negCell->getOpposingCell(this)->getCons().rhoU );
+
+    cons[2] = 7.0 / 12.0 * ( this->posCell->getCons().rhoV                        + this->negCell->getCons().rhoV )
+            - 1.0 / 12.0 * ( this->posCell->getOpposingCell(this)->getCons().rhoV + this->negCell->getOpposingCell(this)->getCons().rhoV );
+
+    cons[3] = 7.0 / 12.0 * ( this->posCell->getCons().rhoE                        + this->negCell->getCons().rhoE )
+            - 1.0 / 12.0 * ( this->posCell->getOpposingCell(this)->getCons().rhoE + this->negCell->getOpposingCell(this)->getCons().rhoE );
 }
 
 void Interface::differentiateConsNormal(double* normalGradCons, double* prim)
@@ -302,19 +358,19 @@ void Interface::differentiateConsNormalThirdOrder(double* normalGradCons, double
     double dn = ( ( this->posCell->getDx().x + this->negCell->getDx().x ) * normal.x
         + ( this->posCell->getDx().y + this->negCell->getDx().y ) * normal.y ) * 0.5;
 
-    normalGradCons[0] = ( 5.0/4.0  * ( this->posCell->getCons().rho - this->negCell->getCons().rho )  
+    normalGradCons[0] = ( 5.0/4.0  * ( this->posCell->getCons().rho                        - this->negCell->getCons().rho )  
                         - 1.0/12.0 * ( this->posCell->getOpposingCell(this)->getCons().rho - this->negCell->getOpposingCell(this)->getCons().rho )
                         ) / dn;
 
-    normalGradCons[1] = ( 5.0/4.0  * ( this->posCell->getCons().rhoU - this->negCell->getCons().rhoU )  
+    normalGradCons[1] = ( 5.0/4.0  * ( this->posCell->getCons().rhoU                        - this->negCell->getCons().rhoU )  
                         - 1.0/12.0 * ( this->posCell->getOpposingCell(this)->getCons().rhoU - this->negCell->getOpposingCell(this)->getCons().rhoU )
                         ) / dn;
 
-    normalGradCons[2] = ( 5.0/4.0  * ( this->posCell->getCons().rhoV - this->negCell->getCons().rhoV )  
+    normalGradCons[2] = ( 5.0/4.0  * ( this->posCell->getCons().rhoV                        - this->negCell->getCons().rhoV )  
                         - 1.0/12.0 * ( this->posCell->getOpposingCell(this)->getCons().rhoV - this->negCell->getOpposingCell(this)->getCons().rhoV )
                         ) / dn;
 
-    normalGradCons[3] = ( 5.0/4.0  * ( this->posCell->getCons().rhoE - this->negCell->getCons().rhoE )  
+    normalGradCons[3] = ( 5.0/4.0  * ( this->posCell->getCons().rhoE                        - this->negCell->getCons().rhoE )  
                         - 1.0/12.0 * ( this->posCell->getOpposingCell(this)->getCons().rhoE - this->negCell->getOpposingCell(this)->getCons().rhoE )
                         ) / dn;
 
@@ -572,6 +628,15 @@ void Interface::rotate(double * vector)
     double tmp = vector[1];
     vector[1] = vector[2];
     vector[2] = tmp;
+}
+
+void Interface::cons2prim(double * prim, double * cons)
+{
+    prim[0] = cons[0];
+    prim[1] = cons[1] / cons[0];
+    prim[2] = cons[2] / cons[0];
+    prim[3] = ( fluidParam.K + 2.0 )*cons[0]
+        / ( 4.0 * (cons[3] - 0.5*( cons[1] * cons[1] + cons[2] * cons[2] ) / cons[0] ) );
 }
 
 void Interface::computeMicroSlope(double * prim, double * macroSlope, double * microSlope)

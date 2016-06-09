@@ -43,8 +43,10 @@ public:
 private:
 
     void interpolatePrim(double* prim);
-
     void interpolatePrimThirdOrder(double* prim);
+
+    void interpolateCons(double* prim);
+    void interpolateConsThirdOrder(double* prim);
 
     void differentiateConsNormal(double* normalGradCons, double* prim);
     void differentiateConsNormalThirdOrder(double* normalGradCons, double* prim);
@@ -58,6 +60,7 @@ private:
                       double* a, double* b, double* A, double* timeCoefficients, double dy, double* prim, double tau);
 
     void rotate(double* vector);
+    void cons2prim(double* prim, double*cons);
 
     void computeMicroSlope(double* prim, double* macroSlope, double* microSlope);
     void computeMoments(double* prim, double* MomentU, double* MomentV, double* MomentXi, int numberMoments);
