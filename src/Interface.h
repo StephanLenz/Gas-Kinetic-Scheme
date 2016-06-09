@@ -43,7 +43,13 @@ public:
 private:
 
     void interpolatePrim(double* prim);
-    void differentiateCons(double* normalGradCons, double* tangentialGradCons, double* prim);
+
+    void interpolatePrimThirdOrder(double* prim);
+
+    void differentiateConsNormal(double* normalGradCons, double* prim);
+    void differentiateConsNormalThirdOrder(double* normalGradCons, double* prim);
+
+    void differentiateConsTangential(double* tangentialGradCons, double* prim);
 
     void computeTimeDerivative(double* prim, double* MomentU, double* MomentV, double* MomentXi,
                                double* a, double* b, double * timeGrad);

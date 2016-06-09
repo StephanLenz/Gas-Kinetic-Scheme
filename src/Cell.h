@@ -70,6 +70,8 @@ public:
 
     Cell* getNeighborCell(int i);
 
+    Cell* getOpposingCell(Interface* askingInterface);
+
     Cell* findNeighborInDomain();
 
     bool isGhostCell();

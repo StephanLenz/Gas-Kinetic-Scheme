@@ -133,7 +133,7 @@ int main(int argc, char* argv[])
 
     */
 
-    /*
+    ///*
 
     // ========================================================================
     //
@@ -146,8 +146,8 @@ int main(int argc, char* argv[])
     double H = 1.0;
     double W = 1.0;
 
-    param.numberOfIterations = 1000000;
-    param.outputInterval = 1000000;
+    param.numberOfIterations = 500000;
+    param.outputInterval = 500000;
     param.CFL = 0.5;
 
     param.verbose = false;
@@ -182,7 +182,7 @@ int main(int argc, char* argv[])
     // Initialize Values
     mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0);
 
-    */
+   // */
 
     /*
 
@@ -197,9 +197,9 @@ int main(int argc, char* argv[])
     double H = 1.0;
     double W = 1.0;
 
-    param.numberOfIterations = 100000;
-    param.outputInterval = 100000;
-    param.CFL = 0.1;
+    param.numberOfIterations = 100;
+    param.outputInterval = 1;
+    param.CFL = 0.5;
 
     param.verbose = false;
 
@@ -209,9 +209,14 @@ int main(int argc, char* argv[])
 
     fluidParam.K = 1;
     fluidParam.nu = 1e-2;
-    fluidParam.R = 200.0;
+    fluidParam.R = 208.0;
 
-    double uTop = 0.1;
+    double uTop = 1.0;
+    //double T    = 293.15;
+    //double lambda = 1.0 / ( 2.0 * fluidParam.R * T );
+
+    cout << "Re = " << uTop / fluidParam.nu << endl;
+    //cout << "Ma = " << uTop / sqrt(fluidParam.R * T) << endl;
 
     // ========================================================================
 
@@ -248,10 +253,10 @@ int main(int argc, char* argv[])
 
     mesh->iterate();
 
-    mesh->writeTimeSteps("out/timeSteps.dat");
+    //mesh->writeTimeSteps("out/timeSteps.dat");
 
     ostringstream filename;
-    filename << "out/VelocityProfilePresGrad" << ny << ".dat";
+    filename << "out/VelocityProfileForceThirdOrder" << ny << ".dat";
     mesh->writeVelocityProfile(filename.str(), 0.5);
     
     //char a; cin >> a;

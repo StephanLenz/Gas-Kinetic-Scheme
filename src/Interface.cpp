@@ -77,9 +77,13 @@ void Interface::computeFlux(double dt)
 
     // ========================================================================
     // interpolated primary variables at the interface
-    this->interpolatePrim(prim);
+    //this->interpolatePrim(prim);
+    this->interpolatePrimThirdOrder(prim);
+
     // spacial gradients of the conservative varibles
-    this->differentiateCons(normalGradCons, tangentialGradCons, prim);
+    //this->differentiateConsNormal(normalGradCons, prim);
+    this->differentiateConsNormalThirdOrder(normalGradCons, prim);
+    this->differentiateConsTangential(tangentialGradCons, prim);
     // ========================================================================
 
     // ========================================================================
@@ -235,7 +239,29 @@ void Interface::interpolatePrim(double * prim)
                   + this->posCell->getPrim().L   );
 }
 
-void Interface::differentiateCons(double* normalGradCons, double* tangentialGradCons, double* prim)
+void Interface::interpolatePrimThirdOrder(double * prim)
+{
+    // For Boundary Interfaces use only linear Interpolation
+    if ( this->negCell->isGhostCell() || this->posCell->isGhostCell() )
+    {
+        this->interpolatePrim(prim);
+        return;
+    }
+
+    prim[0] = 7.0 / 12.0 * ( this->posCell->getPrim().rho + this->negCell->getPrim().rho )
+            - 1.0 / 12.0 * ( this->posCell->getOpposingCell(this)->getPrim().rho + this->negCell->getOpposingCell(this)->getPrim().rho );
+
+    prim[1] = 7.0 / 12.0 * ( this->posCell->getPrim().U + this->negCell->getPrim().U )
+            - 1.0 / 12.0 * ( this->posCell->getOpposingCell(this)->getPrim().U + this->negCell->getOpposingCell(this)->getPrim().U );
+
+    prim[2] = 7.0 / 12.0 * ( this->posCell->getPrim().V + this->negCell->getPrim().V )
+            - 1.0 / 12.0 * ( this->posCell->getOpposingCell(this)->getPrim().V + this->negCell->getOpposingCell(this)->getPrim().V );
+
+    prim[3] = 7.0 / 12.0 * ( this->posCell->getPrim().L + this->negCell->getPrim().L )
+            - 1.0 / 12.0 * ( this->posCell->getOpposingCell(this)->getPrim().L + this->negCell->getOpposingCell(this)->getPrim().L );
+}
+
+void Interface::differentiateConsNormal(double* normalGradCons, double* prim)
 {
     // This method computes the spacial derivatives of the conservative Variables.
     // The derivatives are computed by central finite differences.
@@ -246,20 +272,56 @@ void Interface::differentiateCons(double* normalGradCons, double* tangentialGrad
 
     // compute the distance between 
     double dn = ( ( this->posCell->getDx().x + this->negCell->getDx().x ) * normal.x
-                + ( this->posCell->getDx().y + this->negCell->getDx().y ) * normal.y ) * 0.5;
+        + ( this->posCell->getDx().y + this->negCell->getDx().y ) * normal.y ) * 0.5;
 
-    normalGradCons[0] = ( this->posCell->getCons().rho
-                        - this->negCell->getCons().rho  ) / dn;
+    normalGradCons[0] = ( this->posCell->getCons().rho  - this->negCell->getCons().rho ) / dn;
 
-    normalGradCons[1] = ( this->posCell->getCons().rhoU
-                        - this->negCell->getCons().rhoU ) / dn;
+    normalGradCons[1] = ( this->posCell->getCons().rhoU - this->negCell->getCons().rhoU ) / dn;
 
-    normalGradCons[2] = ( this->posCell->getCons().rhoV
-                        - this->negCell->getCons().rhoV ) / dn;
+    normalGradCons[2] = ( this->posCell->getCons().rhoV - this->negCell->getCons().rhoV ) / dn;
 
-    normalGradCons[3] = ( this->posCell->getCons().rhoE
-                        - this->negCell->getCons().rhoE ) / dn;
+    normalGradCons[3] = ( this->posCell->getCons().rhoE - this->negCell->getCons().rhoE ) / dn;
+}
 
+void Interface::differentiateConsNormalThirdOrder(double* normalGradCons, double* prim)
+{
+    // This method computes the spacial derivatives of the conservative Variables.
+    // The derivatives are computed by third order central finite differences.
+
+    if ( this->negCell->isGhostCell() || this->posCell->isGhostCell() )
+    {
+        this->differentiateConsNormal(normalGradCons, prim);
+        return;
+    }
+
+    // ========================================================================
+    // normal direction
+    // ========================================================================
+
+    // compute the distance between 
+    double dn = ( ( this->posCell->getDx().x + this->negCell->getDx().x ) * normal.x
+        + ( this->posCell->getDx().y + this->negCell->getDx().y ) * normal.y ) * 0.5;
+
+    normalGradCons[0] = ( 5.0/4.0  * ( this->posCell->getCons().rho - this->negCell->getCons().rho )  
+                        - 1.0/12.0 * ( this->posCell->getOpposingCell(this)->getCons().rho - this->negCell->getOpposingCell(this)->getCons().rho )
+                        ) / dn;
+
+    normalGradCons[1] = ( 5.0/4.0  * ( this->posCell->getCons().rhoU - this->negCell->getCons().rhoU )  
+                        - 1.0/12.0 * ( this->posCell->getOpposingCell(this)->getCons().rhoU - this->negCell->getOpposingCell(this)->getCons().rhoU )
+                        ) / dn;
+
+    normalGradCons[2] = ( 5.0/4.0  * ( this->posCell->getCons().rhoV - this->negCell->getCons().rhoV )  
+                        - 1.0/12.0 * ( this->posCell->getOpposingCell(this)->getCons().rhoV - this->negCell->getOpposingCell(this)->getCons().rhoV )
+                        ) / dn;
+
+    normalGradCons[3] = ( 5.0/4.0  * ( this->posCell->getCons().rhoE - this->negCell->getCons().rhoE )  
+                        - 1.0/12.0 * ( this->posCell->getOpposingCell(this)->getCons().rhoE - this->negCell->getOpposingCell(this)->getCons().rhoE )
+                        ) / dn;
+
+}
+
+void Interface::differentiateConsTangential(double* tangentialGradCons, double* prim)
+{
     // ========================================================================
     // tangential direction
     // ========================================================================

@@ -228,6 +228,16 @@ Cell * Cell::getNeighborCell(int i)
     return this->InterfaceList[i]->getNeigborCell(this);
 }
 
+Cell * Cell::getOpposingCell(Interface * askingInterface)
+{
+    int j = 0;
+    for ( int i = 0; i < 4; i++ )
+        if ( askingInterface == this->InterfaceList[i] )
+            j = i;
+
+    return this->getNeighborCell( (j+2) % 4 );
+}
+
 Cell * Cell::findNeighborInDomain()
 {
     Cell* neighborCell = NULL;
