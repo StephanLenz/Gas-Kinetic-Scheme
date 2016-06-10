@@ -334,10 +334,17 @@ void GKSMesh::iterate()
     ostringstream filename;
     filename << "out/result_0.vtk";
     writeVTKFile(filename.str(), true, false);
-    ostringstream filenameFlux;
-    filenameFlux << "out/resultFlux_0.vtk";
-    writeVTKFileFlux(filenameFlux.str(), true, false);
 
+    if ( param.fluxOutput == true )
+    {
+        ostringstream filenameFlux;
+        filenameFlux << "out/resultFlux_0.vtk";
+        writeVTKFileFlux(filenameFlux.str(), true, false);
+    }
+
+    // ========================================================================
+    // ========================================================================
+    // ========================================================================
     while (this->iter < this->param.numberOfIterations)
     {
         this->timeStep();
@@ -345,18 +352,27 @@ void GKSMesh::iterate()
         if ( this->iter%10000 == 0 )
             cout << "timestep: " << this->iter << endl;
 
+        // ========================================================================
         if (this->iter%this->param.outputInterval == 0)
         {
             ostringstream filename;
             filename << "out/result_" << this->iter << ".vtk";
             writeVTKFile(filename.str(), true, false);
-            ostringstream filenameFlux;
-            filenameFlux << "out/resultFlux_" << this->iter << ".vtk";
-            writeVTKFileFlux(filenameFlux.str(), true, false);
+
+            if ( param.fluxOutput == true )
+            {
+                ostringstream filenameFlux;
+                filenameFlux << "out/resultFlux_" << this->iter << ".vtk";
+                writeVTKFileFlux(filenameFlux.str(), true, false);
+            }
         }
+        // ========================================================================
         //cout << this->toString();
         //cout << this->cellValuesToString();
     }
+    // ========================================================================
+    // ========================================================================
+    // ========================================================================
 }
 
 string GKSMesh::toString()

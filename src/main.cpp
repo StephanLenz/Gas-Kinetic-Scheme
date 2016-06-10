@@ -30,6 +30,7 @@ int main(int argc, char* argv[])
     param.numberOfIterations = 10000;
     param.outputInterval = 10;
     param.CFL = 0.5;
+    param.fluxOutput = false;
 
     param.verbose = false;
 
@@ -84,6 +85,7 @@ int main(int argc, char* argv[])
     param.numberOfIterations = 250000;
     param.outputInterval = 250000;
     param.CFL = 0.5;
+    param.fluxOutput = false;
 
     param.verbose = false;
 
@@ -133,7 +135,7 @@ int main(int argc, char* argv[])
 
     */
 
-    /*
+    ///*
 
     // ========================================================================
     //
@@ -149,6 +151,7 @@ int main(int argc, char* argv[])
     param.numberOfIterations = 500000;
     param.outputInterval = 500000;
     param.CFL = 0.5;
+    param.fluxOutput = false;
 
     param.verbose = false;
 
@@ -182,9 +185,9 @@ int main(int argc, char* argv[])
     // Initialize Values
     mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0);
 
-    */
+    //*/
 
-    ///*
+    /*
 
     // ========================================================================
     //
@@ -197,9 +200,10 @@ int main(int argc, char* argv[])
     double H = 1.0;
     double W = 1.0;
 
-    param.numberOfIterations = 100;
-    param.outputInterval = 1;
+    param.numberOfIterations = 1000;
+    param.outputInterval = 1000;
     param.CFL = 0.5;
+    param.fluxOutput = false;
 
     param.verbose = false;
 
@@ -208,15 +212,15 @@ int main(int argc, char* argv[])
     FluidParameter fluidParam;
 
     fluidParam.K = 1;
-    fluidParam.nu = 1e-2;
+    fluidParam.nu = 1.0e-2;
     fluidParam.R = 208.0;
 
     double uTop = 1.0;
-    //double T    = 293.15;
-    //double lambda = 1.0 / ( 2.0 * fluidParam.R * T );
+    double T    = 293.15;
+    double lambda = 1.0 / ( 2.0 * fluidParam.R * T );
 
     cout << "Re = " << uTop / fluidParam.nu << endl;
-    //cout << "Ma = " << uTop / sqrt(fluidParam.R * T) << endl;
+    cout << "Ma = " << uTop / sqrt(fluidParam.R * T) << endl;
 
     // ========================================================================
 
@@ -228,9 +232,9 @@ int main(int argc, char* argv[])
     //    | 0     2 |
     //    |    1    |
     //    -----------
-    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, 0.0, 0.0, 0.0);
-    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, 0.0, 0.0, 0.0);
-    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, 0.0, 0.0, 0.0);
+    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, 0.0,  0.0, 0.0);
+    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, 0.0,  0.0, 0.0);
+    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, 0.0,  0.0, 0.0);
     mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, uTop, 0.0, 0.0);
 
     // Generate Mesh
@@ -239,7 +243,7 @@ int main(int argc, char* argv[])
     // Initialize Values
     mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0);
     
-    //*/
+    */
 
     // ========================================================================
     // ========================================================================
@@ -255,9 +259,9 @@ int main(int argc, char* argv[])
 
     //mesh->writeTimeSteps("out/timeSteps.dat");
 
-    //ostringstream filename;
-    //filename << "out/VelocityProfileForceThirdOrder" << ny << ".dat";
-    //mesh->writeVelocityProfile(filename.str(), 0.5);
+    ostringstream filename;
+    filename << "out/VelocityProfileForceThirdOrder" << ny << ".dat";
+    mesh->writeVelocityProfile(filename.str(), 0.5);
     
     //char a; cin >> a;
 }

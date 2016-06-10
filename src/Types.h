@@ -36,6 +36,7 @@ struct Parameters
 {
 	unsigned int numberOfIterations;
     unsigned int outputInterval;
+    bool fluxOutput;
 
 	double CFL;
 

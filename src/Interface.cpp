@@ -330,13 +330,13 @@ void Interface::differentiateConsNormal(double* normalGradCons, double* prim)
     double dn = ( ( this->posCell->getDx().x + this->negCell->getDx().x ) * normal.x
         + ( this->posCell->getDx().y + this->negCell->getDx().y ) * normal.y ) * 0.5;
 
-    normalGradCons[0] = ( this->posCell->getCons().rho  - this->negCell->getCons().rho ) / dn;
+    normalGradCons[0] = ( this->posCell->getCons().rho  - this->negCell->getCons().rho )  / (dn * prim[0] );
 
-    normalGradCons[1] = ( this->posCell->getCons().rhoU - this->negCell->getCons().rhoU ) / dn;
+    normalGradCons[1] = ( this->posCell->getCons().rhoU - this->negCell->getCons().rhoU ) / ( dn * prim[0] );
 
-    normalGradCons[2] = ( this->posCell->getCons().rhoV - this->negCell->getCons().rhoV ) / dn;
+    normalGradCons[2] = ( this->posCell->getCons().rhoV - this->negCell->getCons().rhoV ) / ( dn * prim[0] );
 
-    normalGradCons[3] = ( this->posCell->getCons().rhoE - this->negCell->getCons().rhoE ) / dn;
+    normalGradCons[3] = ( this->posCell->getCons().rhoE - this->negCell->getCons().rhoE ) / ( dn * prim[0] );
 }
 
 void Interface::differentiateConsNormalThirdOrder(double* normalGradCons, double* prim)
@@ -360,19 +360,19 @@ void Interface::differentiateConsNormalThirdOrder(double* normalGradCons, double
 
     normalGradCons[0] = ( 5.0/4.0  * ( this->posCell->getCons().rho                        - this->negCell->getCons().rho )  
                         - 1.0/12.0 * ( this->posCell->getOpposingCell(this)->getCons().rho - this->negCell->getOpposingCell(this)->getCons().rho )
-                        ) / dn;
+                        ) / ( dn * prim[0] );
 
     normalGradCons[1] = ( 5.0/4.0  * ( this->posCell->getCons().rhoU                        - this->negCell->getCons().rhoU )  
                         - 1.0/12.0 * ( this->posCell->getOpposingCell(this)->getCons().rhoU - this->negCell->getOpposingCell(this)->getCons().rhoU )
-                        ) / dn;
+                        ) / ( dn * prim[0] );
 
     normalGradCons[2] = ( 5.0/4.0  * ( this->posCell->getCons().rhoV                        - this->negCell->getCons().rhoV )  
                         - 1.0/12.0 * ( this->posCell->getOpposingCell(this)->getCons().rhoV - this->negCell->getOpposingCell(this)->getCons().rhoV )
-                        ) / dn;
+                        ) / ( dn * prim[0] );
 
     normalGradCons[3] = ( 5.0/4.0  * ( this->posCell->getCons().rhoE                        - this->negCell->getCons().rhoE )  
                         - 1.0/12.0 * ( this->posCell->getOpposingCell(this)->getCons().rhoE - this->negCell->getOpposingCell(this)->getCons().rhoE )
-                        ) / dn;
+                        ) / ( dn * prim[0] );
 
 }
 
@@ -432,7 +432,7 @@ void Interface::differentiateConsTangential(double* tangentialGradCons, double* 
                               + this->posCell->getCons().rho 
                               + this->negCell->getCons().rho
                               ) * 0.25
-                            ) / dt;
+                            ) / ( dt * prim[0] );
 
     tangentialGradCons[1] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rhoU
                               + this->negCell->getNeighborCell(posIdx)->getCons().rhoU
@@ -444,7 +444,7 @@ void Interface::differentiateConsTangential(double* tangentialGradCons, double* 
                               + this->posCell->getCons().rhoU 
                               + this->negCell->getCons().rhoU 
                               ) * 0.25
-                            ) / dt;
+                            ) / ( dt * prim[0] );
 
     tangentialGradCons[2] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rhoV
                               + this->negCell->getNeighborCell(posIdx)->getCons().rhoV
@@ -456,7 +456,7 @@ void Interface::differentiateConsTangential(double* tangentialGradCons, double* 
                               + this->posCell->getCons().rhoV 
                               + this->negCell->getCons().rhoV 
                               ) * 0.25
-                            ) / dt;
+                            ) / ( dt * prim[0] );
 
     tangentialGradCons[3] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rhoE
                               + this->negCell->getNeighborCell(posIdx)->getCons().rhoE
@@ -468,7 +468,7 @@ void Interface::differentiateConsTangential(double* tangentialGradCons, double* 
                               + this->posCell->getCons().rhoE 
                               + this->negCell->getCons().rhoE 
                               ) * 0.25
-                            ) / dt;
+                            ) / ( dt * prim[0] );
 
 }
 
@@ -518,18 +518,18 @@ void Interface::computeTimeDerivative(double * prim, double * MomentU, double * 
                                 + 2.0 * MomentU[2] * MomentV[1] * MomentXi[2]
                                 + 2.0 * MomentV[3] * MomentXi[2] );
 
-    //timeGrad[0] /= -prim[0];
-    //timeGrad[1] /= -prim[0];
-    //timeGrad[2] /= -prim[0];
-    //timeGrad[3] /= -prim[0];
+    timeGrad[0] *= -1.0;
+    timeGrad[1] *= -1.0;
+    timeGrad[2] *= -1.0;
+    timeGrad[3] *= -1.0;
 
     // The above computed Moments do not contain the density.
     // Therefore the density is applied seperately.
 
-    timeGrad[0] *= -prim[0];
-    timeGrad[1] *= -prim[0];
-    timeGrad[2] *= -prim[0];
-    timeGrad[3] *= -prim[0];
+    //timeGrad[0] *= -prim[0];
+    //timeGrad[1] *= -prim[0];
+    //timeGrad[2] *= -prim[0];
+    //timeGrad[3] *= -prim[0];
 }
 
 void Interface::assembleFlux(double * MomentU, double * MomentV, double * MomentXi, double * a, double * b, double * A, double * timeCoefficients, double dy, double* prim, double tau)
@@ -616,9 +616,9 @@ void Interface::assembleFlux(double * MomentU, double * MomentV, double * Moment
         // Flux_2 and Flux_3 alrdy contain the density implicitly by the micro slopes a, b and A
         // Flux_1 depends only on the moments, in which the density is cancelt out.#
         // Therefore Flux_1 must also be multiplied with the density
-        this->timeIntegratedFlux[i] = ( prim[0]*timeCoefficients[0] * Flux_1[i] + timeCoefficients[1] * Flux_2[i] + timeCoefficients[2] * Flux_3[i] ) * dy;
+        this->timeIntegratedFlux[i] = ( timeCoefficients[0] * Flux_1[i] + timeCoefficients[1] * Flux_2[i] + timeCoefficients[2] * Flux_3[i] ) * dy * prim[0];
         // The Flux density in the Flux per unit area of the interface at one instant in time
-        this->FluxDensity[i] = prim[0]*Flux_1[i] - tau*( Flux_2[i] + Flux_3[i] );
+        this->FluxDensity[i] = ( Flux_1[i] - tau*( Flux_2[i] + Flux_3[i] ) ) * prim[0];
     }
     // ========================================================================
 }
