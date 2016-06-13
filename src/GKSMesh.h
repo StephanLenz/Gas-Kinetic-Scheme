@@ -28,6 +28,7 @@ private:
 
     double dt;
     vector<double> dtList;
+    double time;
     unsigned int iter;
 
 public:

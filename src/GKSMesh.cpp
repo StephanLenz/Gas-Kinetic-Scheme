@@ -255,7 +255,9 @@ void GKSMesh::initMeshLinearDensity(double * rho, double u, double v, double T)
         center = (*i)->getCenter();
 
         interpolatedRho = rho[0] + center.y*(rho[1] - rho[0]) / this->lengthY;
+        //double interpolatedLambda = rho[0] + center.y*( rho[1] - rho[0] ) / this->lengthY;
 
+        //( *i )->setValues(interpolatedRho, u, v, interpolatedLambda);
         (*i)->setValues(interpolatedRho, u, v, T);
     }
 }
@@ -328,7 +330,7 @@ void GKSMesh::timeStep()
 
 void GKSMesh::iterate()
 {
-
+    this->time = 0.0;
     this->applyBoundaryCondition();
 
     ostringstream filename;
@@ -348,9 +350,10 @@ void GKSMesh::iterate()
     while (this->iter < this->param.numberOfIterations)
     {
         this->timeStep();
+        this->time += this->dt;
 
-        if ( this->iter%10000 == 0 )
-            cout << "timestep: " << this->iter << endl;
+        if ( this->iter%1000 == 0 )
+            cout << "t = " << this->time <<  "  |  timestep: " << this->iter << endl;
 
         // ========================================================================
         if (this->iter%this->param.outputInterval == 0)

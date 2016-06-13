@@ -135,7 +135,7 @@ int main(int argc, char* argv[])
 
     */
 
-    ///*
+    /*
 
     // ========================================================================
     //
@@ -185,9 +185,9 @@ int main(int argc, char* argv[])
     // Initialize Values
     mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0);
 
-    //*/
+    */
 
-    /*
+    ///*
 
     // ========================================================================
     //
@@ -200,9 +200,9 @@ int main(int argc, char* argv[])
     double H = 1.0;
     double W = 1.0;
 
-    param.numberOfIterations = 1000;
+    param.numberOfIterations = 100000;
     param.outputInterval = 1000;
-    param.CFL = 0.5;
+    param.CFL = 0.1;
     param.fluxOutput = false;
 
     param.verbose = false;
@@ -232,17 +232,79 @@ int main(int argc, char* argv[])
     //    | 0     2 |
     //    |    1    |
     //    -----------
-    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, 0.0,  0.0, 0.0);
-    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, 0.0,  0.0, 0.0);
-    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, 0.0,  0.0, 0.0);
-    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, uTop, 0.0, 0.0);
+    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, 0.0,  0.0, 1.0);
+    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, 0.0,  0.0, 1.0);
+    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, 0.0,  0.0, 1.0);
+    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, uTop, 0.0, 1.0);
+
+    // Generate Mesh
+    mesh->generateRectMesh(W, H, 64, 64);
+
+    // Initialize Values
+    mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
+    
+    //*/
+        
+    /*
+
+    // ========================================================================
+    //
+    //                  Test
+    //
+    // ========================================================================
+
+        Parameters param;
+
+    double H = 1.0;
+    double W = 1.0;
+
+    param.numberOfIterations = 10000;
+    param.outputInterval = 10;
+    param.CFL = 0.1;
+    param.fluxOutput = false;
+
+    param.verbose = false;
+
+    // ========================================================================
+
+    FluidParameter fluidParam;
+
+    fluidParam.K = 1;
+    fluidParam.nu = 1.0e-2;
+    fluidParam.R = 208.0;
+
+    double uTop = 1.0;
+    double T = 293.15;
+    double lambda = 1.0 / ( 2.0 * fluidParam.R * T );
+
+    cout << "Re = " << uTop / fluidParam.nu << endl;
+    cout << "Ma = " << uTop / sqrt(fluidParam.R * T) << endl;
+
+    // ========================================================================
+
+    GKSMesh* mesh = new GKSMesh(param, fluidParam);
+
+    // Define Boundary Conditions
+    //    -----------
+    //    |    3    |
+    //    | 0     2 |
+    //    |    1    |
+    //    -----------
+    mesh->addBoundaryCondition(1, 1, 1, 1, 0.0, 0.0, 0.0, 1.0);
+    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, 0.0, 0.0, 1.0);
+    mesh->addBoundaryCondition(1, 1, 1, 1, 0.0, 0.0, 0.0, 1.0);
+    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, 0.0, 0.0, 1.0);
 
     // Generate Mesh
     mesh->generateRectMesh(W, H, 32, 32);
 
     // Initialize Values
-    mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0);
-    
+    // mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0);
+
+    double rho[] = { 1.0, 1.0 + 1.0e-3 };
+
+    mesh->initMeshLinearDensity(rho, 0.0, 0.0, lambda);
+
     */
 
     // ========================================================================
@@ -257,11 +319,11 @@ int main(int argc, char* argv[])
 
     mesh->iterate();
 
-    //mesh->writeTimeSteps("out/timeSteps.dat");
+    mesh->writeTimeSteps("out/timeSteps.dat");
 
-    ostringstream filename;
-    filename << "out/VelocityProfileForceThirdOrder" << ny << ".dat";
-    mesh->writeVelocityProfile(filename.str(), 0.5);
+    //ostringstream filename;
+    //filename << "out/VelocityProfileForceThirdOrder" << ny << ".dat";
+    //mesh->writeVelocityProfile(filename.str(), 0.5);
     
-    //char a; cin >> a;
+    char a; cin >> a;
 }
