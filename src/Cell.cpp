@@ -37,6 +37,12 @@ Cell::~Cell()
 
 void Cell::update(double dt)
 {
+    double cons_old[4];
+    cons_old[0] = this->cons[0];
+    cons_old[1] = this->cons[1];
+    cons_old[2] = this->cons[2];
+    cons_old[3] = this->cons[3];
+
     // negative interfaces = in flux
     // positive interfaces = out flux
     this->cons[0] += ( this->InterfaceList[0]->getTimeIntegratedFlux().rho
@@ -69,6 +75,12 @@ void Cell::update(double dt)
 
     // compute primary Variables
     this->computePrim();
+
+    this->residual.rho  = fabs(this->cons[0] - cons_old[0]) / fabs(cons_old[0]);
+    this->residual.rhoU = fabs(this->cons[1] - cons_old[1]) / fabs(cons_old[1]);
+    this->residual.rhoV = fabs(this->cons[2] - cons_old[2]) / fabs(cons_old[2]);
+    this->residual.rhoE = fabs(this->cons[3] - cons_old[3]) / fabs(cons_old[3]);
+
 }
 
 void Cell::applyBoundaryCondition()
@@ -213,6 +225,11 @@ ConservedVariable Cell::getCons()
     tmp.rhoV = this->cons[2];
     tmp.rhoE = this->cons[3];
     return tmp;
+}
+
+ConservedVariable Cell::getLocalResidual()
+{
+    return this->residual;
 }
 
 float2 Cell::getDx()

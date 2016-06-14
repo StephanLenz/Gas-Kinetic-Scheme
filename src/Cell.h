@@ -37,6 +37,8 @@ private:
 	// Conseved Variables
 	double cons[4];
 
+    ConservedVariable residual;
+
     // Boundary Cell
     BoundaryCondition* BoundaryContitionPointer;
 
@@ -65,6 +67,8 @@ public:
     PrimaryVariable getPrim();
 
     ConservedVariable getCons();
+
+    ConservedVariable getLocalResidual();
 
     float2 getDx();
 

@@ -31,6 +31,8 @@ private:
     double time;
     unsigned int iter;
 
+    vector<ConservedVariable> convergenceHistory;
+
 public:
 	GKSMesh();
 
@@ -55,6 +57,8 @@ public:
 
     void computeGlobalTimestep();
 
+    ConservedVariable getGlobalResidual();
+
     void timeStep();
 
     void iterate();
@@ -71,6 +75,12 @@ public:
     void writeVelocityProfile(string filename, double x);
 
     void writeMeshAsText(string filename);
+
+    void writeVelocityU(string filename);
+
+    void writeVelocityV(string filename);
+
+    void writeConvergenceHistory(string filename);
 
 private:
 

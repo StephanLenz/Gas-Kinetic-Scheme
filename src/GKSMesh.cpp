@@ -272,11 +272,18 @@ void GKSMesh::addBoundaryCondition( int rhoType, int UType, int VType, int TType
 
 void GKSMesh::applyBoundaryCondition()
 {
-    for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
+    #pragma omp parallel for
+    for ( int i = 0; i < CellList.size(); i++ )
     {
-        if ( ( (*i)->isGhostCell() ) )
-            (*i)->applyBoundaryCondition();
+        if ( CellList[i]->isGhostCell() )
+            CellList[i]->applyBoundaryCondition();
     }
+
+    //for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
+    //{
+    //    if ( ( (*i)->isGhostCell() ) )
+    //        (*i)->applyBoundaryCondition();
+    //}
 }
 
 void GKSMesh::computeGlobalTimestep()
@@ -290,6 +297,28 @@ void GKSMesh::computeGlobalTimestep()
         }
     }
     this->dt *= this->param.CFL;
+}
+
+ConservedVariable GKSMesh::getGlobalResidual()
+{
+    ConservedVariable residual;
+    residual.rho  = 0.0;
+    residual.rhoU = 0.0;
+    residual.rhoV = 0.0;
+    residual.rhoE = 0.0;
+
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+    {
+        if ( !( ( *i )->isGhostCell() ) )
+        {
+            residual.rho  = max( residual.rho , (*i)->getLocalResidual().rho  );
+            residual.rhoU = max( residual.rhoU, (*i)->getLocalResidual().rhoU );
+            residual.rhoV = max( residual.rhoV, (*i)->getLocalResidual().rhoV );
+            residual.rhoE = max( residual.rhoE, (*i)->getLocalResidual().rhoE );
+        }
+    }
+
+    return residual;
 }
 
 void GKSMesh::timeStep()
@@ -307,18 +336,34 @@ void GKSMesh::timeStep()
     // ========================================================================
 
     if (this->param.verbose) cout << "  Compute Fluxes ..." << endl;
-    for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
+
+    #pragma omp parallel for
+    for ( int i = 0; i < InterfaceList.size(); i++ )
     {
-        if( !(*i)->isGhostInterface() )
-            (*i)->computeFlux(this->dt);
+        if ( !InterfaceList[i]->isGhostInterface() )
+            InterfaceList[i]->computeFlux(this->dt);
     }
 
+    //for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
+    //{
+    //    if( !(*i)->isGhostInterface() )
+    //        (*i)->computeFlux(this->dt);
+    //}
+
     if (this->param.verbose) cout << "  Update Cells ..." << endl;
-    for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
+
+    #pragma omp parallel for
+    for ( int i = 0; i < CellList.size(); i++ )
     {
-        if( !(*i)->isGhostCell() )
-            (*i)->update(this->dt);
+        if ( !CellList[i]->isGhostCell() )
+            CellList[i]->update(this->dt);
     }
+
+    //for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
+    //{
+    //    if( !(*i)->isGhostCell() )
+    //        (*i)->update(this->dt);
+    //}
 
     // ========================================================================
 
@@ -352,9 +397,19 @@ void GKSMesh::iterate()
         this->timeStep();
         this->time += this->dt;
 
-        if ( this->iter%1000 == 0 )
-            cout << "t = " << this->time <<  "  |  timestep: " << this->iter << endl;
+        if ( this->iter % 1000 == 0 )
+        {
+            ConservedVariable residual = this->getGlobalResidual();
 
+            cout << "t = " << this->time << "  \t|  timestep: " << this->iter << endl;
+            cout << "r_rho = "  << residual.rho  << "\t ";
+            cout << "r_rhoU = " << residual.rhoU << "\t ";
+            cout << "r_rhoV = " << residual.rhoV << "\t ";
+            cout << "r_rhoE = " << residual.rhoE << "\t ";
+            cout << endl;
+
+            this->convergenceHistory.push_back(residual);
+        }
         // ========================================================================
         if (this->iter%this->param.outputInterval == 0)
         {
@@ -464,6 +519,8 @@ void GKSMesh::writeTimeSteps(string filename)
         file << (*i) << "\n";
 
     file.close();
+
+    cout << "done!" << endl;
 }
 
 void GKSMesh::writeVelocityProfile(string filename, double x)
@@ -526,6 +583,79 @@ void GKSMesh::writeMeshAsText(string filename)
     }
 
     file.close();
+}
+
+void GKSMesh::writeVelocityU(string filename)
+{
+    cout << "Wrinting file " << filename << " ... ";
+    // open file stream
+    ofstream file;
+    file.open(filename.c_str());
+
+    if ( !file.is_open() ) {
+        cout << " File cound not be opened.\n\nERROR!\n\n\n";
+        return;
+    }
+
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+    {
+        //if ( !( *i )->isGhostCell() )
+            file << ( *i )->getPrim().U << endl;
+    }
+
+    file.close();
+
+    cout << "done!" << endl;
+}
+
+void GKSMesh::writeVelocityV(string filename)
+{
+    cout << "Wrinting file " << filename << " ... ";
+    // open file stream
+    ofstream file;
+    file.open(filename.c_str());
+
+    if ( !file.is_open() ) {
+        cout << " File cound not be opened.\n\nERROR!\n\n\n";
+        return;
+    }
+
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+    {
+        //if( !(*i)->isGhostCell() )
+            file << ( *i )->getPrim().V << endl;
+    }
+
+    file.close();
+
+    cout << "done!" << endl;
+}
+
+void GKSMesh::writeConvergenceHistory(string filename)
+{
+    cout << "Wrinting file " << filename << " ... ";
+    // open file stream
+    ofstream file;
+    file.precision(15);
+    file.open(filename.c_str());
+
+    if ( !file.is_open() ) {
+        cout << " File cound not be opened.\n\nERROR!\n\n\n";
+        return;
+    }
+
+    for ( int i = 0; i < this->convergenceHistory.size(); i++ )
+    {
+        file << convergenceHistory[i].rho  << "\t";
+        file << convergenceHistory[i].rhoU << "\t";
+        file << convergenceHistory[i].rhoV << "\t";
+        file << convergenceHistory[i].rhoE << "\t";
+        file << endl;
+    }
+
+    file.close();
+
+    cout << "done!" << endl;
 }
 
 void GKSMesh::writeCellGeometry(ofstream& file)

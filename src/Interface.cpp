@@ -59,7 +59,7 @@ void Interface::computeFlux(double dt)
     const int NUMBER_OF_MOMENTS = 7;
 
     double prim[4];
-    double cons[4];
+    //double cons[4];
     double normalGradCons[4];
     double tangentialGradCons[4];
     double timeGrad[4];

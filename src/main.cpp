@@ -9,6 +9,7 @@
 #include "BoundaryCondition.h"
 #include <iostream>
 #include <sstream>
+#include <chrono>
 
 using namespace std;
 
@@ -200,8 +201,8 @@ int main(int argc, char* argv[])
     double H = 1.0;
     double W = 1.0;
 
-    param.numberOfIterations = 100000;
-    param.outputInterval = 1000;
+    param.numberOfIterations = 1000000;
+    param.outputInterval = 1000000;
     param.CFL = 0.1;
     param.fluxOutput = false;
 
@@ -238,7 +239,7 @@ int main(int argc, char* argv[])
     mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, uTop, 0.0, 1.0);
 
     // Generate Mesh
-    mesh->generateRectMesh(W, H, 64, 64);
+    mesh->generateRectMesh(W, H, 32, 32);
 
     // Initialize Values
     mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
@@ -317,13 +318,24 @@ int main(int argc, char* argv[])
 
     //mesh->writeMeshAsText("out/Mesh.txt");
 
+    chrono::high_resolution_clock::time_point startTime = chrono::high_resolution_clock::now();
+
     mesh->iterate();
 
-    mesh->writeTimeSteps("out/timeSteps.dat");
+    chrono::high_resolution_clock::time_point endTime = chrono::high_resolution_clock::now();
+
+    cout << "Time to Solution: " << chrono::duration_cast<chrono::seconds>( endTime - startTime ).count() << " s" <<  endl;
+
+    //mesh->writeTimeSteps("out/timeSteps.dat");
+
+    //mesh->writeVelocityU("out/VelocityU.dat");
+    //mesh->writeVelocityV("out/VelocityV.dat");
 
     //ostringstream filename;
     //filename << "out/VelocityProfileForceThirdOrder" << ny << ".dat";
     //mesh->writeVelocityProfile(filename.str(), 0.5);
     
+    mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
+
     char a; cin >> a;
 }
