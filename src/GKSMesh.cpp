@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>    //min()
+#include <chrono>
 
 using namespace std;
 
@@ -389,6 +390,9 @@ void GKSMesh::iterate()
         writeVTKFileFlux(filenameFlux.str(), true, false);
     }
 
+
+    chrono::high_resolution_clock::time_point startTime = chrono::high_resolution_clock::now();
+
     // ========================================================================
     // ========================================================================
     // ========================================================================
@@ -397,7 +401,7 @@ void GKSMesh::iterate()
         this->timeStep();
         this->time += this->dt;
 
-        if ( this->iter % 1000 == 0 )
+        if ( this->iter % this->param.outputInterval == 0 )
         {
             ConservedVariable residual = this->getGlobalResidual();
 
@@ -409,9 +413,30 @@ void GKSMesh::iterate()
             cout << endl;
 
             this->convergenceHistory.push_back(residual);
+
+            if ( this->isConverged(residual) )
+            {
+                cout << endl << " ========== Simulation converged! ==========" << endl;
+                cout << "Remaining residual change less than " << this->param.convergenceCriterium << endl;
+                cout << "Timesteps: " << this->iter << endl;
+                cout << "Time: " << this->time << endl;
+
+                ostringstream filename;
+                filename << "out/result_" << this->iter << ".vtk";
+                writeVTKFile(filename.str(), true, false);
+
+                if ( param.fluxOutput == true )
+                {
+                    ostringstream filenameFlux;
+                    filenameFlux << "out/resultFlux_" << this->iter << ".vtk";
+                    writeVTKFileFlux(filenameFlux.str(), true, false);
+                }
+                break;
+            }
+
         }
         // ========================================================================
-        if (this->iter%this->param.outputInterval == 0)
+        if (this->iter % this->param.outputIntervalVTK == 0)
         {
             ostringstream filename;
             filename << "out/result_" << this->iter << ".vtk";
@@ -431,6 +456,23 @@ void GKSMesh::iterate()
     // ========================================================================
     // ========================================================================
     // ========================================================================
+    
+    chrono::high_resolution_clock::time_point endTime = chrono::high_resolution_clock::now();
+    this->computationTime = chrono::duration_cast<chrono::seconds>( endTime - startTime ).count();
+
+    cout << "Time to Solution: " << this->computationTime << " s" << endl;
+}
+
+bool GKSMesh::isConverged(ConservedVariable residual)
+{
+    bool flag = true;
+
+    flag = flag && ( residual.rho  < this->param.convergenceCriterium );
+    flag = flag && ( residual.rhoU < this->param.convergenceCriterium );
+    flag = flag && ( residual.rhoV < this->param.convergenceCriterium );
+    flag = flag && ( residual.rhoE < this->param.convergenceCriterium );
+
+    return flag;
 }
 
 string GKSMesh::toString()
@@ -456,6 +498,59 @@ string GKSMesh::cellValuesToString()
             tmp << (*i)->valuesToString() << "\n";
     }
     return tmp.str();
+}
+
+void GKSMesh::writeOverviewFile(string filename)
+{
+    cout << "Wrinting file " << filename << " ... ";
+    // open file stream
+    ofstream file;
+    file.precision(15);
+    file.open(filename.c_str());
+
+    if ( !file.is_open() ) {
+        cout << " File cound not be opened.\n\nERROR!\n\n\n";
+        return;
+    }
+
+    file << " ========== Fluid Parameters ==========";
+    file << endl;
+    file << "nu =\t " << this->fluidParam.nu << endl;
+    file << "K  =\t " << this->fluidParam.K << endl;
+    file << "R  =\t " << this->fluidParam.R << endl;
+    file << "Fx =\t " << this->fluidParam.Force.x << endl;
+    file << "Fy =\t " << this->fluidParam.Force.y << endl;
+    file << endl;
+
+    file << " ========== Simulation Parameters ==========";
+    file << endl;
+    file << "Max Number of Iteratios:             " << this->param.numberOfIterations << endl;
+    file << "VTK-File Output Intervat:            " << this->param.outputIntervalVTK << endl;
+    file << "Convergence History Output Interval: " << this->param.outputInterval << endl;
+    file << "Convergence Criterium:               " << this->param.convergenceCriterium << endl;
+    file << endl;
+
+    file << " ========== Simulation Results ==========";
+    file << endl;
+    if ( this->isConverged(*(convergenceHistory.end()-1)) )
+    {
+        file << "Simulation Converged!" << endl;
+        file << "Time steps: " << this->iter << endl;
+    }
+    else
+    {
+        file << "Simulation did not converge" << endl;
+    }
+    file << "Final Residuals:" << endl;
+    file << "r_rho  = " << ( *(convergenceHistory.end()-1) ).rho << "\t ";
+    file << "r_rhoU = " << ( *(convergenceHistory.end()-1) ).rhoU << "\t ";
+    file << "r_rhoV = " << ( *(convergenceHistory.end()-1) ).rhoV << "\t ";
+    file << "r_rhoE = " << ( *(convergenceHistory.end()-1) ).rhoE << "\t ";
+    file << endl;
+    
+    file.close();
+
+    cout << "done!" << endl;
 }
 
 void GKSMesh::writeVTKFile(string filename, bool data, bool BC)
@@ -550,6 +645,8 @@ void GKSMesh::writeVelocityProfile(string filename, double x)
     }
 
     file.close();
+
+    cout << "done!" << endl;
 
 }
 

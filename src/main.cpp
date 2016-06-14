@@ -29,7 +29,11 @@ int main(int argc, char* argv[])
     double W = 0.5;
 
     param.numberOfIterations = 10000;
+    param.outputIntervalVTK = 250000;
     param.outputInterval = 10;
+
+    param.convergenceCriterium = 1.0e-7;
+
     param.CFL = 0.5;
     param.fluxOutput = false;
 
@@ -84,7 +88,11 @@ int main(int argc, char* argv[])
     double W = 1.0;
 
     param.numberOfIterations = 250000;
-    param.outputInterval = 250000;
+    param.outputIntervalVTK = 250000;
+    param.outputInterval = 10000;
+
+    param.convergenceCriterium = 1.0e-7;
+
     param.CFL = 0.5;
     param.fluxOutput = false;
 
@@ -136,7 +144,7 @@ int main(int argc, char* argv[])
 
     */
 
-    /*
+    ///*
 
     // ========================================================================
     //
@@ -150,7 +158,11 @@ int main(int argc, char* argv[])
     double W = 1.0;
 
     param.numberOfIterations = 500000;
-    param.outputInterval = 500000;
+    param.outputIntervalVTK = 500000;
+    param.outputInterval = 1000;
+
+    param.convergenceCriterium = 1.0e-7;
+
     param.CFL = 0.5;
     param.fluxOutput = false;
 
@@ -180,15 +192,15 @@ int main(int argc, char* argv[])
     mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0);
 
     // Generate Mesh
-    int ny = 512;
+    int ny = 32;
     mesh->generateRectMeshPeriodic(W, H, 1, ny);
 
     // Initialize Values
     mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0);
 
-    */
+    //*/
 
-    ///*
+    /*
 
     // ========================================================================
     //
@@ -202,7 +214,11 @@ int main(int argc, char* argv[])
     double W = 1.0;
 
     param.numberOfIterations = 1000000;
+    param.outputIntervalVTK = 250000;
     param.outputInterval = 1000000;
+
+    param.convergenceCriterium = 1.0e-7;
+
     param.CFL = 0.1;
     param.fluxOutput = false;
 
@@ -244,7 +260,7 @@ int main(int argc, char* argv[])
     // Initialize Values
     mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
     
-    //*/
+    */
         
     /*
 
@@ -260,7 +276,11 @@ int main(int argc, char* argv[])
     double W = 1.0;
 
     param.numberOfIterations = 10000;
+    param.outputIntervalVTK = 250000;
     param.outputInterval = 10;
+
+    param.convergenceCriterium = 1.0e-7;
+
     param.CFL = 0.1;
     param.fluxOutput = false;
 
@@ -308,34 +328,29 @@ int main(int argc, char* argv[])
 
     */
 
-    // ========================================================================
-    // ========================================================================
-    // ========================================================================
-    // ========================================================================
-    // ========================================================================
+    // ================================================================================================================================================
+    // ================================================================================================================================================
+    // ================================================================================================================================================
+    // ================================================================================================================================================
+    // ================================================================================================================================================
 
     //cout << mesh->toString();
 
     //mesh->writeMeshAsText("out/Mesh.txt");
 
-    chrono::high_resolution_clock::time_point startTime = chrono::high_resolution_clock::now();
-
     mesh->iterate();
-
-    chrono::high_resolution_clock::time_point endTime = chrono::high_resolution_clock::now();
-
-    cout << "Time to Solution: " << chrono::duration_cast<chrono::seconds>( endTime - startTime ).count() << " s" <<  endl;
 
     //mesh->writeTimeSteps("out/timeSteps.dat");
 
     //mesh->writeVelocityU("out/VelocityU.dat");
     //mesh->writeVelocityV("out/VelocityV.dat");
 
-    //ostringstream filename;
-    //filename << "out/VelocityProfileForceThirdOrder" << ny << ".dat";
-    //mesh->writeVelocityProfile(filename.str(), 0.5);
+    ostringstream filename;
+    filename << "out/VelocityProfileForceThirdOrder" << ny << ".dat";
+    mesh->writeVelocityProfile(filename.str(), 0.5);
     
     mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
+    mesh->writeOverviewFile("out/OverviewFile.dat");
 
     char a; cin >> a;
 }

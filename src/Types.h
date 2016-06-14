@@ -36,6 +36,10 @@ struct Parameters
 {
 	unsigned int numberOfIterations;
     unsigned int outputInterval;
+    unsigned int outputIntervalVTK;
+
+    double convergenceCriterium;
+    
     bool fluxOutput;
 
 	double CFL;

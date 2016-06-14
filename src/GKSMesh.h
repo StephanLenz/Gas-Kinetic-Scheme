@@ -8,6 +8,7 @@
 #include "Types.h"
 #include <vector>
 #include <string>
+#include <chrono>
 
 using namespace std;
 
@@ -32,6 +33,8 @@ private:
     unsigned int iter;
 
     vector<ConservedVariable> convergenceHistory;
+
+    long long computationTime;
 
 public:
 	GKSMesh();
@@ -63,8 +66,12 @@ public:
 
     void iterate();
 
+    bool isConverged(ConservedVariable residual);
+
 	string toString();
     string cellValuesToString();
+
+    void writeOverviewFile(string filename);
 
 	void writeVTKFile(string filename, bool data = true, bool BC = false);
 
