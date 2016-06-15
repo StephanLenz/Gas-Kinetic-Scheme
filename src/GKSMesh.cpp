@@ -547,7 +547,9 @@ void GKSMesh::writeOverviewFile(string filename)
     file << "r_rhoV = " << ( *(convergenceHistory.end()-1) ).rhoV << "\t ";
     file << "r_rhoE = " << ( *(convergenceHistory.end()-1) ).rhoE << "\t ";
     file << endl;
-    
+    file << endl;
+    file << "Real Time Simulated : " << this->time << " s" << endl;
+    file << "Time to solution:     " << this->computationTime << " s" << endl;
     file.close();
 
     cout << "done!" << endl;
