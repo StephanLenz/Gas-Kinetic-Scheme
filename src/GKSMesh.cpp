@@ -279,12 +279,6 @@ void GKSMesh::applyBoundaryCondition()
         if ( CellList[i]->isGhostCell() )
             CellList[i]->applyBoundaryCondition();
     }
-
-    //for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
-    //{
-    //    if ( ( (*i)->isGhostCell() ) )
-    //        (*i)->applyBoundaryCondition();
-    //}
 }
 
 void GKSMesh::computeGlobalTimestep()
@@ -345,12 +339,6 @@ void GKSMesh::timeStep()
             InterfaceList[i]->computeFlux(this->dt);
     }
 
-    //for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
-    //{
-    //    if( !(*i)->isGhostInterface() )
-    //        (*i)->computeFlux(this->dt);
-    //}
-
     if (this->param.verbose) cout << "  Update Cells ..." << endl;
 
     #pragma omp parallel for
@@ -359,12 +347,6 @@ void GKSMesh::timeStep()
         if ( !CellList[i]->isGhostCell() )
             CellList[i]->update(this->dt);
     }
-
-    //for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
-    //{
-    //    if( !(*i)->isGhostCell() )
-    //        (*i)->update(this->dt);
-    //}
 
     // ========================================================================
 
@@ -830,7 +812,9 @@ void GKSMesh::writeCellData(ofstream& file)
 {
     // write cell data ( ID and stress )
     file << "CELL_DATA " << this->CellList.size() << endl;
-    file << "FIELD Lable 9\n";
+    file << "FIELD Lable 13\n";
+
+    // ================================================================================================================
 
     file << "rho 1 " << this->CellList.size() << " double\n";
     for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
@@ -856,6 +840,8 @@ void GKSMesh::writeCellData(ofstream& file)
         file << (*i)->getPrim().L << endl;
     }
 
+    // ================================================================================================================
+
     file << "GhostCell 1 " << this->CellList.size() << " int\n";
     for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
     {
@@ -864,6 +850,8 @@ void GKSMesh::writeCellData(ofstream& file)
         else
             file << 0 << endl;
     }
+
+    // ================================================================================================================
 
     file << "rhoU 1 " << this->CellList.size() << " double\n";
     for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
@@ -883,13 +871,41 @@ void GKSMesh::writeCellData(ofstream& file)
         file << (*i)->getCons().rhoE << endl;
     }
 
+    // ================================================================================================================
+
     file << "p 1 " << this->CellList.size() << " double\n";
     for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
         file << ( *i )->getPrim().rho / ( 2.0 * ( *i )->getPrim().L ) << endl;
     }
 
+    // ================================================================================================================
 
+    file << "res_rho 1 " << this->CellList.size() << " double\n";
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+    {
+        file << ( *i )->getLocalResidual().rho << endl;
+    }
+
+    file << "res_rhoU 1 " << this->CellList.size() << " double\n";
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+    {
+        file << ( *i )->getLocalResidual().rhoU << endl;
+    }
+
+    file << "res_rhoV 1 " << this->CellList.size() << " double\n";
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+    {
+        file << ( *i )->getLocalResidual().rhoV << endl;
+    }
+
+    file << "res_rhoE 1 " << this->CellList.size() << " double\n";
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+    {
+        file << ( *i )->getLocalResidual().rhoE << endl;
+    }
+
+    // ================================================================================================================
 }
 
 void GKSMesh::writeInterfaceData(ofstream & file)

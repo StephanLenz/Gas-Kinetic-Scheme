@@ -213,11 +213,11 @@ int main(int argc, char* argv[])
     double H = 1.0;
     double W = 1.0;
 
-    param.numberOfIterations = 50000000;
-    param.outputIntervalVTK = 500000;
+    param.numberOfIterations = 5000000;
+    param.outputIntervalVTK = 10000;
     param.outputInterval = 10000;
 
-    param.convergenceCriterium = 1.0e-6;
+    param.convergenceCriterium = 1.0e-5;
 
     param.CFL = 0.1;
     param.fluxOutput = false;
@@ -231,7 +231,7 @@ int main(int argc, char* argv[])
     fluidParam.K = 0;
     fluidParam.R = 208.0;
 
-    double Re = 100;
+    double Re = 2000;
     double Ma = 0.15;
     double T = 313.15;
 
@@ -261,7 +261,7 @@ int main(int argc, char* argv[])
     mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, uTop, 0.0, 1.0);
 
     // Generate Mesh
-    int nx = 128;
+    int nx = 64;
     mesh->generateRectMesh(W, H, nx, nx);
 
     // Initialize Values
@@ -359,7 +359,7 @@ int main(int argc, char* argv[])
     //mesh->writeOverviewFile(       ( filename.str() + "/OverviewFile.dat" )          );
     
     ostringstream filename;
-    filename << "out/DrivenCavity/Re100/" << nx;
+    filename << "out/DrivenCavity/Re" << Re << "/" << nx;
     //mesh->writeVelocityProfile(( filename.str() + "/VelocityProfile.dat" ), 0.5);
     mesh->writeVelocityU(          (filename.str() + "/VelocityU.dat"          ));
     mesh->writeVelocityV(          (filename.str() + "/VelocityV.dat"          ));
