@@ -227,6 +227,51 @@ void Interface::computeBoundaryFlux(double dt)
 
 }
 
+void Interface::computeBoundaryFlux(double dt)
+{
+    PrimaryVariable prim = this->getCellInDomain()->getPrim();
+
+    if ( this->axis == 1 )
+    {
+        this->rotate((double*)&prim);
+    }
+    
+    double distance = this->distance( this->getCellInDomain()->getCenter() );
+
+    // compute the length of the interface
+    double dy = this->getCellInDomain()->getDx().x * normal.y
+              + this->getCellInDomain()->getDx().y * normal.x;
+
+    //ConservedVariable FluxDensity = this->BoundaryConditionPointer->computeBoundaryInterfaceFlux(prim, dx, this->fluidParam.nu);
+    ConservedVariable FluxDensity;
+    double sign = 1.0;
+
+    if ( posCell == NULL )
+        sign = -1.0;
+
+    FluxDensity.rho  = 0.0;
+    FluxDensity.rhoU = prim.rho / ( 2.0 * prim.L );
+    FluxDensity.rhoV = - sign * this->fluidParam.nu * prim.rho * prim.V / distance;
+    FluxDensity.rhoE = 0.0;
+    
+    this->timeIntegratedFlux[0] = FluxDensity.rho  * dt * dy;
+    this->timeIntegratedFlux[1] = FluxDensity.rhoU * dt * dy;
+    this->timeIntegratedFlux[2] = FluxDensity.rhoV * dt * dy;
+    this->timeIntegratedFlux[3] = FluxDensity.rhoE * dt * dy;
+
+    this->FluxDensity[0] = FluxDensity.rho;
+    this->FluxDensity[1] = FluxDensity.rhoU;
+    this->FluxDensity[2] = FluxDensity.rhoV;
+    this->FluxDensity[3] = FluxDensity.rhoE;
+
+    if ( this->axis == 1 )
+    {
+        this->rotate(this->FluxDensity);
+        this->rotate(this->timeIntegratedFlux);
+    }
+
+}
+
 Cell * Interface::getNeigborCell(Cell * askingCell)
 {
     // ========================================================================
