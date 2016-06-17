@@ -17,6 +17,8 @@ public:
     ~InterfaceBC();
 
     ConservedVariable computeBoundaryInterfaceFlux(PrimaryVariable prim, double dx, double nu);
+
+    double getWallVelocity();
 };
 
 

@@ -22,3 +22,8 @@ ConservedVariable InterfaceBC::computeBoundaryInterfaceFlux(PrimaryVariable prim
 
     return Flux;
 }
+
+double InterfaceBC::getWallVelocity()
+{
+    return this->wallVelocity;
+}
