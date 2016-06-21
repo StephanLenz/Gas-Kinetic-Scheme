@@ -15,7 +15,7 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-    /*
+    ///*
 
     // ========================================================================
     //
@@ -26,7 +26,66 @@ int main(int argc, char* argv[])
     Parameters param;
 
     double H = 1.0;
-    double W = 0.1;
+    double W = 0.5;
+
+    param.numberOfIterations = 10000;
+    param.outputIntervalVTK = 250000;
+    param.outputInterval = 10;
+
+    param.convergenceCriterium = 1.0e-7;
+
+    param.CFL = 0.5;
+    param.fluxOutput = false;
+
+    param.verbose = false;
+
+    // ========================================================================
+
+    FluidParameter fluidParam;
+
+    fluidParam.K  = 1;
+    fluidParam.nu = 1e-2;
+    fluidParam.R = 200.0;
+    fluidParam.Force.x = 0.0;
+    fluidParam.Force.y = 0.0;
+
+    // ========================================================================
+
+    GKSMesh* mesh = new GKSMesh(param, fluidParam);
+
+    // Define Boundary Conditions
+    //    -----------
+    //    |    1    |
+    //    |         |
+    //    |    0    |
+    //    -----------
+    mesh->addBoundaryCondition(1, 1, 1, 1,  1.0, 0.0, 0.0, 0.0);
+    mesh->addBoundaryCondition(1, 1, 1, 1,  1.0, 0.0, 0.0, 0.0);
+
+    // Generate Mesh
+    mesh->generateRectMeshPeriodic(W, H, 1, 8);
+
+    // Initialize Values
+    //mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0);
+
+    double rho[] = { 1.0, 1.0 + 1.0e-3 };
+
+    mesh->initMeshLinearDensity(rho, 0.0, 0.0, 1.0);
+
+    */
+    
+    /*
+
+    // ========================================================================
+    //
+    //                  Poiseuille-Flow (non periodic)
+    //
+    // ========================================================================
+
+    Parameters param;
+
+    double H = 1.0;
+    double W = 1.0;
 
     param.numberOfIterations = 1000000;
     param.outputIntervalVTK = 1000000;
@@ -64,7 +123,8 @@ int main(int argc, char* argv[])
     mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, 0.0, 0.0, 0.0);
 
     // Generate Mesh
-    mesh->generateRectMesh(W, H, 1, 64);
+    int ny = 32;
+    mesh->generateRectMesh(W, H, 33, ny);
 
     // Initialize Values
     mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0);
@@ -84,12 +144,14 @@ int main(int argc, char* argv[])
     double H = 1.0;
     double W = 0.1;
 
-    param.numberOfIterations = 100000;
-    param.outputIntervalVTK = 1000;
-    param.outputInterval = 1000;
+    param.numberOfIterations = 1000000;
+    param.outputIntervalVTK = 1000000;
+    param.outputInterval = 100000;
+
+    param.convergenceCriterium = 1.0e-9;
+
     param.CFL = 0.5;
-    
-    param.convergenceCriterium = 1.0e-8;
+    param.fluxOutput = false;
 
     param.verbose = false;
     param.fluxOutput = true;
@@ -114,18 +176,19 @@ int main(int argc, char* argv[])
     //    |         |
     //    |    0    |
     //    -----------
-    mesh->addInterfaceBoundaryCondition(0.0);
-    mesh->addInterfaceBoundaryCondition(0.0);
+    mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0);
+    mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0);
 
     // Generate Mesh
-    mesh->generateRectMeshPeriodicInterfaceBCs(W, H, 1, 64);
+    int ny = 512;
+    mesh->generateRectMeshPeriodic(W, H, 1, ny);
 
     // Initialize Values
     mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0);
 
     */
 
-    ///*
+    /*
 
     // ========================================================================
     //
@@ -190,8 +253,74 @@ int main(int argc, char* argv[])
 
     // Initialize Values
     mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
-
+    
     //*/
+        
+    /*
+
+    // ========================================================================
+    //
+    //                  Test
+    //
+    // ========================================================================
+
+        Parameters param;
+
+    double H = 1.0;
+    double W = 1.0;
+
+    param.numberOfIterations = 10000;
+    param.outputIntervalVTK = 250000;
+    param.outputInterval = 10;
+
+    param.convergenceCriterium = 1.0e-7;
+
+    param.CFL = 0.1;
+    param.fluxOutput = false;
+
+    param.verbose = false;
+
+    // ========================================================================
+
+    FluidParameter fluidParam;
+
+    fluidParam.K = 1;
+    fluidParam.nu = 1.0e-2;
+    fluidParam.R = 208.0;
+
+    double uTop = 1.0;
+    double T = 293.15;
+    double lambda = 1.0 / ( 2.0 * fluidParam.R * T );
+
+    cout << "Re = " << uTop / fluidParam.nu << endl;
+    cout << "Ma = " << uTop / sqrt(fluidParam.R * T) << endl;
+
+    // ========================================================================
+
+    GKSMesh* mesh = new GKSMesh(param, fluidParam);
+
+    // Define Boundary Conditions
+    //    -----------
+    //    |    3    |
+    //    | 0     2 |
+    //    |    1    |
+    //    -----------
+    mesh->addBoundaryCondition(1, 1, 1, 1, 0.0, 0.0, 0.0, 1.0);
+    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, 0.0, 0.0, 1.0);
+    mesh->addBoundaryCondition(1, 1, 1, 1, 0.0, 0.0, 0.0, 1.0);
+    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, 0.0, 0.0, 1.0);
+
+    // Generate Mesh
+    mesh->generateRectMesh(W, H, 32, 32);
+
+    // Initialize Values
+    // mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0);
+
+    double rho[] = { 1.0, 1.0 + 1.0e-3 };
+
+    mesh->initMeshLinearDensity(rho, 0.0, 0.0, lambda);
+
+    */
 
     // ================================================================================================================================================
     // ================================================================================================================================================
@@ -226,7 +355,7 @@ int main(int argc, char* argv[])
 
 
     //mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
-    mesh->writeOverviewFile("out/OverviewFile.dat");
+    //mesh->writeOverviewFile("out/OverviewFile.dat");
 
     //char a; cin >> a;
 }
