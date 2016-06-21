@@ -15,7 +15,7 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-    ///*
+    /*
 
     // ========================================================================
     //
@@ -26,16 +26,19 @@ int main(int argc, char* argv[])
     Parameters param;
 
     double H = 1.0;
-    double W = 0.5;
+    double W = 1.0;
 
-    param.numberOfIterations = 10000;
-    param.outputIntervalVTK = 250000;
-    param.outputInterval = 10;
+    param.numberOfIterations = 1000000;
+    param.outputIntervalVTK = 10000;
+    param.outputInterval = 1000;
 
     param.convergenceCriterium = 1.0e-7;
 
+    param.L = 1.0;
     param.CFL = 0.5;
+
     param.fluxOutput = false;
+    param.resOutput = false;
 
     param.verbose = false;
 
@@ -45,9 +48,13 @@ int main(int argc, char* argv[])
 
     fluidParam.K  = 1;
     fluidParam.nu = 1e-2;
-    fluidParam.R = 200.0;
+    fluidParam.R = 208.0;
     fluidParam.Force.x = 0.0;
     fluidParam.Force.y = 0.0;
+
+    double uTop = 1.0;
+    double T = 293.15;
+    double lambda = 1.0 / ( 2.0 * fluidParam.R * T );
 
     // ========================================================================
 
@@ -59,18 +66,14 @@ int main(int argc, char* argv[])
     //    |         |
     //    |    0    |
     //    -----------
-    mesh->addBoundaryCondition(1, 1, 1, 1,  1.0, 0.0, 0.0, 0.0);
-    mesh->addBoundaryCondition(1, 1, 1, 1,  1.0, 0.0, 0.0, 0.0);
+    mesh->addBoundaryCondition(1, 0, 0, 1,  1.0, 0.0,  0.0, 0.0);
+    mesh->addBoundaryCondition(1, 0, 0, 1,  1.0, uTop, 0.0, 0.0);
 
     // Generate Mesh
     mesh->generateRectMeshPeriodic(W, H, 1, 8);
 
     // Initialize Values
-    //mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0);
-
-    double rho[] = { 1.0, 1.0 + 1.0e-3 };
-
-    mesh->initMeshLinearDensity(rho, 0.0, 0.0, 1.0);
+    mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
 
     */
     
@@ -131,7 +134,7 @@ int main(int argc, char* argv[])
 
     */
 
-    /*
+    ///*
 
     // ========================================================================
     //
@@ -142,19 +145,20 @@ int main(int argc, char* argv[])
     Parameters param;
 
     double H = 1.0;
-    double W = 0.1;
+    double W = 1.0;
 
     param.numberOfIterations = 1000000;
-    param.outputIntervalVTK = 1000000;
-    param.outputInterval = 100000;
+    param.outputIntervalVTK = 10000;
+    param.outputInterval = 1000;
 
-    param.convergenceCriterium = 1.0e-9;
+    param.convergenceCriterium = 1.0e-7;
 
+    param.L = 1.0;
     param.CFL = 0.5;
-    param.fluxOutput = false;
 
     param.verbose = false;
-    param.fluxOutput = true;
+    param.fluxOutput = false;
+    param.resOutput = false;
 
     // ========================================================================
 
@@ -162,9 +166,12 @@ int main(int argc, char* argv[])
 
     fluidParam.K  = 1;
     fluidParam.nu = 1e-2;
-    fluidParam.R = 200.0;
+    fluidParam.R = 208.0;
     fluidParam.Force.x = 1e-4;
     fluidParam.Force.y = 0.0;
+
+    double T = 293.15;
+    double lambda = 1.0 / ( 2.0 * fluidParam.R * T );
 
     // ========================================================================
 
@@ -180,13 +187,13 @@ int main(int argc, char* argv[])
     mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0);
 
     // Generate Mesh
-    int ny = 512;
+    int ny = 32;
     mesh->generateRectMeshPeriodic(W, H, 1, ny);
 
     // Initialize Values
     mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0);
 
-    */
+    //*/
 
     /*
 
@@ -330,14 +337,14 @@ int main(int argc, char* argv[])
 
     //cout << mesh->toString();
 
-    mesh->writeMeshAsText("out/Mesh.txt");
+    //mesh->writeMeshAsText("out/Mesh.txt");
 
     mesh->iterate();
 
     //mesh->writeTimeSteps("out/timeSteps.dat");
 
-    mesh->writeVelocityU("out/VelocityU.dat");
-    mesh->writeVelocityV("out/VelocityV.dat");
+    //mesh->writeVelocityU("out/VelocityU.dat");
+    //mesh->writeVelocityV("out/VelocityV.dat");
 
     //ostringstream filename;
     //filename << "out/PoiseuillePresGradConvergenceStudy/" << ny;
@@ -354,8 +361,8 @@ int main(int argc, char* argv[])
     //mesh->writeOverviewFile(      ( filename.str() + "/OverviewFile.dat" ));
 
 
-    //mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
-    //mesh->writeOverviewFile("out/OverviewFile.dat");
+    mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
+    mesh->writeOverviewFile("out/OverviewFile.dat");
 
     //char a; cin >> a;
 }
