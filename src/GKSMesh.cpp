@@ -294,7 +294,7 @@ void GKSMesh::computeGlobalTimestep()
     this->dt *= this->param.CFL;
 }
 
-ConservedVariable GKSMesh::getGlobalResidual()
+ConservedVariable GKSMesh::getMaxGlobalResidual()
 {
     ConservedVariable residual;
     residual.rho  = 0.0;
@@ -312,6 +312,33 @@ ConservedVariable GKSMesh::getGlobalResidual()
             residual.rhoE = max( residual.rhoE, (*i)->getLocalResidual().rhoE );
         }
     }
+
+    return residual;
+}
+
+ConservedVariable GKSMesh::getL2GlobalResidual()
+{
+    ConservedVariable residual;
+    residual.rho  = 0.0;
+    residual.rhoU = 0.0;
+    residual.rhoV = 0.0;
+    residual.rhoE = 0.0;
+
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+    {
+        if ( !( ( *i )->isGhostCell() ) )
+        {
+            residual.rho  +=  ( *i )->getLocalResidual().rho  * ( *i )->getLocalResidual().rho;
+            residual.rhoU +=  ( *i )->getLocalResidual().rhoU * ( *i )->getLocalResidual().rhoU;
+            residual.rhoV +=  ( *i )->getLocalResidual().rhoV * ( *i )->getLocalResidual().rhoV;
+            residual.rhoE +=  ( *i )->getLocalResidual().rhoE * ( *i )->getLocalResidual().rhoE;
+        }
+    }
+
+    residual.rho  = sqrt( residual.rho  );
+    residual.rhoU = sqrt( residual.rhoU );
+    residual.rhoV = sqrt( residual.rhoV );
+    residual.rhoE = sqrt( residual.rhoE );
 
     return residual;
 }
@@ -385,7 +412,7 @@ void GKSMesh::iterate()
 
         if ( this->iter % this->param.outputInterval == 0 )
         {
-            ConservedVariable residual = this->getGlobalResidual();
+            ConservedVariable residual = this->getMaxGlobalResidual();
 
             cout << "t = " << this->time << "  \t|  timestep: " << this->iter << endl;
             cout << "r_rho = "  << residual.rho  << "\t ";
@@ -443,6 +470,52 @@ void GKSMesh::iterate()
     this->computationTime = chrono::duration_cast<chrono::seconds>( endTime - startTime ).count();
 
     cout << "Time to Solution: " << this->computationTime << " s" << endl;
+}
+
+double GKSMesh::getMaxVelocity()
+{
+    double maxVelocity = 0.0;
+    double localVelocity;
+    Cell* localCell;
+    for ( int i = 0; i < this->CellList.size(); i++ )
+    {
+        if ( !( this->CellList[i]->isGhostCell() ) )
+        {
+            localCell = this->CellList[i];
+            localVelocity = sqrt( localCell->getPrim().U * localCell->getPrim().U 
+                                + localCell->getPrim().V * localCell->getPrim().V );
+            maxVelocity = max(maxVelocity, localVelocity);
+        }
+    }
+
+    return maxVelocity;
+}
+
+double GKSMesh::getMaxRe()
+{
+    return  this->getMaxVelocity()*this->param.L / this->fluidParam.nu;
+}
+
+double GKSMesh::getMaxMa()
+{
+    double maxMa = 0.0;    
+    Cell* localCell;
+    double localVelocity;
+    double localSpeedOfSound;
+
+    for ( int i = 0; i < this->CellList.size(); i++ )
+    {
+        if ( !( this->CellList[i]->isGhostCell() ) )
+        {
+            localCell = this->CellList[i];
+            localVelocity = sqrt( localCell->getPrim().U * localCell->getPrim().U
+                                + localCell->getPrim().V * localCell->getPrim().V );
+            localSpeedOfSound = sqrt(1.0 / ( 2.0 * localCell->getPrim().L ));
+            maxMa = max(maxMa, localVelocity/localSpeedOfSound);
+        }
+    }
+
+    return maxMa;
 }
 
 bool GKSMesh::isConverged(ConservedVariable residual)
@@ -510,6 +583,13 @@ void GKSMesh::writeOverviewFile(string filename)
     file << "VTK-File Output Intervat:            " << this->param.outputIntervalVTK << endl;
     file << "Convergence History Output Interval: " << this->param.outputInterval << endl;
     file << "Convergence Criterium:               " << this->param.convergenceCriterium << endl;
+    file << endl;
+
+    file << " ========== Flow Characteristics ==========";
+    file << endl;
+    file << "Umax = " << this->getMaxVelocity() << " m/s" << endl;
+    file << "Re   = " << this->getMaxRe() << endl;
+    file << "Ma   = " << this->getMaxMa() << endl;
     file << endl;
 
     file << " ========== Simulation Results ==========";
@@ -810,42 +890,46 @@ void GKSMesh::writeInterfaceGeometry(ofstream& file)
 
 void GKSMesh::writeCellData(ofstream& file)
 {
+    int numberOfFields = 9;
+    if ( this->param.resOutput )
+        numberOfFields += 4;
+    
     // write cell data ( ID and stress )
     file << "CELL_DATA " << this->CellList.size() << endl;
-    file << "FIELD Lable 13\n";
+    file << "FIELD Lable " << numberOfFields << "\n";
 
     // ================================================================================================================
 
     file << "rho 1 " << this->CellList.size() << " double\n";
-    for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
-        file << (*i)->getPrim().rho << endl;
+        file << ( *i )->getPrim().rho << endl;
     }
 
     file << "U 1 " << this->CellList.size() << " double\n";
-    for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
-        file << (*i)->getPrim().U << endl;
+        file << ( *i )->getPrim().U << endl;
     }
 
     file << "V 1 " << this->CellList.size() << " double\n";
-    for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
-        file << (*i)->getPrim().V << endl;
+        file << ( *i )->getPrim().V << endl;
     }
 
     file << "Lambda 1 " << this->CellList.size() << " double\n";
-    for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
-        file << (*i)->getPrim().L << endl;
+        file << ( *i )->getPrim().L << endl;
     }
 
     // ================================================================================================================
 
     file << "GhostCell 1 " << this->CellList.size() << " int\n";
-    for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
-        if ((*i)->isGhostCell())
+        if ( ( *i )->isGhostCell() )
             file << 1 << endl;
         else
             file << 0 << endl;
@@ -854,21 +938,21 @@ void GKSMesh::writeCellData(ofstream& file)
     // ================================================================================================================
 
     file << "rhoU 1 " << this->CellList.size() << " double\n";
-    for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
-        file << (*i)->getCons().rhoU << endl;
+        file << ( *i )->getCons().rhoU << endl;
     }
 
     file << "rhoV 1 " << this->CellList.size() << " double\n";
-    for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
-        file << (*i)->getCons().rhoV << endl;
+        file << ( *i )->getCons().rhoV << endl;
     }
 
     file << "rhoE 1 " << this->CellList.size() << " double\n";
-    for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
-        file << (*i)->getCons().rhoE << endl;
+        file << ( *i )->getCons().rhoE << endl;
     }
 
     // ================================================================================================================
@@ -881,30 +965,32 @@ void GKSMesh::writeCellData(ofstream& file)
 
     // ================================================================================================================
 
-    file << "res_rho 1 " << this->CellList.size() << " double\n";
-    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+    if ( this->param.resOutput )
     {
-        file << ( *i )->getLocalResidual().rho << endl;
-    }
+        file << "res_rho 1 " << this->CellList.size() << " double\n";
+        for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+        {
+            file << ( *i )->getLocalResidual().rho << endl;
+        }
 
-    file << "res_rhoU 1 " << this->CellList.size() << " double\n";
-    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
-    {
-        file << ( *i )->getLocalResidual().rhoU << endl;
-    }
+        file << "res_rhoU 1 " << this->CellList.size() << " double\n";
+        for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+        {
+            file << ( *i )->getLocalResidual().rhoU << endl;
+        }
 
-    file << "res_rhoV 1 " << this->CellList.size() << " double\n";
-    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
-    {
-        file << ( *i )->getLocalResidual().rhoV << endl;
-    }
+        file << "res_rhoV 1 " << this->CellList.size() << " double\n";
+        for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+        {
+            file << ( *i )->getLocalResidual().rhoV << endl;
+        }
 
-    file << "res_rhoE 1 " << this->CellList.size() << " double\n";
-    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
-    {
-        file << ( *i )->getLocalResidual().rhoE << endl;
+        file << "res_rhoE 1 " << this->CellList.size() << " double\n";
+        for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+        {
+            file << ( *i )->getLocalResidual().rhoE << endl;
+        }
     }
-
     // ================================================================================================================
 }
 

@@ -60,11 +60,17 @@ public:
 
     void computeGlobalTimestep();
 
-    ConservedVariable getGlobalResidual();
+    ConservedVariable getMaxGlobalResidual();
+    ConservedVariable getL2GlobalResidual();
 
     void timeStep();
 
     void iterate();
+
+    double getMaxVelocity();
+
+    double getMaxRe();
+    double getMaxMa();
 
     bool isConverged(ConservedVariable residual);
 

@@ -70,16 +70,17 @@ void Cell::update(double dt)
                      ) / (this->dx*this->dy);
 
     // Apply Forcing
-    this->cons[1] += dt * this->fluidParam.Force.x;
-    this->cons[2] += dt * this->fluidParam.Force.y;
+    this->cons[1] += dt * this->cons[0] * this->fluidParam.Force.x;
+    this->cons[2] += dt * this->cons[0] * this->fluidParam.Force.y;
 
     // compute primary Variables
     this->computePrim();
 
-    this->residual.rho  = fabs(this->cons[0] - cons_old[0]) / fabs(cons_old[0]);
-    this->residual.rhoU = fabs(this->cons[1] - cons_old[1]) / fabs(cons_old[1]);
-    this->residual.rhoV = fabs(this->cons[2] - cons_old[2]) / fabs(cons_old[2]);
-    this->residual.rhoE = fabs(this->cons[3] - cons_old[3]) / fabs(cons_old[3]);
+    // Set the residual for zero values to zero
+    this->residual.rho  = (fabs(cons_old[0]) > 1.0e-12) ? fabs(this->cons[0] - cons_old[0]) / fabs(cons_old[0]) : 0.0;
+    this->residual.rhoU = (fabs(cons_old[1]) > 1.0e-12) ? fabs(this->cons[1] - cons_old[1]) / fabs(cons_old[1]) : 0.0;
+    this->residual.rhoV = (fabs(cons_old[2]) > 1.0e-12) ? fabs(this->cons[2] - cons_old[2]) / fabs(cons_old[2]) : 0.0;
+    this->residual.rhoE = (fabs(cons_old[3]) > 1.0e-12) ? fabs(this->cons[3] - cons_old[3]) / fabs(cons_old[3]) : 0.0;
 
 }
 

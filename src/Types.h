@@ -40,8 +40,10 @@ struct Parameters
 
     double convergenceCriterium;
     
+    bool resOutput;
     bool fluxOutput;
 
+    double L;
 	double CFL;
 
     bool verbose;
