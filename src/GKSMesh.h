@@ -50,6 +50,8 @@ public:
 
     void generateRectMeshPeriodic(double lengthX, double lengthY, int nx, int ny);
 
+    void generateRectMeshPeriodicVertical(double lengthX, double lengthY, int nx, int ny);
+
     void generateRectMeshInterfaceBCs(double lengthX, double lengthY, int nx, int ny);
 
     void generateRectMeshPeriodicInterfaceBCs(double lengthX, double lengthY, int nx, int ny);

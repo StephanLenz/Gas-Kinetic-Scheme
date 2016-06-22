@@ -732,7 +732,7 @@ void Interface::computeMicroSlope(double * prim, double * macroSlope, double * m
     double A, B, C, E;
 
     // ========================================================================
-    // this is the total energy density E = rhoE / rho
+    // this is 2 times the total energy density 2 E = 2 rhoE / rho
     E = prim[1] * prim[1] + prim[2] * prim[2] + ( this->fluidParam.K + 2.0 ) / ( 2.0*prim[3] );
     // ========================================================================
 
@@ -775,6 +775,6 @@ void Interface::computeMoments(double * prim, double * MomentU, double* MomentV,
     MomentXi[3] = 0.0;
     MomentXi[4] = ( 2.0*this->fluidParam.K + 1.0*this->fluidParam.K*this->fluidParam.K ) / (4.0 * prim[3] * prim[3]);
     MomentXi[5] = 0.0;
-    MomentXi[6] = 0.0;
+    MomentXi[6] = ( 1.0*this->fluidParam.K + 4.0 ) / ( 2.0 * prim[3] ) * MomentXi[4];
 }
 

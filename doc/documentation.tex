@@ -321,7 +321,35 @@ a_1 &=& \left( \dfrac{1}{\rho} \dfrac{\partial \rho}{\partial x} \right)
 \end{split}
 \end{eqnarray}
 
-This computation is here only shown for the normal variation constants $a_i$. For the tangential and time variation the respective derivatives of the macroscopic variables need to be used in the above formulas. The spacial derivatives are computed from finite differences between then cell values. For the time derivative a more complex computation is needed. The time derivatives can be expressed as:
+This computation is here only shown for the normal variation constants $a_i$. For the tangential and time variation the respective derivatives of the macroscopic variables need to be used in the above formulas. The values of the primitive variables are computed by third order interpolation in the normal direction of the interface. $W_{+}$ denotes the cell on the positive side of the interface.
+
+\begin{equation}
+\uu{Z}_{i+\frac{1}{2},j} 
+= \dfrac{7}{12} \left( \uu{Z}_{i,j} + \uu{Z}_{i+1,j} \right)
+- \dfrac{1}{12} \left( \uu{Z}_{i-1,j} + \uu{Z}_{i+2,j} \right)
+\hspace{1cm} \textnormal{with} \hspace{1cm}
+\uu{Z} = \left( \rho, U, V, \lambda \right)^T
+\end{equation}
+
+For the boundary Interfaces on linear Interpolation is used, since only one layer of Ghost-Cells is introduced.
+
+The spacial derivatives of the conservative variables are computed from finite differences between then cell values. The normal derivatives are computed from the third order interpolation:
+
+\begin{equation}
+\left( \dfrac{1}{\rho}\dfrac{\partial \uu{W}}{\partial x} \right)_{i+\frac{1}{2},j}
+= \dfrac{\frac{5}{4}  \left( \uu{W}_{i+1,j} - \uu{W}_{i,j} \right) 
+       - \frac{1}{12} \left( \uu{W}_{i+2,j} - \uu{W}_{i-1,j} \right)}{\rho \Delta x}
+\end{equation}
+
+At the boundaries a again only first order interpolation is used. The tangential derivatives are computed by linear interpolation:
+
+\begin{equation}
+\left( \dfrac{1}{\rho}\dfrac{\partial \uu{W}}{\partial y} \right)_{i+\frac{1}{2},j}
+= \dfrac{\left( \uu{W}_{i,j+1} + \uu{W}_{i+1,j+1} \right)
+       - \left( \uu{W}_{i,j}   + \uu{W}_{i+1,j}   \right) }{4 \rho \Delta x}
+\end{equation}
+
+For the time derivative a more complex computation is needed. The time derivatives can be expressed as:
 
 \begin{equation}
 \begin{pmatrix}
@@ -639,6 +667,22 @@ s ~
 
 The swap of the momentum components in shown by the Rotation Matrix $\uuu{R}$ which just rotates the second and third component.
 
+\subsection*{Boundary Conditions}
+
+The Boundary Conditions are implemented with the help of a layer of Ghost-Cells around the domain. The Interfaces between the domain and the Ghost-Cells exactly represent the boundary. Two types of Boundary Conditions are implemented for every primitive variable. The value of the Ghost-Cell for Diriclet Boundary Conditions (fixed value on boundary) is computed with linear interpolation:
+
+\begin{equation}
+Z_{\alpha,~GhostCell} = 2 Z_{\alpha,~Boundary} - Z_{\alpha,~Cell~in~Domain}
+\end{equation}
+
+The homogeneous Neumann Boundary Conditions (zero Gradient at Boundary) are implemented in a similar way:
+
+\begin{equation}
+Z_{\alpha,~GhostCell} = Z_{\alpha,~Cell~in~Domain}
+\end{equation}
+
+The values of the conservative variables are then computed from the primitive variables.
+
 \clearpage
 
 \section{Some Formulas}
@@ -720,6 +764,8 @@ Re \gg 1
 Re \approx 1
 \end{equation}
 
+From Tannehill et al. (1997) Chapter 9 Eq. 9.14
+
 \begin{equation}
 \Delta t \leq CFL \dfrac{\Delta x}{(u_{max} + c_s)(1 + 2/Re^*)}
 \end{equation}
@@ -763,7 +809,66 @@ u_{max} &=& \dfrac{GH^2}{8\nu\rho}&
 \end{split}
 \end{eqnarray}
 
+A very simple test case, with which I test my implementation is the Poiseuille flow driven by a volume force $G$, where the analytical solution is known.
+
+The set up of the simulation is the following:
+
+\begin{itemize}
+\item computation domain of $1m \times 1m$
+\item one Cell in flow direction (x-direction)
+\item varying number of cells in cross flow direction (y-direction, $64$ Cells for the figures)
+\item periodic boundary condition in x-direction (by assigning the Pointers to the cell itself)
+\item Ghost Cell boundary conditions on top and bottom
+	\begin{itemize}
+	\item zero Gradient for density and temperature (in the form of $\lambda$)
+	\item fixed value for both velocities $u = v = 0.0 \frac{m}{s}$.
+	\end{itemize}
+\item $K = 1$, $\nu = 0.01 \frac{m^2}{s}$, $\rho = 1.0 \tfrac{kg}{m^3}$
+\item $G = 1\cdot 10^{-4} \frac{m}{s^2}$
+\item $\lambda = 1.0 \tfrac{s^2}{m^2}$ (random value) and $\lambda = 8.2 \cdot 10^{-6}  \tfrac{s^2}{m^2}$ (corresponds to $T = 293.15 K$ for Argon)
+\item $Re = 0.125$
+\item $Ma = 1.77 \cdot 10^{-3}$ and $Ma = 5.06 \cdot 10^{-6}$ for the respective simulations
+\item $CFL = 0.1$ (the value of $CFL = 0.5$ seemed to yield unstable results)
+\end{itemize}
+
+The result of the simulation is shown in the figures \ref{fig:veloProfilePoiseuille_L1} and \ref{fig:veloProfilePoiseuille_L8e-6}. The stream wise velocity corresponds with analytical solution and reduces with first order with a refinement in y-direction for both values of $\lambda$. The cross stream velocity should be zero. The simulation with $\lambda = 1.0$ yields non zero cross stream velocities that are not negligible small, only 5 orders of magnitude smaller than the stream wise velocity at double precision, so round off and cut off can be ruled out. These v-velocities are also stationary and do not disappear with time. Moreover they do not disappear with a grid refinement.
+
+\begin{figure}
+\includegraphics[width=\textwidth]{VeloFields_Lambda_1.png}
+\caption{Velocity Field of the Poiseuille flow with the velocity profiles with example values}
+\label{fig:veloProfilePoiseuille_L1}
+\end{figure}
+
+\begin{figure}
+\includegraphics[width=\textwidth]{VeloFields_Lambda_8e-6.png}
+\caption{Velocity Field of the Poiseuille flow with the velocity profiles with physically more realistic values}
+\label{fig:veloProfilePoiseuille_L8e-6}
+\end{figure}
+
+\clearpage
+
 \section{Implementation}
 
+My Implementation is based on your structured Code and the corresponding Paper by Xu and Lui (1999). From there I used the incompressible GKS from the 4th Chapter of Xu's GKS-Book (2015) with the simplification of smooth flow, which is also reported in Su, Xu et al. (1999).
+
+I implemented everything in C++, making use of the object orientation. There is one class containing the mesh and all the functionality on the whole mesh. The mesh itself contains pointers to all Cells and Interfaces, which in turn are represented by Objects of the respective classes. These two classes contain the data of the flow field and the functionality limited to a cell or an interface. In addition to that a Cell has the pointers to the four adjacent Interfaces and an interface has the pointers to the two adjacent cells. These pointers are used to get all the needed data for the flux computation (interfaces) and the update of the macroscopic variables (cells). 
+
+My Algorithm is shown in figure \ref{fig:algorithm}. The time iteration is controlled in the global mesh class. First the global time step is computed as the minimum of all local time steps, which are computed by the CFL-Condition. Then I loop over all Interfaces and compute the fluxes. This is the right part of figure \ref{fig:algorithm} and the main task in the algorithm.
+
+I start with computing the values of the primitive variables at the interface by third order interpolation. The Interfaces at the boundary have only one neighbor outside of the domain (a Ghost Cell) and therefore I use linear interpolation for those interfaces. Then I compute the derivatives of conservative variables in the same manner. I also normalize all derivatives with the density. With the primitive Variables I then can compute the relaxation time. At this point I have to distinguish the Interfaces with respect to their orientation. I wrote only one code for all Interfaces (normal to x-axis and y-axis). For the Interfaces normal to the y-axis I need to swap the velocities and momenta (and the respective derivatives) since a normal velocity corresponds to a y-velocity in the global frame of reference, but to a x-velocity (normal) in the local interface frame of reference. Then I can compute the local slope constants $a$ and $b$ and the moments of the equilibrium distribution. With these two I then reconstruct the time slope of the conservative variables. The time slope is automatically normalized with density, since neither $a$ and $b$ nor the moments contain the density. The local slope constants with respect to time can then be computed by the same means as $a$ and $b$.
+
+Finally the flux over the Interface is assembled by splitting it into three parts for the time integration. The symbolic time integration and the integration over the area of the interface (by multiplying with the interface area) is also taken into account in this step. Then the Fluxes are rotated again into the global frame of reference. 
+
+With the fluxes computed I update the cell averaged values but adding all fluxes of the four adjacent interfaces to the current value. Then I apply the boundary conditions, by assigning the corresponding values to the ghost cells. Then I write my output data and start the iteration all over again.
+
+\begin{figure}
+\includegraphics[width=\textwidth]{AlgorithmFlowchart.png}
+\caption{GKS-Algorithm for smooth flows}
+\label{fig:algorithm}
+\end{figure}
+
+\subsection{Weidong Anwser}
+
+Ans: I use the standard CFL condition. Since $CFL*\frac{dx}{\lambda_{max}} \leq 1$, where $\lambda_{max}$ is the spectral radius and $\lambda_{max}=(|u|+C)+v_{diffusion}$, C is the sound speed. $v_{diffusion}$ is the characteristic velocity of diffusion and it is about $2\nu/dx$ .
 
 \end{document}

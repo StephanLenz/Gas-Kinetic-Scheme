@@ -134,7 +134,7 @@ int main(int argc, char* argv[])
 
     */
 
-    ///*
+    /*
 
     // ========================================================================
     //
@@ -147,14 +147,14 @@ int main(int argc, char* argv[])
     double H = 1.0;
     double W = 1.0;
 
-    param.numberOfIterations = 1000000;
-    param.outputIntervalVTK = 10000;
-    param.outputInterval = 1000;
+    param.numberOfIterations = 100000000;
+    param.outputIntervalVTK = 100000;
+    param.outputInterval = 10000;
 
-    param.convergenceCriterium = 1.0e-7;
+    param.convergenceCriterium = 1.0e-10;
 
     param.L = 1.0;
-    param.CFL = 0.5;
+    param.CFL = 0.1;
 
     param.verbose = false;
     param.fluxOutput = false;
@@ -187,11 +187,72 @@ int main(int argc, char* argv[])
     mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0);
 
     // Generate Mesh
-    int ny = 32;
+    int ny = 64;
     mesh->generateRectMeshPeriodic(W, H, 1, ny);
 
     // Initialize Values
-    mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0);
+    mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
+
+    */
+
+    ///*
+
+    // ========================================================================
+    //
+    //                  Poiseuille-Flow (Force driven, vertical)
+    //
+    // ========================================================================
+
+    Parameters param;
+
+    double H = 1.0;
+    double W = 1.0;
+
+    param.numberOfIterations = 100000000;
+    param.outputIntervalVTK = 100000;
+    param.outputInterval = 10000;
+
+    param.convergenceCriterium = 1.0e-10;
+
+    param.L = 1.0;
+    param.CFL = 0.1;
+
+    param.verbose = false;
+    param.fluxOutput = false;
+    param.resOutput = false;
+
+    // ========================================================================
+
+    FluidParameter fluidParam;
+
+    fluidParam.K = 1;
+    fluidParam.nu = 1e-2;
+    fluidParam.R = 208.0;
+    fluidParam.Force.x = 0.0;
+    fluidParam.Force.y = 1e-4;
+
+    double T = 293.15;
+    double lambda = 1.0 / ( 2.0 * fluidParam.R * T );
+
+    // ========================================================================
+
+    GKSMesh* mesh = new GKSMesh(param, fluidParam);
+
+    // Define Boundary Conditions
+    //    -----------
+    //    |    1    |
+    //    |         |
+    //    |    0    |
+    //    -----------
+    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, 0.0, 0.0, 0.0);
+    mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, 0.0, 0.0, 0.0);
+
+    // Generate Mesh
+    int nx = 32;
+    mesh->generateRectMeshPeriodicVertical(W, H, nx, 1);
+
+    // Initialize Values
+    mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
 
     //*/
 
@@ -347,7 +408,7 @@ int main(int argc, char* argv[])
     //mesh->writeVelocityV("out/VelocityV.dat");
 
     //ostringstream filename;
-    //filename << "out/PoiseuillePresGradConvergenceStudy/" << ny;
+    //filename << "out/PoiseuilleFlow/ConvergenceStudy/" << ny;
     //mesh->writeVelocityProfile(    ( filename.str() + "/VelocityProfile.dat" )  , 0.5);
     //mesh->writeConvergenceHistory( ( filename.str() + "/ConvergenceHistory.dat" )    );
     //mesh->writeOverviewFile(       ( filename.str() + "/OverviewFile.dat" )          );

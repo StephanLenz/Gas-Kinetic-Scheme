@@ -213,6 +213,103 @@ void GKSMesh::generateRectMeshPeriodic(double lengthX, double lengthY, int nx, i
     return;
 }
 
+void GKSMesh::generateRectMeshPeriodicVertical(double lengthX, double lengthY, int nx, int ny)
+{
+    double dx = lengthX / (double)nx;
+    double dy = lengthY / (double)ny;
+
+    this->lengthX = lengthX;
+    this->lengthY = lengthY;
+
+    Cell*		tmpCell;
+    Interface*  tmpInterface;
+    float2      normal;
+    float2      center;
+
+    //=========================================================================
+    //=========================================================================
+    //		Cell generation
+    //			including ghost cells in y-direction
+    //=========================================================================
+    //=========================================================================
+    BoundaryCondition* currentBC = NULL;
+    for ( int i = 0; i < ny; i++ )       // Y-Direction
+    {
+
+        for ( int j = -1; j < nx+1; j++ )   // X-Direction
+        {
+            if ( j == -1 )         currentBC = BoundaryConditionList[0];
+            else if ( j == nx )    currentBC = BoundaryConditionList[1];
+            else                 currentBC = NULL;
+
+            //                      cell centerX         cell centerY
+            tmpCell = new Cell(( (double)j + 0.5 )*dx, ( (double)i + 0.5 )*dy, dx, dy, currentBC, this->fluidParam);
+            // add interface to list
+            this->CellList.push_back(tmpCell);
+        }
+    }
+
+    //=========================================================================
+    //=========================================================================
+    //						F interface generation
+    //=========================================================================
+    //=========================================================================
+    normal.x = 1;
+    normal.y = 0;
+    for ( int i = 0; i < ny; i++ )       // Y-Direction
+    {
+        for ( int j = 0; j < nx+1; j++ )    // X-Direction
+        {
+            center.x =   (double)j         * dx;
+            center.y = ( (double)i + 0.5 ) * dy;
+
+            Cell* negCell;
+            Cell* posCell;
+
+            negCell = CellList[i*(nx) + j];
+            posCell = CellList[i*(nx) + (j + 1)];
+
+            // create a new interface with the adjacent cells
+            tmpInterface = new Interface(negCell, posCell, center, normal, this->fluidParam, NULL);
+            // add itnerface to list
+            this->InterfaceList.push_back(tmpInterface);
+        }
+    }
+
+    //=========================================================================
+    //=========================================================================
+    //						G interface generation
+    //=========================================================================
+    //=========================================================================
+    normal.x = 0;
+    normal.y = 1;
+    for ( int i = 0; i < ny; i++ )        // Y-Direction
+    {
+        for ( int j = 0; j <= nx+1; j++ )        // X-Direction
+        {
+            center.x = ( (double)j - 0.5 ) * dx;
+            center.y =   (double)i         * dy;
+
+            Cell* negCell;
+            Cell* posCell;
+
+            posCell = CellList[i*(nx)+j];
+
+            if ( i == 0 )
+                negCell = CellList[(ny-1)*nx + j];
+            else
+                negCell = CellList[(i-1)*(nx)+j];
+
+            // create a new interface with the adjacent cells
+            tmpInterface = new Interface(negCell, posCell, center, normal, this->fluidParam, NULL);
+            // add itnerface to list
+            this->InterfaceList.push_back(tmpInterface);
+        }
+    }
+
+    return;
+}
+
 void GKSMesh::generateRectMeshInterfaceBCs(double lengthX, double lengthY, int nx, int ny)
 {
     double dx = lengthX / (double)nx;
@@ -746,7 +843,7 @@ bool GKSMesh::isConverged(ConservedVariable residual)
     bool flag = true;
 
     flag = flag && ( residual.rho  < this->param.convergenceCriterium );
-    flag = flag && ( residual.rhoU < this->param.convergenceCriterium );
+    //flag = flag && ( residual.rhoU < this->param.convergenceCriterium );
     flag = flag && ( residual.rhoV < this->param.convergenceCriterium );
     flag = flag && ( residual.rhoE < this->param.convergenceCriterium );
 
