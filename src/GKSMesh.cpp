@@ -1,6 +1,7 @@
 
 #include "GKSMesh.h"
 #include "Cell.h"
+#include "CompressibleInterface.h"
 #include "Types.h"
 #include <sstream>
 #include <fstream>
@@ -82,7 +83,7 @@ void GKSMesh::generateRectMesh(double lengthX, double lengthY, int nx, int ny)
             Cell* negCell = this->CellList[i*(nx + 2) + j];
 
 			// create a new interface with the adjacent cells
-			tmpInterface = new Interface(negCell, posCell, center, normal, this->fluidParam, NULL);
+			tmpInterface = new CompressibleInterface(negCell, posCell, center, normal, this->fluidParam, NULL);
 			// add itnerface to list
 			this->InterfaceList.push_back(tmpInterface);
 		}
@@ -106,7 +107,7 @@ void GKSMesh::generateRectMesh(double lengthX, double lengthY, int nx, int ny)
             Cell* negCell = this->CellList[i*(nx + 2) + j];
 
 			// create a new interface with the adjacent cells
-			tmpInterface = new Interface(negCell, posCell, center, normal, this->fluidParam, NULL);
+			tmpInterface = new CompressibleInterface(negCell, posCell, center, normal, this->fluidParam, NULL);
 			// add itnerface to list
 			this->InterfaceList.push_back(tmpInterface);
 		}
@@ -180,7 +181,7 @@ void GKSMesh::generateRectMeshPeriodic(double lengthX, double lengthY, int nx, i
                 posCell = CellList[i*(nx) + j];
 
             // create a new interface with the adjacent cells
-            tmpInterface = new Interface( negCell, posCell, center, normal, this->fluidParam, NULL);
+            tmpInterface = new CompressibleInterface( negCell, posCell, center, normal, this->fluidParam, NULL);
             // add itnerface to list
             this->InterfaceList.push_back(tmpInterface);
         }
@@ -204,7 +205,7 @@ void GKSMesh::generateRectMeshPeriodic(double lengthX, double lengthY, int nx, i
             Cell* negCell = CellList[i*(nx)+j];
 
             // create a new interface with the adjacent cells
-            tmpInterface = new Interface(negCell, posCell, center, normal, this->fluidParam, NULL);
+            tmpInterface = new CompressibleInterface(negCell, posCell, center, normal, this->fluidParam, NULL);
             // add itnerface to list
             this->InterfaceList.push_back(tmpInterface);
         }
@@ -270,7 +271,7 @@ void GKSMesh::generateRectMeshPeriodicVertical(double lengthX, double lengthY, i
             posCell = CellList[i*(nx) + (j + 1)];
 
             // create a new interface with the adjacent cells
-            tmpInterface = new Interface(negCell, posCell, center, normal, this->fluidParam, NULL);
+            tmpInterface = new CompressibleInterface(negCell, posCell, center, normal, this->fluidParam, NULL);
             // add itnerface to list
             this->InterfaceList.push_back(tmpInterface);
         }
@@ -301,7 +302,7 @@ void GKSMesh::generateRectMeshPeriodicVertical(double lengthX, double lengthY, i
                 negCell = CellList[(i-1)*(nx)+j];
 
             // create a new interface with the adjacent cells
-            tmpInterface = new Interface(negCell, posCell, center, normal, this->fluidParam, NULL);
+            tmpInterface = new CompressibleInterface(negCell, posCell, center, normal, this->fluidParam, NULL);
             // add itnerface to list
             this->InterfaceList.push_back(tmpInterface);
         }
@@ -373,7 +374,7 @@ void GKSMesh::generateRectMeshInterfaceBCs(double lengthX, double lengthY, int n
                 currentInterfaceBC = NULL;
 
             // create a new interface with the adjacent cells
-            tmpInterface = new Interface(negCell, posCell, center, normal, this->fluidParam, currentInterfaceBC);
+            tmpInterface = new CompressibleInterface(negCell, posCell, center, normal, this->fluidParam, currentInterfaceBC);
             // add itnerface to list
             this->InterfaceList.push_back(tmpInterface);
         }
@@ -411,7 +412,7 @@ void GKSMesh::generateRectMeshInterfaceBCs(double lengthX, double lengthY, int n
                 currentInterfaceBC = NULL;
 
             // create a new interface with the adjacent cells
-            tmpInterface = new Interface(negCell, posCell, center, normal, this->fluidParam, currentInterfaceBC);
+            tmpInterface = new CompressibleInterface(negCell, posCell, center, normal, this->fluidParam, currentInterfaceBC);
             // add itnerface to list
             this->InterfaceList.push_back(tmpInterface);
         }
@@ -480,7 +481,7 @@ void GKSMesh::generateRectMeshPeriodicInterfaceBCs(double lengthX, double length
                 posCell = CellList[i*(nx)+j];
 
             // create a new interface with the adjacent cells
-            tmpInterface = new Interface(negCell, posCell, center, normal, this->fluidParam, NULL);
+            tmpInterface = new CompressibleInterface(negCell, posCell, center, normal, this->fluidParam, NULL);
             // add itnerface to list
             this->InterfaceList.push_back(tmpInterface);
         }
@@ -518,7 +519,7 @@ void GKSMesh::generateRectMeshPeriodicInterfaceBCs(double lengthX, double length
                 currentInterfaceBC = NULL;
 
             // create a new interface with the adjacent cells
-            tmpInterface = new Interface(negCell, posCell, center, normal, this->fluidParam, currentInterfaceBC);
+            tmpInterface = new CompressibleInterface(negCell, posCell, center, normal, this->fluidParam, currentInterfaceBC);
             // add itnerface to list
             this->InterfaceList.push_back(tmpInterface);
         }
@@ -843,7 +844,7 @@ bool GKSMesh::isConverged(ConservedVariable residual)
     bool flag = true;
 
     flag = flag && ( residual.rho  < this->param.convergenceCriterium );
-    //flag = flag && ( residual.rhoU < this->param.convergenceCriterium );
+    flag = flag && ( residual.rhoU < this->param.convergenceCriterium );
     flag = flag && ( residual.rhoV < this->param.convergenceCriterium );
     flag = flag && ( residual.rhoE < this->param.convergenceCriterium );
 

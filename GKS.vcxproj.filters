@@ -33,6 +33,9 @@
     <ClCompile Include="src\InterfaceBC.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="src\CompressibleInterface.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Types.h">
@@ -51,6 +54,9 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="src\InterfaceBC.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CompressibleInterface.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

@@ -134,7 +134,7 @@ int main(int argc, char* argv[])
 
     */
 
-    /*
+    ///*
 
     // ========================================================================
     //
@@ -151,7 +151,7 @@ int main(int argc, char* argv[])
     param.outputIntervalVTK = 100000;
     param.outputInterval = 10000;
 
-    param.convergenceCriterium = 1.0e-10;
+    param.convergenceCriterium = 1.0e-7;
 
     param.L = 1.0;
     param.CFL = 0.1;
@@ -193,9 +193,9 @@ int main(int argc, char* argv[])
     // Initialize Values
     mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
 
-    */
+    //*/
 
-    ///*
+    /*
 
     // ========================================================================
     //
@@ -254,7 +254,7 @@ int main(int argc, char* argv[])
     // Initialize Values
     mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
 
-    //*/
+    */
 
     /*
 
@@ -422,8 +422,8 @@ int main(int argc, char* argv[])
     //mesh->writeOverviewFile(      ( filename.str() + "/OverviewFile.dat" ));
 
 
-    mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
-    mesh->writeOverviewFile("out/OverviewFile.dat");
+    //mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
+    //mesh->writeOverviewFile("out/OverviewFile.dat");
 
     //char a; cin >> a;
 }

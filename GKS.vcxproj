@@ -114,6 +114,7 @@
     <ClCompile Include="src\BoundaryCondition.cpp" />
     <ClCompile Include="src\Cell.cpp" />
     <ClCompile Include="src\GKSMesh.cpp" />
+    <ClCompile Include="src\CompressibleInterface.cpp" />
     <ClCompile Include="src\Interface.cpp" />
     <ClCompile Include="src\InterfaceBC.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -122,6 +123,7 @@
     <ClInclude Include="src\BoundaryCondition.h" />
     <ClInclude Include="src\Cell.h" />
     <ClInclude Include="src\GKSMesh.h" />
+    <ClInclude Include="src\CompressibleInterface.h" />
     <ClInclude Include="src\Interface.h" />
     <ClInclude Include="src\InterfaceBC.h" />
     <ClInclude Include="src\Types.h" />

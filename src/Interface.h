@@ -11,7 +11,7 @@ using namespace std;
 
 class Interface
 {
-private:
+protected:
 	Cell* negCell;
 	Cell* posCell;
 
@@ -30,11 +30,11 @@ public:
 	Interface(Cell* negCell, Cell* posCell, float2 center, float2 normal, FluidParameter fluidParam, InterfaceBC* BC);
 	~Interface();
 
-	void computeFlux(double dt);
+	virtual void computeFlux(double dt) = 0;
 
-    void computeInternalFlux(double dt);
+    virtual void computeInternalFlux(double dt) = 0;
 
-    void computeBoundaryFlux(double dt);
+    virtual void computeBoundaryFlux(double dt) = 0;
 
     Cell* getNeigborCell(Cell* askingCell);
     Cell* getCellInDomain();
@@ -49,7 +49,7 @@ public:
 
     string writeCenter();
 
-private:
+protected:
 
     void interpolatePrim(double* prim);
     void interpolatePrimThirdOrder(double* prim);
@@ -62,11 +62,12 @@ private:
 
     void differentiateConsTangential(double* tangentialGradCons, double* prim);
 
-    void computeTimeDerivative(double* prim, double* MomentU, double* MomentV, double* MomentXi,
-                               double* a, double* b, double * timeGrad);
+    virtual void computeTimeDerivative(double* prim, double* MomentU, double* MomentV, double* MomentXi,
+                                       double* a, double* b, double * timeGrad) = 0;
 
-    void assembleFlux(double* MomentU, double* MomentV, double* MomentXi, 
-                      double* a, double* b, double* A, double* timeCoefficients, double dy, double* prim, double tau);
+    virtual void assembleFlux(double* MomentU, double* MomentV, double* MomentXi, 
+                              double* a, double* b, double* A, double* timeCoefficients,
+                              double dy, double* prim, double tau) = 0;
 
     void rotate(double* vector);
     void cons2prim(double* prim, double*cons);
