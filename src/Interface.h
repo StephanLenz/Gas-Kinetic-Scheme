@@ -30,11 +30,13 @@ public:
 	Interface(Cell* negCell, Cell* posCell, float2 center, float2 normal, FluidParameter fluidParam, InterfaceBC* BC);
 	~Interface();
 
-	virtual void computeFlux(double dt) = 0;
+    static Interface* createInterface(InterfaceType type, Cell* negCell, Cell* posCell, float2 center, float2 normal, FluidParameter fluidParam, InterfaceBC* BC);
 
-    virtual void computeInternalFlux(double dt) = 0;
+	virtual void computeFlux(double dt);
 
-    virtual void computeBoundaryFlux(double dt) = 0;
+    virtual void computeInternalFlux(double dt);
+
+    virtual void computeBoundaryFlux(double dt);
 
     Cell* getNeigborCell(Cell* askingCell);
     Cell* getCellInDomain();

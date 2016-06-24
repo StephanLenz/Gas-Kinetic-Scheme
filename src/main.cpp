@@ -188,10 +188,11 @@ int main(int argc, char* argv[])
 
     // Generate Mesh
     int ny = 64;
-    mesh->generateRectMeshPeriodic(W, H, 1, ny);
+    mesh->generateRectMeshPeriodic(incompressible, W, H, 1, ny);
 
     // Initialize Values
-    mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
+    //mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
+    mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0/6.0);
 
     //*/
 

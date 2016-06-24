@@ -46,15 +46,15 @@ public:
 
 	~GKSMesh();
 
-	void generateRectMesh(double lengthX, double lengthY, int nx, int ny);
+	void generateRectMesh(InterfaceType type, double lengthX, double lengthY, int nx, int ny);
 
-    void generateRectMeshPeriodic(double lengthX, double lengthY, int nx, int ny);
+    void generateRectMeshPeriodic(InterfaceType type, double lengthX, double lengthY, int nx, int ny);
 
-    void generateRectMeshPeriodicVertical(double lengthX, double lengthY, int nx, int ny);
+    void generateRectMeshPeriodicVertical(InterfaceType type, double lengthX, double lengthY, int nx, int ny);
 
-    void generateRectMeshInterfaceBCs(double lengthX, double lengthY, int nx, int ny);
+    void generateRectMeshInterfaceBCs(InterfaceType type, double lengthX, double lengthY, int nx, int ny);
 
-    void generateRectMeshPeriodicInterfaceBCs(double lengthX, double lengthY, int nx, int ny);
+    void generateRectMeshPeriodicInterfaceBCs(InterfaceType type, double lengthX, double lengthY, int nx, int ny);
 
 	void initMeshConstant(double rho, double u, double v, double T);
 

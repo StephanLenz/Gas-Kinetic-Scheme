@@ -49,4 +49,10 @@ struct Parameters
     bool verbose;
 };
 
+enum InterfaceType
+{
+    compressible,
+    incompressible
+};
+
 #endif

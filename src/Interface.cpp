@@ -1,6 +1,9 @@
 
 
 #include "Interface.h"
+#include "IncompressibleInterface.h"
+#include "CompressibleInterface.h"
+#include "Types.h"
 #include <sstream>
 
 Interface::Interface()
@@ -56,6 +59,21 @@ Interface::Interface(Cell* negCell, Cell* posCell, float2 center, float2 normal,
 
 Interface::~Interface()
 {
+}
+
+// ============================================================================
+//                     Interface Factory
+// ============================================================================
+Interface * Interface::createInterface(InterfaceType type, Cell * negCell, Cell * posCell, float2 center, float2 normal, FluidParameter fluidParam, InterfaceBC * BC)
+{
+    Interface* tmp = NULL;
+
+    if ( type == incompressible )
+        tmp = new IncompressibleInterface(negCell, posCell, center, normal, fluidParam, BC);
+    else
+        tmp = new CompressibleInterface(negCell, posCell, center, normal, fluidParam, BC);
+
+    return tmp;
 }
 
 void Interface::computeFlux(double dt)
@@ -124,7 +142,7 @@ void Interface::computeInternalFlux(double dt)
     // spacial micro slopes a = a1 + a2 u + a3 v
     //                      b = b1 + b2 u + b3 v
     // The microslopes contain the density (in opposition to Weidong Li's Code)
-    this->computeMicroSlope(prim, normalGradCons,     a);
+    this->computeMicroSlope(prim, normalGradCons, a);
     this->computeMicroSlope(prim, tangentialGradCons, b);
     // ========================================================================
 
@@ -175,12 +193,12 @@ void Interface::computeBoundaryFlux(double dt)
     {
         this->rotate((double*)&prim);
     }
-    
-    double distance = this->distance( this->getCellInDomain()->getCenter() );
+
+    double distance = this->distance(this->getCellInDomain()->getCenter());
 
     // compute the length of the interface
     double dy = this->getCellInDomain()->getDx().x * normal.y
-              + this->getCellInDomain()->getDx().y * normal.x;
+        + this->getCellInDomain()->getDx().y * normal.x;
 
     //ConservedVariable FluxDensity = this->BoundaryConditionPointer->computeBoundaryInterfaceFlux(prim, dx, this->fluidParam.nu);
     ConservedVariable FluxDensity;
@@ -189,11 +207,11 @@ void Interface::computeBoundaryFlux(double dt)
     if ( posCell == NULL )
         sign = -1.0;
 
-    FluxDensity.rho  = 0.0;
+    FluxDensity.rho = 0.0;
     FluxDensity.rhoU = prim.rho / ( 2.0 * prim.L );
-    FluxDensity.rhoV = - sign * this->fluidParam.nu * prim.rho * ( prim.V - this->BoundaryConditionPointer->getWallVelocity() ) / distance;
+    FluxDensity.rhoV = -sign * this->fluidParam.nu * prim.rho * ( prim.V - this->BoundaryConditionPointer->getWallVelocity() ) / distance;
     FluxDensity.rhoE = 0.0;
-    
+
     this->timeIntegratedFlux[0] = FluxDensity.rho  * dt * dy;
     this->timeIntegratedFlux[1] = FluxDensity.rhoU * dt * dy;
     this->timeIntegratedFlux[2] = FluxDensity.rhoV * dt * dy;
@@ -548,157 +566,6 @@ void Interface::differentiateConsTangential(double* tangentialGradCons, double* 
                               ) * 0.25
                             ) / ( dt * prim[0] );
 
-}
-
-void Interface::computeTimeDerivative(double * prim, double * MomentU, double * MomentV, double * MomentXi,
-                                      double* a, double* b, double * timeGrad)
-{
-
-    timeGrad[0] = a[0] * MomentU[1] * MomentV[0]
-                + a[1] * MomentU[2] * MomentV[0]
-                + a[2] * MomentU[1] * MomentV[1]
-                + a[3] * ( MomentU[3] * MomentV[0] + MomentU[1] * MomentV[2] + MomentU[1] * MomentV[0] * MomentXi[2] )
-                + b[0] * MomentU[0] * MomentV[1]
-                + b[1] * MomentU[1] * MomentV[1]
-                + b[2] * MomentU[0] * MomentV[2]
-                + b[3] * ( MomentU[2] * MomentV[1] + MomentU[0] * MomentV[3] + MomentU[0] * MomentV[1] * MomentXi[2] ) ;
-
-    timeGrad[1] = a[0] * MomentU[2] * MomentV[0]
-                + a[1] * MomentU[3] * MomentV[0]
-                + a[2] * MomentU[2] * MomentV[1]
-                + a[3] * ( MomentU[4] * MomentV[0] + MomentU[2] * MomentV[2] + MomentU[2] * MomentV[0] * MomentXi[2] )
-                + b[0] * MomentU[1] * MomentV[1]
-                + b[1] * MomentU[2] * MomentV[1]
-                + b[2] * MomentU[1] * MomentV[2]
-                + b[3] * ( MomentU[3] * MomentV[1] + MomentU[1] * MomentV[3] + MomentU[1] * MomentV[1] * MomentXi[2] );
-
-    timeGrad[2] = a[0] * MomentU[1] * MomentV[1]
-                + a[1] * MomentU[2] * MomentV[1]
-                + a[2] * MomentU[1] * MomentV[2]
-                + a[3] * ( MomentU[3] * MomentV[1] + MomentU[1] * MomentV[3] + MomentU[1] * MomentV[1] * MomentXi[2] )
-                + b[0] * MomentU[0] * MomentV[2]
-                + b[1] * MomentU[1] * MomentV[2]
-                + b[2] * MomentU[0] * MomentV[3]
-                + b[3] * ( MomentU[2] * MomentV[2] + MomentU[0] * MomentV[4] + MomentU[0] * MomentV[2] * MomentXi[2] );
-
-    timeGrad[3] = a[0] * 0.50 * ( MomentU[3] * MomentV[0] + MomentU[1] * MomentV[2] + MomentU[1] * MomentV[0] * MomentXi[2] )
-                + a[1] * 0.50 * ( MomentU[4] * MomentV[0] + MomentU[2] * MomentV[2] + MomentU[2] * MomentV[0] * MomentXi[2] )
-                + a[2] * 0.50 * ( MomentU[3] * MomentV[1] + MomentU[1] * MomentV[3] + MomentU[1] * MomentV[1] * MomentXi[2] )
-                + a[3] * 0.25 * ( MomentU[5] + MomentU[1]* ( MomentV[4] + MomentXi[4] )
-                                + 2.0 * MomentU[3] * MomentV[2]
-                                + 2.0 * MomentU[3] * MomentXi[2]
-                                + 2.0 * MomentU[1] * MomentV[2] * MomentXi[2] )
-                + b[0] * 0.50 * ( MomentU[2] * MomentV[1] + MomentU[0] * MomentV[3] + MomentU[0] * MomentV[1] * MomentXi[2] )
-                + b[1] * 0.50 * ( MomentU[3] * MomentV[1] + MomentU[1] * MomentV[3] + MomentU[1] * MomentV[1] * MomentXi[2] )
-                + b[2] * 0.50 * ( MomentU[2] * MomentV[2] + MomentU[0] * MomentV[4] + MomentU[0] * MomentV[2] * MomentXi[2] )
-                + b[3] * 0.25 * ( MomentV[5] + MomentV[1] * ( MomentU[4] + MomentXi[4] )
-                                + 2.0 * MomentU[2] * MomentV[3]
-                                + 2.0 * MomentU[2] * MomentV[1] * MomentXi[2]
-                                + 2.0 * MomentV[3] * MomentXi[2] );
-
-    timeGrad[0] *= -1.0;
-    timeGrad[1] *= -1.0;
-    timeGrad[2] *= -1.0;
-    timeGrad[3] *= -1.0;
-
-    // The above computed Moments do not contain the density.
-    // Therefore the density is applied seperately.
-
-    //timeGrad[0] *= -prim[0];
-    //timeGrad[1] *= -prim[0];
-    //timeGrad[2] *= -prim[0];
-    //timeGrad[3] *= -prim[0];
-}
-
-void Interface::assembleFlux(double * MomentU, double * MomentV, double * MomentXi, double * a, double * b, double * A, double * timeCoefficients, double dy, double* prim, double tau)
-{
-    double Flux_1[4];   // this part does not contain the density (dimension of velocity powers)
-    double Flux_2[4];   // this part contains the density by the micro slopes a and b
-    double Flux_3[4];   // this part contains the density by the micro slope A
-    
-    // ========================================================================
-    Flux_1[0] = MomentU[1];
-    Flux_1[1] = MomentU[2];
-    Flux_1[2] = MomentU[1] * MomentV[1];
-    Flux_1[3] = 0.5 * (MomentU[3] + MomentU[1] * MomentV[2] + MomentU[1] * MomentXi[2]);
-    // ========================================================================
-
-    // ========================================================================
-    Flux_2[0] = ( a[0] * MomentU[2] 
-                + a[1] * MomentU[3]
-                + a[2] * MomentU[2] * MomentV[1]
-                + a[3] * 0.5 * ( MomentU[4] + MomentU[2]*MomentV[2] + MomentU[2]*MomentXi[2] )
-                + b[0] * MomentU[1] * MomentV[1]
-                + b[1] * MomentU[2] * MomentV[1]
-                + b[2] * MomentU[1] * MomentV[2]
-                + b[3] * 0.5 * ( MomentU[3]*MomentV[1] + MomentU[1]*MomentV[3] + MomentU[1]*MomentV[1]*MomentXi[2] )
-                );
-    Flux_2[1] = ( a[0] * MomentU[3] 
-                + a[1] * MomentU[4]
-                + a[2] * MomentU[3] * MomentV[1]
-                + a[3] * 0.5 * ( MomentU[5] + MomentU[3]*MomentV[2] + MomentU[3]*MomentXi[2] )
-                + b[0] * MomentU[2] * MomentV[1]
-                + b[1] * MomentU[3] * MomentV[1]
-                + b[2] * MomentU[2] * MomentV[2]
-                + b[3] * 0.5 * ( MomentU[4]*MomentV[1] + MomentU[2]*MomentV[3] + MomentU[2]*MomentV[1]*MomentXi[2] )
-                );
-    Flux_2[2] = ( a[0] * MomentU[2] * MomentV[1]
-                + a[1] * MomentU[3] * MomentV[1]
-                + a[2] * MomentU[2] * MomentV[2]
-                + a[3] * 0.5 * ( MomentU[4]*MomentV[1] + MomentU[2]*MomentV[3] + MomentU[2]*MomentV[1]*MomentXi[2] )
-                + b[0] * MomentU[1] * MomentV[2]
-                + b[1] * MomentU[2] * MomentV[2]
-                + b[2] * MomentU[1] * MomentV[3]
-                + b[3] * 0.5 * ( MomentU[3]*MomentV[2] + MomentU[1]*MomentV[4] + MomentU[1]*MomentV[2]*MomentXi[2] )
-                );
-    Flux_2[3] = 0.5 * ( a[0] * ( MomentU[4] * MomentV[0] + MomentU[2] * MomentV[2] + MomentU[2] * MomentV[0] * MomentXi[2] )
-                      + a[1] * ( MomentU[5] * MomentV[0] + MomentU[3] * MomentV[2] + MomentU[3] * MomentV[0] * MomentXi[2] )
-                      + a[2] * ( MomentU[4] * MomentV[1] + MomentU[2] * MomentV[3] + MomentU[2] * MomentV[1] * MomentXi[2] )
-                      + a[3] * ( 0.5 * ( MomentU[6] * MomentV[0] + MomentU[2] * MomentV[4] + MomentU[2] * MomentV[0] * MomentXi[4] )
-                               +       ( MomentU[4] * MomentV[2] + MomentU[4] * MomentV[0] * MomentXi[2] + MomentU[2] * MomentV[2] * MomentXi[2] ) )
-                      + b[0] * ( MomentU[3] * MomentV[1] + MomentU[1] * MomentV[3] + MomentU[1] * MomentV[1] * MomentXi[2] )
-                      + b[1] * ( MomentU[4] * MomentV[1] + MomentU[2] * MomentV[3] + MomentU[2] * MomentV[1] * MomentXi[2] )
-                      + b[2] * ( MomentU[3] * MomentV[2] + MomentU[1] * MomentV[4] + MomentU[1] * MomentV[2] * MomentXi[2] )
-                      + b[3] * ( 0.5 * ( MomentU[5] * MomentV[1] + MomentU[1] * MomentV[5] + MomentU[1] * MomentV[1] * MomentXi[4] )
-                               +       ( MomentU[3] * MomentV[3] + MomentU[3] * MomentV[1] * MomentXi[2] + MomentU[1] * MomentV[3] * MomentXi[2] ) )
-                      );
-    // ========================================================================
-
-    // ========================================================================
-    Flux_3[0] = ( A[0] * MomentU[1] * MomentV[0]
-                + A[1] * MomentU[2] * MomentV[0]
-                + A[2] * MomentU[1] * MomentV[1]
-                + A[3] * 0.5 * ( MomentU[3]*MomentV[0] + MomentU[1]*MomentV[2] + MomentU[1]*MomentV[0]*MomentXi[2] )
-                );
-    Flux_3[1] = ( A[0] * MomentU[2] * MomentV[0]
-                + A[1] * MomentU[3] * MomentV[0]
-                + A[2] * MomentU[2] * MomentV[1]
-                + A[3] * 0.5 * ( MomentU[4]*MomentV[0] + MomentU[2]*MomentV[2] + MomentU[2]*MomentV[0]*MomentXi[2] )
-                );
-    Flux_3[2] = ( A[0] * MomentU[1] * MomentV[1]
-                + A[1] * MomentU[2] * MomentV[1]
-                + A[2] * MomentU[1] * MomentV[2]
-                + A[3] * 0.5 * ( MomentU[3]*MomentV[1] + MomentU[1]*MomentV[3] + MomentU[1]*MomentV[1]*MomentXi[2] )
-                );
-    Flux_3[3] = 0.5 * ( A[0] * ( MomentU[3] * MomentV[0] + MomentU[1] * MomentV[2] + MomentU[1] * MomentV[0] * MomentXi[2] )
-                      + A[1] * ( MomentU[4] * MomentV[0] + MomentU[2] * MomentV[2] + MomentU[2] * MomentV[0] * MomentXi[2] )
-                      + A[2] * ( MomentU[3] * MomentV[1] + MomentU[1] * MomentV[3] + MomentU[1] * MomentV[1] * MomentXi[2] )
-                      + A[3] * ( 0.5 * ( MomentU[5] * MomentV[0] + MomentU[1] * MomentV[4] + MomentU[1] * MomentV[0] * MomentXi[4] )
-                               +       ( MomentU[3] * MomentV[2] + MomentU[3] * MomentXi[2] + MomentU[1] * MomentV[2] * MomentXi[2] ) )
-                      );
-    // ========================================================================
-
-    // ========================================================================
-    for ( int i = 0; i < 4; i++ )
-    {
-        // Flux_2 and Flux_3 alrdy contain the density implicitly by the micro slopes a, b and A
-        // Flux_1 depends only on the moments, in which the density is cancelt out.#
-        // Therefore Flux_1 must also be multiplied with the density
-        this->timeIntegratedFlux[i] = ( timeCoefficients[0] * Flux_1[i] + timeCoefficients[1] * Flux_2[i] + timeCoefficients[2] * Flux_3[i] ) * dy * prim[0];
-        // The Flux density in the Flux per unit area of the interface at one instant in time
-        this->FluxDensity[i] = ( Flux_1[i] - tau*( Flux_2[i] + Flux_3[i] ) ) * prim[0];
-    }
-    // ========================================================================
 }
 
 void Interface::rotate(double * vector)

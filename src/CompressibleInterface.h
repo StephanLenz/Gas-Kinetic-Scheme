@@ -16,12 +16,6 @@ public:
     CompressibleInterface(Cell* negCell, Cell* posCell, float2 center, float2 normal, FluidParameter fluidParam, InterfaceBC* BC);
 	~CompressibleInterface();
 
-	void computeFlux(double dt);
-
-    void computeInternalFlux(double dt);
-
-    void computeBoundaryFlux(double dt);
-
 protected:
 
     void computeTimeDerivative(double* prim, double* MomentU, double* MomentV, double* MomentXi,
