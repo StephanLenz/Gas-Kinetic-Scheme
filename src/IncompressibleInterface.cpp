@@ -1,23 +1,23 @@
 
 
 #include "Interface.h"
-#include "CompressibleInterface.h"
+#include "IncompressibleInterface.h"
 #include <sstream>
 
-CompressibleInterface::CompressibleInterface()
+IncompressibleInterface::IncompressibleInterface()
 {
 }
 
-CompressibleInterface::CompressibleInterface(Cell* negCell, Cell* posCell, float2 center, float2 normal, FluidParameter fluidParam, InterfaceBC* BC)
+IncompressibleInterface::IncompressibleInterface(Cell* negCell, Cell* posCell, float2 center, float2 normal, FluidParameter fluidParam, InterfaceBC* BC)
     : Interface(negCell, posCell, center, normal, fluidParam, BC)
 {
 }
 
-CompressibleInterface::~CompressibleInterface()
+IncompressibleInterface::~IncompressibleInterface()
 {
 }
 
-void CompressibleInterface::computeFlux(double dt)
+void IncompressibleInterface::computeFlux(double dt)
 {
     if ( this->isBoundaryInterface() )
     {
@@ -30,7 +30,7 @@ void CompressibleInterface::computeFlux(double dt)
 
 }
 
-void CompressibleInterface::computeInternalFlux(double dt)
+void IncompressibleInterface::computeInternalFlux(double dt)
 {
     const int NUMBER_OF_MOMENTS = 7;
 
@@ -126,7 +126,7 @@ void CompressibleInterface::computeInternalFlux(double dt)
 
 }
 
-void CompressibleInterface::computeBoundaryFlux(double dt)
+void IncompressibleInterface::computeBoundaryFlux(double dt)
 {
     PrimaryVariable prim = this->getCellInDomain()->getPrim();
 
@@ -171,7 +171,7 @@ void CompressibleInterface::computeBoundaryFlux(double dt)
 
 }
 
-void CompressibleInterface::computeTimeDerivative(double * prim, double * MomentU, double * MomentV, double * MomentXi,
+void IncompressibleInterface::computeTimeDerivative(double * prim, double * MomentU, double * MomentV, double * MomentXi,
                                       double* a, double* b, double * timeGrad)
 {
 
@@ -231,7 +231,7 @@ void CompressibleInterface::computeTimeDerivative(double * prim, double * Moment
     //timeGrad[3] *= -prim[0];
 }
 
-void CompressibleInterface::assembleFlux(double * MomentU, double * MomentV, double * MomentXi, double * a, double * b, double * A, double * timeCoefficients, double dy, double* prim, double tau)
+void IncompressibleInterface::assembleFlux(double * MomentU, double * MomentV, double * MomentXi, double * a, double * b, double * A, double * timeCoefficients, double dy, double* prim, double tau)
 {
     double Flux_1[4];   // this part does not contain the density (dimension of velocity powers)
     double Flux_2[4];   // this part contains the density by the micro slopes a and b
@@ -322,7 +322,7 @@ void CompressibleInterface::assembleFlux(double * MomentU, double * MomentV, dou
     // ========================================================================
 }
 
-void CompressibleInterface::computeMicroSlope(double * prim, double * macroSlope, double * microSlope)
+void IncompressibleInterface::computeMicroSlope(double * prim, double * macroSlope, double * microSlope)
 {
     // this method computes the micro slopes from the slopes of the conservative variables
     // the resulting microslopes contain the density, since they are computed from the slopes

@@ -1,6 +1,6 @@
 
-#ifndef COMPRESSIBLEINTERFACE_H
-#define COMPRESSIBLEINTERFACE_H
+#ifndef INCOMPRESSIBLEINTERFACE_H
+#define INCOMPRESSIBLEINTERFACE_H
 
 #include "Interface.h"
 #include "Cell.h"
@@ -9,12 +9,12 @@
 
 using namespace std;
 
-class CompressibleInterface : public Interface
+class IncompressibleInterface : public Interface
 {
 public:
-	CompressibleInterface();
-    CompressibleInterface(Cell* negCell, Cell* posCell, float2 center, float2 normal, FluidParameter fluidParam, InterfaceBC* BC);
-	~CompressibleInterface();
+	IncompressibleInterface();
+    IncompressibleInterface(Cell* negCell, Cell* posCell, float2 center, float2 normal, FluidParameter fluidParam, InterfaceBC* BC);
+	~IncompressibleInterface();
 
 	void computeFlux(double dt);
 

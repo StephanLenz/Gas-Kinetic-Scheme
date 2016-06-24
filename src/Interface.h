@@ -73,7 +73,7 @@ protected:
     void cons2prim(double* prim, double*cons);
     double distance(float2 point);
 
-    void computeMicroSlope(double* prim, double* macroSlope, double* microSlope);
+    virtual void computeMicroSlope(double* prim, double* macroSlope, double* microSlope) = 0;
     void computeMoments(double* prim, double* MomentU, double* MomentV, double* MomentXi, int numberMoments);
 };
 

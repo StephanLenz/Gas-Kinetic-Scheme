@@ -723,37 +723,6 @@ double Interface::distance(float2 point)
                + ( this->center.y - point.y )*( this->center.y - point.y ) );
 }
 
-void Interface::computeMicroSlope(double * prim, double * macroSlope, double * microSlope)
-{
-    // this method computes the micro slopes from the slopes of the conservative variables
-    // the resulting microslopes contain the density, since they are computed from the slopes
-    // of the conservative variables, which are rho, rhoU, rhoV and rhoE
-
-    double A, B, C, E;
-
-    // ========================================================================
-    // this is 2 times the total energy density 2 E = 2 rhoE / rho
-    E = prim[1] * prim[1] + prim[2] * prim[2] + ( this->fluidParam.K + 2.0 ) / ( 2.0*prim[3] );
-    // ========================================================================
-
-    // ========================================================================
-    // the product rule of derivations is used here!
-    A = 2.0*macroSlope[3] - E       * macroSlope[0];    // = 2 rho dE/dx
-    B =     macroSlope[1] - prim[1] * macroSlope[0];    // =   rho dU/dx
-    C =     macroSlope[2] - prim[2] * macroSlope[0];    // =   rho dV/dx
-    // ========================================================================
-
-    // compute micro slopes of primitive variables from macro slopes of conservatice variables
-    microSlope[3] = (4.0 * prim[3]*prim[3])/(this->fluidParam.K + 2.0)
-                  * ( A - 2.0*prim[1]*B - 2.0*prim[2]*C );
-
-    microSlope[2] = 2.0 * prim[3] * C - prim[2] * microSlope[3];
-
-    microSlope[1] = 2.0 * prim[3] * B - prim[1] * microSlope[3];
-
-    microSlope[0] = macroSlope[0] - prim[1]*microSlope[1] - prim[2]*microSlope[2] - 0.5 * E* microSlope[3];
-}
-
 void Interface::computeMoments(double * prim, double * MomentU, double* MomentV, double * MomentXi, int numberMoments)
 {
     //==================== U Moments ==========================================
