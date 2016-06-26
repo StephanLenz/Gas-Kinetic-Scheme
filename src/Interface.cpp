@@ -131,19 +131,26 @@ void Interface::computeInternalFlux(double dt)
     double timeCoefficients[3] = { dt, -tau*dt, 0.5*dt*dt - tau*dt };
 
     // in case of horizontal interface (G interface), swap velocity directions
-    if ( this->axis == 1 )
-    {
-        this->rotate(prim);
-        this->rotate(normalGradCons);
-        this->rotate(tangentialGradCons);
-    }
+    //if ( this->axis == 1 )
+    //{
+    //    this->rotate(prim);
+    //    this->rotate(normalGradCons);
+    //    this->rotate(tangentialGradCons);
+    //}
 
     // ========================================================================
     // spacial micro slopes a = a1 + a2 u + a3 v
     //                      b = b1 + b2 u + b3 v
-    // The microslopes contain the density (in opposition to Weidong Li's Code)
-    this->computeMicroSlope(prim, normalGradCons, a);
-    this->computeMicroSlope(prim, tangentialGradCons, b);
+    if ( this->axis == 0 )
+    {
+        this->computeMicroSlope(prim, normalGradCons, a);
+        this->computeMicroSlope(prim, tangentialGradCons, b);
+    }
+    else
+    {
+        this->computeMicroSlope(prim, normalGradCons, b);
+        this->computeMicroSlope(prim, tangentialGradCons, a);
+    }
     // ========================================================================
 
     // This Block can turn off the usage of tangential Derivatives
@@ -177,12 +184,12 @@ void Interface::computeInternalFlux(double dt)
     // ========================================================================
 
     // in case of horizontal interface (G interface), swap velocity fluxes
-    if ( this->axis == 1 )
-    {
-        this->rotate(this->timeIntegratedFlux);
-        this->rotate(this->FluxDensity);
-    }
-
+    //if ( this->axis == 1 )
+    //{
+    //    this->rotate(this->timeIntegratedFlux);
+    //    this->rotate(this->FluxDensity);
+    //}
+    int test = 1;
 }
 
 void Interface::computeBoundaryFlux(double dt)
@@ -424,9 +431,9 @@ void Interface::differentiateConsNormal(double* normalGradCons, double* prim)
 
     // compute the distance between 
     double dn = ( ( this->posCell->getDx().x + this->negCell->getDx().x ) * normal.x
-        + ( this->posCell->getDx().y + this->negCell->getDx().y ) * normal.y ) * 0.5;
+                + ( this->posCell->getDx().y + this->negCell->getDx().y ) * normal.y ) * 0.5;
 
-    normalGradCons[0] = ( this->posCell->getCons().rho  - this->negCell->getCons().rho )  / (dn * prim[0] );
+    normalGradCons[0] = ( this->posCell->getCons().rho  - this->negCell->getCons().rho )  / ( dn * prim[0] );
 
     normalGradCons[1] = ( this->posCell->getCons().rhoU - this->negCell->getCons().rhoU ) / ( dn * prim[0] );
 
@@ -452,7 +459,7 @@ void Interface::differentiateConsNormalThirdOrder(double* normalGradCons, double
 
     // compute the distance between 
     double dn = ( ( this->posCell->getDx().x + this->negCell->getDx().x ) * normal.x
-        + ( this->posCell->getDx().y + this->negCell->getDx().y ) * normal.y ) * 0.5;
+                + ( this->posCell->getDx().y + this->negCell->getDx().y ) * normal.y ) * 0.5;
 
     normalGradCons[0] = ( 5.0/4.0  * ( this->posCell->getCons().rho                        - this->negCell->getCons().rho )  
                         - 1.0/12.0 * ( this->posCell->getOpposingCell(this)->getCons().rho - this->negCell->getOpposingCell(this)->getCons().rho )
@@ -596,13 +603,13 @@ void Interface::computeMoments(double * prim, double * MomentU, double* MomentV,
     MomentU[0] = 1.0;
     MomentU[1] = prim[1];
     for (int i = 2; i < numberMoments; i++)
-        MomentU[i] = prim[1] * MomentU[i - 1] + (i - 1)/(2.0*prim[3])*MomentU[i - 2];
+        MomentU[i] = prim[1] * MomentU[i - 1] + ((i - 1)*MomentU[i - 2])/(2.0*prim[3]);
 
     //==================== V Moments ==========================================
     MomentV[0] = 1.0;
     MomentV[1] = prim[2];
     for (int i = 2; i < numberMoments; i++)
-        MomentV[i] = prim[2] * MomentV[i - 1] + (i - 1)/(2.0*prim[3])*MomentV[i - 2];
+        MomentV[i] = prim[2] * MomentV[i - 1] + ((i - 1)*MomentV[i - 2])/(2.0*prim[3]);
 
     //==================== Xi Moments =========================================
     MomentXi[0] = 1.0;

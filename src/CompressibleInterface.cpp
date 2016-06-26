@@ -186,11 +186,11 @@ void CompressibleInterface::computeMicroSlope(double * prim, double * macroSlope
     A = 2.0*macroSlope[3] - E       * macroSlope[0];    // = 2 rho dE/dx
     B = macroSlope[1] - prim[1] * macroSlope[0];    // =   rho dU/dx
     C = macroSlope[2] - prim[2] * macroSlope[0];    // =   rho dV/dx
-                                                    // ========================================================================
+    // ========================================================================
 
-                                                    // compute micro slopes of primitive variables from macro slopes of conservatice variables
+    // compute micro slopes of primitive variables from macro slopes of conservatice variables
     microSlope[3] = ( 4.0 * prim[3] * prim[3] ) / ( this->fluidParam.K + 2.0 )
-        * ( A - 2.0*prim[1] * B - 2.0*prim[2] * C );
+                  * ( A - 2.0*prim[1] * B - 2.0*prim[2] * C );
 
     microSlope[2] = 2.0 * prim[3] * C - prim[2] * microSlope[3];
 

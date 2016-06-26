@@ -70,8 +70,8 @@ void Cell::update(double dt)
                      ) / (this->dx*this->dy);
 
     // Apply Forcing
-    this->cons[1] += dt * this->cons[0] * this->fluidParam.Force.x;
-    this->cons[2] += dt * this->cons[0] * this->fluidParam.Force.y;
+    this->cons[1] += dt * cons_old[0] * this->fluidParam.Force.x;
+    this->cons[2] += dt * cons_old[0] * this->fluidParam.Force.y;
 
     // compute primary Variables
     this->computePrim();
@@ -143,8 +143,9 @@ void Cell::computePrim()
     this->prim[1] = this->cons[1] / this->cons[0];
     this->prim[2] = this->cons[2] / this->cons[0];
     // eq. in GKS Book page 79 at the bottom
-    this->prim[3] = (this->fluidParam.K + 2.0)*this->cons[0]
-                  / ( 4.0 * ( this->cons[3] - 0.5*(this->cons[1]* this->cons[1] + this->cons[2] * this->cons[2])/this->cons[0] ) );
+    //this->prim[3] = (this->fluidParam.K + 2.0)*this->cons[0]
+    //              / ( 4.0 * ( this->cons[3] - 0.5*(this->cons[1]* this->cons[1] + this->cons[2] * this->cons[2])/this->cons[0] ) );
+    this->prim[3] = 3.0 / 2.0;
 }
 
 void Cell::computeCons()
@@ -188,7 +189,8 @@ double Cell::getLocalTimestep()
     // The formular for the speed of sound in Guo, Liu et al (2008) differs
     // from the one at Wikipedia sqrt(RT) != sqrt(kappa RT)
 
-    double U_max = max( fabs(this->getPrim().U), fabs(this->getPrim().V) );
+    //double U_max = max( fabs(this->getPrim().U), fabs(this->getPrim().V) );
+    double U_max = fabs(this->getPrim().U*this->getPrim().U + this->getPrim().V*this->getPrim().V);
     double c_s   = sqrt( 1.0 / ( 2.0*this->getPrim().L ) );                      // c_s = sqrt(RT) = c_s = sqrt(1/2lambda)
     double Re    = U_max * min(dx, dy) / this->fluidParam.nu;
 

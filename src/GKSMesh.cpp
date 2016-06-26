@@ -701,7 +701,7 @@ void GKSMesh::timeStep()
     if ( this->param.verbose ) cout << "  Apply Boundary Conditions ..." << endl;
     this->applyBoundaryCondition();
     
-    
+    int test = 1;
 }
 
 void GKSMesh::iterate()
