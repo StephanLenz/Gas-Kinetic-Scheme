@@ -55,106 +55,65 @@ void IncompressibleInterface::assembleFlux(double * MomentU, double * MomentV, d
     double Flux_1[4];
     double Flux_2[4];
     double Flux_3[4];
+
+    int u, v;
     if( this->axis == 0 )
     {
-    // ========================================================================
-        Flux_1[0] = MomentU[1];
-        Flux_1[1] = MomentU[2];
-        Flux_1[2] = MomentU[1] * MomentV[1];
-        Flux_1[3] = 0.0;
-    // ========================================================================
-
-    // ========================================================================
-        Flux_2[0] = ( a[0] * MomentU[2] * MomentV[0]
-                    + a[1] * MomentU[3] * MomentV[0]
-                    + a[2] * MomentU[2] * MomentV[1]
-                    + b[0] * MomentU[1] * MomentV[1]
-                    + b[1] * MomentU[2] * MomentV[1]
-                    + b[2] * MomentU[1] * MomentV[2]
-                    );
-        Flux_2[1] = ( a[0] * MomentU[3] * MomentV[0]
-                    + a[1] * MomentU[4] * MomentV[0]
-                    + a[2] * MomentU[3] * MomentV[1]
-                    + b[0] * MomentU[2] * MomentV[1]
-                    + b[1] * MomentU[3] * MomentV[1]
-                    + b[2] * MomentU[2] * MomentV[2]
-                    );
-        Flux_2[2] = ( a[0] * MomentU[2] * MomentV[1]
-                    + a[1] * MomentU[3] * MomentV[1]
-                    + a[2] * MomentU[2] * MomentV[2]
-                    + b[0] * MomentU[1] * MomentV[2]
-                    + b[1] * MomentU[2] * MomentV[2]
-                    + b[2] * MomentU[1] * MomentV[3]
-                    );
-        Flux_2[3] = 0.0;
-    // ========================================================================
-
-    // ========================================================================
-        Flux_3[0] = ( A[0] * MomentU[1] * MomentV[0]
-                    + A[1] * MomentU[2] * MomentV[0]
-                    + A[2] * MomentU[1] * MomentV[1]
-                    );
-        Flux_3[1] = ( A[0] * MomentU[2] * MomentV[0]
-                    + A[1] * MomentU[3] * MomentV[0]
-                    + A[2] * MomentU[2] * MomentV[1]
-                    );
-        Flux_3[2] = ( A[0] * MomentU[1] * MomentV[1]
-                    + A[1] * MomentU[2] * MomentV[1]
-                    + A[2] * MomentU[1] * MomentV[2]
-                    );
-        Flux_3[3] = 0.0;
-    // ========================================================================
+        u = 1; v = 0;
     }
     else
     {
-    // ========================================================================
-        Flux_1[0] = MomentU[0] * MomentV[1];
-        Flux_1[1] = MomentU[1] * MomentV[1];
-        Flux_1[2] = MomentU[0] * MomentV[2];
-        Flux_1[3] = 0.0;
-    // ========================================================================
-
-    // ========================================================================
-        Flux_2[0] = ( a[0] * MomentU[1] * MomentV[1]
-                    + a[1] * MomentU[2] * MomentV[1]
-                    + a[2] * MomentU[1] * MomentV[2]
-                    + b[0] * MomentU[0] * MomentV[2]
-                    + b[1] * MomentU[1] * MomentV[2]
-                    + b[2] * MomentU[0] * MomentV[3]
-                    );
-        Flux_2[1] = ( a[0] * MomentU[2] * MomentV[1]
-                    + a[1] * MomentU[3] * MomentV[1]
-                    + a[2] * MomentU[2] * MomentV[2]
-                    + b[0] * MomentU[1] * MomentV[2]
-                    + b[1] * MomentU[2] * MomentV[2]
-                    + b[2] * MomentU[1] * MomentV[3]
-                    );
-        Flux_2[2] = ( a[0] * MomentU[1] * MomentV[2]
-                    + a[1] * MomentU[2] * MomentV[2]
-                    + a[2] * MomentU[1] * MomentV[3]
-                    + b[0] * MomentU[0] * MomentV[3]
-                    + b[1] * MomentU[1] * MomentV[3]
-                    + b[2] * MomentU[0] * MomentV[4]
-                    );
-        Flux_2[3] = 0.0;
-    // ========================================================================
-
-    // ========================================================================
-        Flux_3[0] = ( A[0] * MomentU[0] * MomentV[1]
-                    + A[1] * MomentU[1] * MomentV[1]
-                    + A[2] * MomentU[0] * MomentV[2]
-                    );
-        Flux_3[1] = ( A[0] * MomentU[1] * MomentV[1]
-                    + A[1] * MomentU[2] * MomentV[1]
-                    + A[2] * MomentU[1] * MomentV[2]
-                    );
-        Flux_3[2] = ( A[0] * MomentU[0] * MomentV[2]
-                    + A[1] * MomentU[1] * MomentV[2]
-                    + A[2] * MomentU[0] * MomentV[3]
-                    );
-        Flux_3[3] = 0.0;
-    // ========================================================================
+        u = 0; v = 1;
     }
+
+    // ========================================================================
+    Flux_1[0] = MomentU[0+u] * MomentV[0+v];
+    Flux_1[1] = MomentU[1+u] * MomentV[0+v];
+    Flux_1[2] = MomentU[0+u] * MomentV[1+v];
+    Flux_1[3] = 0.0;
+    // ========================================================================
+
+    // ========================================================================
+    Flux_2[0] = ( a[0] * MomentU[1+u] * MomentV[0+v]
+                + a[1] * MomentU[2+u] * MomentV[0+v]
+                + a[2] * MomentU[1+u] * MomentV[1+v]
+                + b[0] * MomentU[0+u] * MomentV[1+v]
+                + b[1] * MomentU[1+u] * MomentV[1+v]
+                + b[2] * MomentU[0+u] * MomentV[2+v]
+                );
+    Flux_2[1] = ( a[0] * MomentU[2+u] * MomentV[0+v]
+                + a[1] * MomentU[3+u] * MomentV[0+v]
+                + a[2] * MomentU[2+u] * MomentV[1+v]
+                + b[0] * MomentU[3+u] * MomentV[1+v]
+                + b[1] * MomentU[2+u] * MomentV[1+v]
+                + b[2] * MomentU[3+u] * MomentV[2+v]
+                );
+    Flux_2[2] = ( a[0] * MomentU[1+u] * MomentV[1+v]
+                + a[1] * MomentU[2+u] * MomentV[1+v]
+                + a[2] * MomentU[1+u] * MomentV[2+v]
+                + b[0] * MomentU[0+u] * MomentV[2+v]
+                + b[1] * MomentU[1+u] * MomentV[2+v]
+                + b[2] * MomentU[0+u] * MomentV[3+v]
+                );
+    Flux_2[3] = 0.0;
+    // ========================================================================
+
+    // ========================================================================
+    Flux_3[0] = ( A[0] * MomentU[0+u] * MomentV[0+v]
+                + A[1] * MomentU[1+u] * MomentV[0+v]
+                + A[2] * MomentU[0+u] * MomentV[1+v]
+                );
+    Flux_3[1] = ( A[0] * MomentU[1+u] * MomentV[0+v]
+                + A[1] * MomentU[2+u] * MomentV[0+v]
+                + A[2] * MomentU[1+u] * MomentV[1+v]
+                );
+    Flux_3[2] = ( A[0] * MomentU[0+u] * MomentV[1+v]
+                + A[1] * MomentU[1+u] * MomentV[1+v]
+                + A[2] * MomentU[0+u] * MomentV[2+v]
+                );
+    Flux_3[3] = 0.0;
+    // ========================================================================
+    
     // ========================================================================
     for ( int i = 0; i < 4; i++ )
     {

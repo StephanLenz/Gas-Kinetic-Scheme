@@ -147,9 +147,9 @@ int main(int argc, char* argv[])
     double H = 1.0;
     double W = 1.0;
 
-    param.numberOfIterations = 1000;
-    param.outputIntervalVTK = 10;
-    param.outputInterval = 10;
+    param.numberOfIterations = 1000000;
+    param.outputIntervalVTK = 1000;
+    param.outputInterval = 1000;
 
     param.convergenceCriterium = 1.0e-9;
 
@@ -348,12 +348,12 @@ int main(int argc, char* argv[])
     //mesh->writeVelocityU("out/VelocityU.dat");
     //mesh->writeVelocityV("out/VelocityV.dat");
 
-    ostringstream filename;
-    filename << "out/PoiseuilleFlowIncompressible/ConvergenceStudyInterface/" << ny;
-    mesh->writeVelocityProfile(    ( filename.str() + "/VelocityProfile.dat" )  , 0.5);
-    mesh->writeConvergenceHistory( ( filename.str() + "/ConvergenceHistory.dat" )    );
-    mesh->writeOverviewFile(       ( filename.str() + "/OverviewFile.dat" )          );
-    mesh->writeVTKFile(            ( filename.str() + "/ResultFields.vtk" )          );
+    //ostringstream filename;
+    //filename << "out/PoiseuilleFlowIncompressible/ConvergenceStudyInterface/" << ny;
+    //mesh->writeVelocityProfile(    ( filename.str() + "/VelocityProfile.dat" )  , 0.5);
+    //mesh->writeConvergenceHistory( ( filename.str() + "/ConvergenceHistory.dat" )    );
+    //mesh->writeOverviewFile(       ( filename.str() + "/OverviewFile.dat" )          );
+    //mesh->writeVTKFile(            ( filename.str() + "/ResultFields.vtk" )          );
     
     //ostringstream filename;
     //filename << "out/DrivenCavity/Re" << Re << "/" << nx;
