@@ -52,14 +52,14 @@ void GKSMesh::generateRectMesh(InterfaceType type, double lengthX, double length
 
 		for (int j = -1; j < nx + 1; j++)   // X-Direction
 		{
-            if (i == -1)         currentBC = BoundaryConditionList[1];
-            else if (i == ny)    currentBC = BoundaryConditionList[3];
-            else if (j == -1)    currentBC = BoundaryConditionList[0];
+            if (j == -1)         currentBC = BoundaryConditionList[0];
             else if (j == nx)    currentBC = BoundaryConditionList[2];
+            else if (i == -1)    currentBC = BoundaryConditionList[1];
+            else if (i == ny)    currentBC = BoundaryConditionList[3];
             else                 currentBC = NULL;
 
 			//                      cell centerX         cell centerY
-			tmpCell = new Cell(((double)j + 0.5)*dx, ((double)i + 0.5)*dy, dx, dy, currentBC, this->fluidParam);
+			tmpCell = new Cell(type, ((double)j + 0.5)*dx, ((double)i + 0.5)*dy, dx, dy, currentBC, this->fluidParam);
 			// add interface to list
 			this->CellList.push_back(tmpCell);
 		}
@@ -147,7 +147,7 @@ void GKSMesh::generateRectMeshPeriodic(InterfaceType type, double lengthX, doubl
             else                 currentBC = NULL;
 
             //                      cell centerX         cell centerY
-            tmpCell = new Cell(((double)j + 0.5)*dx, ((double)i + 0.5)*dy, dx, dy, currentBC, this->fluidParam);
+            tmpCell = new Cell(type, ((double)j + 0.5)*dx, ((double)i + 0.5)*dy, dx, dy, currentBC, this->fluidParam);
             // add interface to list
             this->CellList.push_back(tmpCell);
         }
@@ -244,7 +244,7 @@ void GKSMesh::generateRectMeshPeriodicVertical(InterfaceType type, double length
             else                 currentBC = NULL;
 
             //                      cell centerX         cell centerY
-            tmpCell = new Cell(( (double)j + 0.5 )*dx, ( (double)i + 0.5 )*dy, dx, dy, currentBC, this->fluidParam);
+            tmpCell = new Cell(type, ( (double)j + 0.5 )*dx, ( (double)i + 0.5 )*dy, dx, dy, currentBC, this->fluidParam);
             // add interface to list
             this->CellList.push_back(tmpCell);
         }
@@ -336,7 +336,7 @@ void GKSMesh::generateRectMeshInterfaceBCs(InterfaceType type, double lengthX, d
         for ( int j = 0; j < nx; j++ )   // X-Direction
         {
             //                      cell centerX         cell centerY
-            tmpCell = new Cell(( (double)j + 0.5 )*dx, ( (double)i + 0.5 )*dy, dx, dy, currentBC, this->fluidParam);
+            tmpCell = new Cell(type, ( (double)j + 0.5 )*dx, ( (double)i + 0.5 )*dy, dx, dy, currentBC, this->fluidParam);
             // add interface to list
             this->CellList.push_back(tmpCell);
         }
@@ -446,7 +446,7 @@ void GKSMesh::generateRectMeshPeriodicInterfaceBCs(InterfaceType type, double le
         for ( int j = 0; j < nx; j++ )   // X-Direction
         {
             //                      cell centerX         cell centerY
-            tmpCell = new Cell(( (double)j + 0.5 )*dx, ( (double)i + 0.5 )*dy, dx, dy, currentBC, this->fluidParam);
+            tmpCell = new Cell(type, ( (double)j + 0.5 )*dx, ( (double)i + 0.5 )*dy, dx, dy, currentBC, this->fluidParam);
             // add interface to list
             this->CellList.push_back(tmpCell);
         }
@@ -1081,7 +1081,7 @@ void GKSMesh::writeVelocityU(string filename)
 
     for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
-        //if ( !( *i )->isGhostCell() )
+        if ( !( *i )->isGhostCell() )
             file << ( *i )->getPrim().U << endl;
     }
 

@@ -13,7 +13,7 @@ Cell::Cell()
     memset(InterfaceList, NULL, 4 * sizeof(Interface*));
 }
 
-Cell::Cell(double centerX, double centerY, double dx, double dy, BoundaryCondition* BC, FluidParameter fluidParam)
+Cell::Cell(InterfaceType interfaceType, double centerX, double centerY, double dx, double dy, BoundaryCondition* BC, FluidParameter fluidParam)
 {
 	this->InterfaceList = new Interface*[4];
     memset(InterfaceList, NULL, 4 * sizeof(Interface*));
@@ -27,6 +27,8 @@ Cell::Cell(double centerX, double centerY, double dx, double dy, BoundaryConditi
     this->BoundaryContitionPointer = BC;
 
     this->fluidParam = fluidParam;
+
+    this->interfaceType = interfaceType;
 }
 
 
@@ -77,10 +79,15 @@ void Cell::update(double dt)
     this->computePrim();
 
     // Set the residual for zero values to zero
-    this->residual.rho  = (fabs(cons_old[0]) > 1.0e-12) ? fabs(this->cons[0] - cons_old[0]) / fabs(cons_old[0]) : 0.0;
-    this->residual.rhoU = (fabs(cons_old[1]) > 1.0e-12) ? fabs(this->cons[1] - cons_old[1]) / fabs(cons_old[1]) : 0.0;
-    this->residual.rhoV = (fabs(cons_old[2]) > 1.0e-12) ? fabs(this->cons[2] - cons_old[2]) / fabs(cons_old[2]) : 0.0;
-    this->residual.rhoE = (fabs(cons_old[3]) > 1.0e-12) ? fabs(this->cons[3] - cons_old[3]) / fabs(cons_old[3]) : 0.0;
+    //this->residual.rho  = (fabs(cons_old[0]) > 1.0e-12) ? fabs(this->cons[0] - cons_old[0]) / fabs(cons_old[0]) : 0.0;
+    //this->residual.rhoU = (fabs(cons_old[1]) > 1.0e-12) ? fabs(this->cons[1] - cons_old[1]) / fabs(cons_old[1]) : 0.0;
+    //this->residual.rhoV = (fabs(cons_old[2]) > 1.0e-12) ? fabs(this->cons[2] - cons_old[2]) / fabs(cons_old[2]) : 0.0;
+    //this->residual.rhoE = (fabs(cons_old[3]) > 1.0e-12) ? fabs(this->cons[3] - cons_old[3]) / fabs(cons_old[3]) : 0.0;
+
+    this->residual.rho  = fabs(this->cons[0] - cons_old[0]) / fabs(cons_old[0]);
+    this->residual.rhoU = fabs(this->cons[1] - cons_old[1]) / fabs(cons_old[1]);
+    this->residual.rhoV = fabs(this->cons[2] - cons_old[2]) / fabs(cons_old[2]);
+    this->residual.rhoE = fabs(this->cons[3] - cons_old[3]) / fabs(cons_old[3]);
 
 }
 
@@ -92,7 +99,7 @@ void Cell::applyBoundaryCondition()
     // if no neighbor was found
     if (neighborCell == NULL)
     {
-        // search any inerface and take the neigbor 
+        // search any interface and take the neigbor 
         for (int i = 0; i < 4; i++)
         {
             if (this->InterfaceList[i] != NULL)
@@ -142,10 +149,13 @@ void Cell::computePrim()
     this->prim[0] = this->cons[0];
     this->prim[1] = this->cons[1] / this->cons[0];
     this->prim[2] = this->cons[2] / this->cons[0];
-    // eq. in GKS Book page 79 at the bottom
-    //this->prim[3] = (this->fluidParam.K + 2.0)*this->cons[0]
-    //              / ( 4.0 * ( this->cons[3] - 0.5*(this->cons[1]* this->cons[1] + this->cons[2] * this->cons[2])/this->cons[0] ) );
-    this->prim[3] = 3.0 / 2.0;
+
+    if( this->interfaceType == incompressible )
+        this->prim[3] = 3.0 / 2.0;
+    else
+        // eq. in GKS Book page 79 at the bottom
+        this->prim[3] = (this->fluidParam.K + 2.0)*this->cons[0]
+                      / ( 4.0 * ( this->cons[3] - 0.5*(this->cons[1]* this->cons[1] + this->cons[2] * this->cons[2])/this->cons[0] ) );
 }
 
 void Cell::computeCons()

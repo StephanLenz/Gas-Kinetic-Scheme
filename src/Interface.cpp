@@ -126,9 +126,11 @@ void Interface::computeInternalFlux(double dt)
     // Formular as in the Rayleigh-Bernard-Paper (Xu, Lui, 1999)
     double tau = 2.0*prim[3] * this->fluidParam.nu;
     // ========================================================================
-
+    
+    // ========================================================================
     // time integration Coefficients
     double timeCoefficients[3] = { dt, -tau*dt, 0.5*dt*dt - tau*dt };
+    // ========================================================================
 
     // in case of horizontal interface (G interface), swap velocity directions
     //if ( this->axis == 1 )
@@ -189,51 +191,88 @@ void Interface::computeInternalFlux(double dt)
     //    this->rotate(this->timeIntegratedFlux);
     //    this->rotate(this->FluxDensity);
     //}
-    int test = 1;
 }
 
 void Interface::computeBoundaryFlux(double dt)
 {
-    PrimaryVariable prim = this->getCellInDomain()->getPrim();
+    const int NUMBER_OF_MOMENTS = 7;
+    double timeGrad[4];
 
-    if ( this->axis == 1 )
-    {
-        this->rotate((double*)&prim);
-    }
+    double a[] = {0.0,0.0,0.0};
+    double b[] = {0.0,0.0,0.0};
+    double A[] = {0.0,0.0,0.0};
 
-    double distance = this->distance(this->getCellInDomain()->getCenter());
+    double MomentU[NUMBER_OF_MOMENTS];
+    double MomentV[NUMBER_OF_MOMENTS];
+    double MomentXi[NUMBER_OF_MOMENTS];
 
-    // compute the length of the interface
-    double dy = this->getCellInDomain()->getDx().x * normal.y
-        + this->getCellInDomain()->getDx().y * normal.x;
-
-    //ConservedVariable FluxDensity = this->BoundaryConditionPointer->computeBoundaryInterfaceFlux(prim, dx, this->fluidParam.nu);
-    ConservedVariable FluxDensity;
+    // ========================================================================
     double sign = 1.0;
-
     if ( posCell == NULL )
         sign = -1.0;
 
-    FluxDensity.rho = 0.0;
-    FluxDensity.rhoU = prim.rho / ( 2.0 * prim.L );
-    FluxDensity.rhoV = -sign * this->fluidParam.nu * prim.rho * ( prim.V - this->BoundaryConditionPointer->getWallVelocity() ) / distance;
-    FluxDensity.rhoE = 0.0;
+    // compute the length of the interface
+    double dy = this->getCellInDomain()->getDx().x * normal.y
+              + this->getCellInDomain()->getDx().y * normal.x;
 
-    this->timeIntegratedFlux[0] = FluxDensity.rho  * dt * dy;
-    this->timeIntegratedFlux[1] = FluxDensity.rhoU * dt * dy;
-    this->timeIntegratedFlux[2] = FluxDensity.rhoV * dt * dy;
-    this->timeIntegratedFlux[3] = FluxDensity.rhoE * dt * dy;
+    double distance = this->distance(this->getCellInDomain()->getCenter());
+    // ========================================================================
 
-    this->FluxDensity[0] = FluxDensity.rho;
-    this->FluxDensity[1] = FluxDensity.rhoU;
-    this->FluxDensity[2] = FluxDensity.rhoV;
-    this->FluxDensity[3] = FluxDensity.rhoE;
+    // ========================================================================
+    PrimaryVariable prim;
+    prim.rho = this->getCellInDomain()->getPrim().rho;
+    prim.U   = 0.0;
+    prim.V   = 0.0;
+    prim.L   = this->getCellInDomain()->getPrim().L;
 
-    if ( this->axis == 1 )
+    ConservedVariable normalGradCons;
+    normalGradCons.rho  = 0.0;
+    normalGradCons.rhoU = sign * this->getCellInDomain()->getCons().rhoU / (distance * prim.rho);
+    normalGradCons.rhoV = sign * this->getCellInDomain()->getCons().rhoV / (distance * prim.rho);
+    normalGradCons.rhoE = 0.0;
+    // ========================================================================
+
+    // ========================================================================
+    // Formular as in the Rayleigh-Bernard-Paper (Xu, Lui, 1999)
+    double tau = 2.0 * prim.L * this->fluidParam.nu;
+    // ========================================================================
+    
+    // ========================================================================
+    // time integration Coefficients
+    double timeCoefficients[3] = { dt, -tau*dt, 0.5*dt*dt - tau*dt };
+    // ========================================================================
+ 
+    // ========================================================================
+    // spacial micro slopes a = a1 + a2 u + a3 v
+    //                      b = b1 + b2 u + b3 v
+    if ( this->axis == 0 )
     {
-        this->rotate(this->FluxDensity);
-        this->rotate(this->timeIntegratedFlux);
+        this->computeMicroSlope((double*)&prim, (double*)&normalGradCons, a);
     }
+    else
+    {
+        this->computeMicroSlope((double*)&prim, (double*)&normalGradCons, b);
+    }
+    // ========================================================================
+    
+    // ========================================================================
+    // The Moments are computed without the density
+    // Therefore their dimensions are powers of velocity
+    this->computeMoments((double*)&prim, MomentU, MomentV, MomentXi, NUMBER_OF_MOMENTS);
+    // ========================================================================
+
+    // ========================================================================
+    // temporal micro slopes A = A1 + A2 u + A3 v
+    // The temporal macro slopes (timeGrad) also contain the density by explicit multiplication
+    this->computeTimeDerivative((double*)&prim, MomentU, MomentV, MomentXi, a, b, timeGrad);
+
+    this->computeMicroSlope((double*)&prim, timeGrad, A);
+    // ========================================================================
+
+    // ========================================================================
+    // compute mass and momentum fluxes
+    this->assembleFlux(MomentU, MomentV, MomentXi, a, b, A, timeCoefficients, dy, (double*)&prim, tau);
+    // ========================================================================
 
 }
 

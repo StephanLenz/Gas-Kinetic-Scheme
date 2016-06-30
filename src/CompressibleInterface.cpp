@@ -79,15 +79,25 @@ void CompressibleInterface::computeTimeDerivative(double * prim, double * Moment
 
 void CompressibleInterface::assembleFlux(double * MomentU, double * MomentV, double * MomentXi, double * a, double * b, double * A, double * timeCoefficients, double dy, double* prim, double tau)
 {
-    double Flux_1[4];   // this part does not contain the density (dimension of velocity powers)
-    double Flux_2[4];   // this part contains the density by the micro slopes a and b
-    double Flux_3[4];   // this part contains the density by the micro slope A
+    double Flux_1[4];
+    double Flux_2[4];
+    double Flux_3[4];
+
+    int u, v;
+    if( this->axis == 0 )
+    {
+        u = 1; v = 0;
+    }
+    else
+    {
+        u = 0; v = 1;
+    }
     
     // ========================================================================
-    Flux_1[0] = MomentU[1];
-    Flux_1[1] = MomentU[2];
-    Flux_1[2] = MomentU[1] * MomentV[1];
-    Flux_1[3] = 0.5 * (MomentU[3] + MomentU[1] * MomentV[2] + MomentU[1] * MomentXi[2]);
+    Flux_1[0] = MomentU[0+u] * MomentV[0+v];
+    Flux_1[1] = MomentU[1+u] * MomentV[0+v];
+    Flux_1[2] = MomentU[0+u] * MomentV[1+v];
+    Flux_1[3] = 0.5 * (MomentU[2+u] + MomentU[0+u] * MomentV[2+v] + MomentU[0+u] * MomentV[0+v] * MomentXi[2]);
     // ========================================================================
 
     // ========================================================================

@@ -42,9 +42,11 @@ private:
     // Boundary Cell
     BoundaryCondition* BoundaryContitionPointer;
 
+    InterfaceType interfaceType;
+
 public:
 	Cell();
-	Cell(double centerX, double centerY, double dx, double dy, BoundaryCondition* BC, FluidParameter fluidParam);
+	Cell(InterfaceType interfacetype, double centerX, double centerY, double dx, double dy, BoundaryCondition* BC, FluidParameter fluidParam);
 
 	~Cell();
 
