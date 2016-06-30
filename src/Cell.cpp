@@ -84,10 +84,10 @@ void Cell::update(double dt)
     //this->residual.rhoV = (fabs(cons_old[2]) > 1.0e-12) ? fabs(this->cons[2] - cons_old[2]) / fabs(cons_old[2]) : 0.0;
     //this->residual.rhoE = (fabs(cons_old[3]) > 1.0e-12) ? fabs(this->cons[3] - cons_old[3]) / fabs(cons_old[3]) : 0.0;
 
-    this->residual.rho  = fabs(this->cons[0] - cons_old[0]) / fabs(cons_old[0]);
-    this->residual.rhoU = fabs(this->cons[1] - cons_old[1]) / fabs(cons_old[1]);
-    this->residual.rhoV = fabs(this->cons[2] - cons_old[2]) / fabs(cons_old[2]);
-    this->residual.rhoE = fabs(this->cons[3] - cons_old[3]) / fabs(cons_old[3]);
+    this->residual.rho  = fabs(this->cons[0] - cons_old[0]);
+    this->residual.rhoU = fabs(this->cons[1] - cons_old[1]);
+    this->residual.rhoV = fabs(this->cons[2] - cons_old[2]);
+    this->residual.rhoE = fabs(this->cons[3] - cons_old[3]);
 
 }
 
@@ -200,7 +200,7 @@ double Cell::getLocalTimestep()
     // from the one at Wikipedia sqrt(RT) != sqrt(kappa RT)
 
     //double U_max = max( fabs(this->getPrim().U), fabs(this->getPrim().V) );
-    double U_max = fabs(this->getPrim().U*this->getPrim().U + this->getPrim().V*this->getPrim().V);
+    double U_max = sqrt(this->getPrim().U*this->getPrim().U + this->getPrim().V*this->getPrim().V);
     double c_s   = sqrt( 1.0 / ( 2.0*this->getPrim().L ) );                      // c_s = sqrt(RT) = c_s = sqrt(1/2lambda)
     double Re    = U_max * min(dx, dy) / this->fluidParam.nu;
 

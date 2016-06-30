@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
 
         */
     
-        ///*
+        /*
 
         // ========================================================================
         //
@@ -166,9 +166,9 @@ int main(int argc, char* argv[])
         // Initialize Values
         mesh->initMeshConstant(1.0, 0.0, 0.0, 3.0/2.0);
 
-        //*/
+        */
 
-        /*
+        ///*
 
         // ========================================================================
         //
@@ -182,13 +182,13 @@ int main(int argc, char* argv[])
         double W = 1.0;
 
         param.numberOfIterations = 10000000;
-        param.outputIntervalVTK = 10000000;
+        param.outputIntervalVTK = 100000;
         param.outputInterval = 100000;
 
         param.convergenceCriterium = 1.0e-10;
 
         param.L = 1.0;
-        param.CFL = 0.3;
+        param.CFL = 0.1;
 
         param.verbose = false;
         param.fluxOutput = false;
@@ -199,8 +199,8 @@ int main(int argc, char* argv[])
         FluidParameter fluidParam;
 
         // ========== Weidongs Parameters ==========
-        int    ny = nyList[j];
-        double Re = ReList[i];
+        int    ny = 16;
+        double Re = 40.0;
         double u0 = 0.1;
 
         fluidParam.K = 1;
@@ -208,6 +208,9 @@ int main(int argc, char* argv[])
         fluidParam.R = 208.0;
         fluidParam.Force.x = (u0*8.0*fluidParam.nu) / (param.L*param.L);
         fluidParam.Force.y = 0.0;
+
+        double T      = 293.15;
+        double lambda = 1.0 / (2.0 * fluidParam.R * T);
     
         // ========== Diffusive Scaling ==========
         //int nyRef = 8;
@@ -245,12 +248,12 @@ int main(int argc, char* argv[])
         mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0);
 
         // Generate Mesh
-        mesh->generateRectMeshPeriodic(incompressible, W, H, 1, ny);
+        mesh->generateRectMeshPeriodic(compressible, W, H, 1, ny);
 
         // Initialize Values
-        mesh->initMeshConstant(1.0, 0.0, 0.0, 3.0/2.0);
+        mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
 
-        */
+        //*/
 
         /*
 
@@ -369,8 +372,8 @@ int main(int argc, char* argv[])
         //mesh->writeOverviewFile(      ( filename.str() + "/OverviewFile.dat" ));
 
 
-        //mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
-        //mesh->writeOverviewFile("out/OverviewFile.dat");
+        mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
+        mesh->writeOverviewFile("out/OverviewFile.dat");
 
         //char a; cin >> a;
     }

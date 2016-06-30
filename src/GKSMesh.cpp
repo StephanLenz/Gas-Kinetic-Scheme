@@ -645,6 +645,12 @@ ConservedVariable GKSMesh::getL2GlobalResidual()
     residual.rhoV = 0.0;
     residual.rhoE = 0.0;
 
+    ConservedVariable cons;
+    cons.rho  = 0.0;
+    cons.rhoU = 0.0;
+    cons.rhoV = 0.0;
+    cons.rhoE = 0.0;
+
     for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
         if ( !( ( *i )->isGhostCell() ) )
@@ -653,13 +659,18 @@ ConservedVariable GKSMesh::getL2GlobalResidual()
             residual.rhoU +=  ( *i )->getLocalResidual().rhoU * ( *i )->getLocalResidual().rhoU;
             residual.rhoV +=  ( *i )->getLocalResidual().rhoV * ( *i )->getLocalResidual().rhoV;
             residual.rhoE +=  ( *i )->getLocalResidual().rhoE * ( *i )->getLocalResidual().rhoE;
+
+            cons.rho  +=  ( *i )->getCons().rho  * ( *i )->getCons().rho;
+            cons.rhoU +=  ( *i )->getCons().rhoU * ( *i )->getCons().rhoU;
+            cons.rhoV +=  ( *i )->getCons().rhoV * ( *i )->getCons().rhoV;
+            cons.rhoE +=  ( *i )->getCons().rhoE * ( *i )->getCons().rhoE;
         }
     }
 
-    residual.rho  = sqrt( residual.rho  );
-    residual.rhoU = sqrt( residual.rhoU );
-    residual.rhoV = sqrt( residual.rhoV );
-    residual.rhoE = sqrt( residual.rhoE );
+    residual.rho  = sqrt( residual.rho  ) / sqrt( cons.rho  );
+    residual.rhoU = sqrt( residual.rhoU ) / sqrt( cons.rhoU );
+    residual.rhoV = sqrt( residual.rhoV ) / sqrt( cons.rhoV );
+    residual.rhoE = sqrt( residual.rhoE ) / sqrt( cons.rhoE );
 
     return residual;
 }
@@ -733,7 +744,7 @@ void GKSMesh::iterate()
 
         if ( this->iter % this->param.outputInterval == 0 )
         {
-            ConservedVariable residual = this->getMaxGlobalResidual();
+            ConservedVariable residual = this->getL2GlobalResidual();
 
             cout << "t = " << this->time << "  \t|  timestep: " << this->iter << endl;
             cout << "r_rho = "  << residual.rho  << "\t ";
