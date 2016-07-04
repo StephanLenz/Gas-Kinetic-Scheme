@@ -128,6 +128,11 @@ void Cell::applyBoundaryCondition()
         {
             this->prim[i] = neighborCell->prim[i];
         }
+        else if ( type == 2 )
+        {
+            double localValue = 4.0 * value * ( this->centerY - this->centerY*this->centerY );
+            this->prim[i] = 2.0*localValue - neighborCell->prim[i];
+        }
     }
     
     this->computeCons();

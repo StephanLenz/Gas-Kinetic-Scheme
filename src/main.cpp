@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
         FluidParameter fluidParam;
 
         // ========== Weidongs Parameters ==========
-        int    ny = nyList[j];
+        int    ny = 32;
         double Re = 40;
         double u0 = 0.1;
 
@@ -155,20 +155,20 @@ int main(int argc, char* argv[])
         //    | 0     2 |
         //    |    1    |
         //    -----------
-        mesh->addBoundaryCondition(0, 1, 1, 1, 1.0+dRho, 0.0, 0.0, 0.0);
-        mesh->addBoundaryCondition(1, 0, 0, 1, 0.0     , 0.0, 0.0, 0.0);
-        mesh->addBoundaryCondition(0, 1, 1, 1, 1.0     , 0.0, 0.0, 0.0);
-        mesh->addBoundaryCondition(1, 0, 0, 1, 0.0     , 0.0, 0.0, 0.0);
+        mesh->addBoundaryCondition(0, 1, 1, 1,    1.0+dRho, 0.0, 0.0, 0.0);
+        mesh->addBoundaryCondition(1, 0, 0, 1,    0.0 ,     0.0, 0.0, 0.0);
+        mesh->addBoundaryCondition(0, 1, 1, 1,    1.0 ,     0.0, 0.0, 0.0);
+        mesh->addBoundaryCondition(1, 0, 0, 1,    0.0 ,     0.0, 0.0, 0.0);
 
         // Generate Mesh
-        mesh->generateRectMesh(incompressible, W, H, 2*ny+1, ny);
+        mesh->generateRectMesh(incompressible, W, H, 2*ny+1, ny+1);
 
         // Initialize Values
         mesh->initMeshConstant(1.0, 0.0, 0.0, 3.0/2.0);
 
         */
 
-        ///*
+        /*
 
         // ========================================================================
         //
@@ -253,7 +253,7 @@ int main(int argc, char* argv[])
         // Initialize Values
         mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
 
-        //*/
+        */
 
         /*
 
@@ -373,8 +373,10 @@ int main(int argc, char* argv[])
         //mesh->writeOverviewFile(      ( filename.str() + "/OverviewFile.dat" ));
 
 
-        mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
-        mesh->writeOverviewFile("out/OverviewFile.dat");
+        //mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
+        //mesh->writeOverviewFile("out/OverviewFile.dat");
+        //mesh->writePressureGradientProfile("out/PressureGradientProfile.dat", 1.0);
+        //mesh->writeVelocityProfile("out/VelocityProfile.dat", 1.0);
 
         //char a; cin >> a;
     }

@@ -1040,7 +1040,7 @@ void GKSMesh::writeVelocityProfile(string filename, double x)
             // check wether the profile location x is located in this cell
             if ( fabs( ( *i )->getCenter().x - x ) <= 0.5 * ( *i )->getDx().x )
             {
-                file << ( *i )->getCenter().y << " " << ( *i )->getPrim().U << "\n";
+                file << ( *i )->getCenter().y << " " << ( *i )->getPrim().U << " " << ( *i )->getPrim().rho << "\n";
             }
         }
     }
