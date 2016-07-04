@@ -91,10 +91,10 @@ int main(int argc, char* argv[])
         Parameters param;
 
         double H = 1.0;
-        double W = 1.0;
+        double W = 2.0;
 
-        param.numberOfIterations = 100000;
-        param.outputIntervalVTK = 10000;
+        param.numberOfIterations = 100000000;
+        param.outputIntervalVTK = 10000000;
         param.outputInterval = 10000;
 
         param.convergenceCriterium = 1.0e-10;
@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
         FluidParameter fluidParam;
 
         // ========== Weidongs Parameters ==========
-        int    ny = 32;
+        int    ny = nyList[j];
         double Re = 40;
         double u0 = 0.1;
 
@@ -121,7 +121,7 @@ int main(int argc, char* argv[])
         fluidParam.Force.x = 0.0;
         fluidParam.Force.y = 0.0;
 
-        double dRho = 3.0 * (u0*8.0*fluidParam.nu) / (param.L*param.L);
+        double dRho = W * 3.0 * (u0*8.0*fluidParam.nu) / (param.L*param.L);
     
         // ========== Diffusive Scaling ==========
         //int nyRef = 8;
@@ -161,7 +161,7 @@ int main(int argc, char* argv[])
         mesh->addBoundaryCondition(1, 0, 0, 1, 0.0     , 0.0, 0.0, 0.0);
 
         // Generate Mesh
-        mesh->generateRectMesh(incompressible, W, H, ny, ny);
+        mesh->generateRectMesh(incompressible, W, H, 2*ny+1, ny);
 
         // Initialize Values
         mesh->initMeshConstant(1.0, 0.0, 0.0, 3.0/2.0);
@@ -199,8 +199,8 @@ int main(int argc, char* argv[])
         FluidParameter fluidParam;
 
         // ========== Weidongs Parameters ==========
-        int    ny = 16;
-        double Re = 40.0;
+        int    ny = 16;//nyList[j];
+        double Re = 40.0;//ReList[i];
         double u0 = 0.1;
 
         fluidParam.K = 1;
@@ -356,12 +356,13 @@ int main(int argc, char* argv[])
         //mesh->writeVelocityU("out/VelocityU.dat");
         //mesh->writeVelocityV("out/VelocityV.dat");
 
-        //ostringstream filename;
-        //filename << "out/PoiseuilleFlowIncompressible/ConvergenceStudyInterface/" << "Re" << Re << "/" << ny;
-        //mesh->writeVelocityProfile(    ( filename.str() + "/VelocityProfile.dat" )  , 0.5);
-        //mesh->writeConvergenceHistory( ( filename.str() + "/ConvergenceHistory.dat" )    );
-        //mesh->writeOverviewFile(       ( filename.str() + "/OverviewFile.dat" )          );
-        //mesh->writeVTKFile(            ( filename.str() + "/ResultFields.vtk" )          );
+        ostringstream filename;
+        filename << "out/PoiseuilleFlowCompressible/ConvergenceStudy/" << "Re" << Re << "/" << ny;
+        mesh->writeVelocityProfile(            ( filename.str() + "/VelocityProfile.dat" )          , 1.0);
+        mesh->writePressureGradientProfile(    ( filename.str() + "/PressureGradientProfile.dat" )  , 1.0);
+        mesh->writeConvergenceHistory(         ( filename.str() + "/ConvergenceHistory.dat" )            );
+        mesh->writeOverviewFile(               ( filename.str() + "/OverviewFile.dat" )                  );
+        mesh->writeVTKFile(                    ( filename.str() + "/ResultFields.vtk" )                  );
     
         //ostringstream filename;
         //filename << "out/DrivenCavity/Re" << Re << "/" << nx;

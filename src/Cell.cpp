@@ -71,6 +71,10 @@ void Cell::update(double dt)
                      - this->InterfaceList[3]->getTimeIntegratedFlux().rhoE
                      ) / (this->dx*this->dy);
 
+    //// ---------------------- FIX ---------------------------------------------
+    //if( fabs(this->cons[2]) < 1.0e-12  ) this->cons[2] = 0.0;
+    //// ---------------------- FIX ---------------------------------------------
+
     // Apply Forcing
     this->cons[1] += dt * cons_old[0] * this->fluidParam.Force.x;
     this->cons[2] += dt * cons_old[0] * this->fluidParam.Force.y;

@@ -640,10 +640,11 @@ ConservedVariable GKSMesh::getMaxGlobalResidual()
 ConservedVariable GKSMesh::getL2GlobalResidual()
 {
     ConservedVariable residual;
-    residual.rho  = 0.0;
-    residual.rhoU = 0.0;
-    residual.rhoV = 0.0;
-    residual.rhoE = 0.0;
+    ConservedVariable residualSquare;
+    residualSquare.rho  = 0.0;
+    residualSquare.rhoU = 0.0;
+    residualSquare.rhoV = 0.0;
+    residualSquare.rhoE = 0.0;
 
     ConservedVariable cons;
     cons.rho  = 0.0;
@@ -655,10 +656,10 @@ ConservedVariable GKSMesh::getL2GlobalResidual()
     {
         if ( !( ( *i )->isGhostCell() ) )
         {
-            residual.rho  +=  ( *i )->getLocalResidual().rho  * ( *i )->getLocalResidual().rho;
-            residual.rhoU +=  ( *i )->getLocalResidual().rhoU * ( *i )->getLocalResidual().rhoU;
-            residual.rhoV +=  ( *i )->getLocalResidual().rhoV * ( *i )->getLocalResidual().rhoV;
-            residual.rhoE +=  ( *i )->getLocalResidual().rhoE * ( *i )->getLocalResidual().rhoE;
+            residualSquare.rho  +=  ( *i )->getLocalResidual().rho  * ( *i )->getLocalResidual().rho;
+            residualSquare.rhoU +=  ( *i )->getLocalResidual().rhoU * ( *i )->getLocalResidual().rhoU;
+            residualSquare.rhoV +=  ( *i )->getLocalResidual().rhoV * ( *i )->getLocalResidual().rhoV;
+            residualSquare.rhoE +=  ( *i )->getLocalResidual().rhoE * ( *i )->getLocalResidual().rhoE;
 
             cons.rho  +=  ( *i )->getCons().rho  * ( *i )->getCons().rho;
             cons.rhoU +=  ( *i )->getCons().rhoU * ( *i )->getCons().rhoU;
@@ -667,10 +668,14 @@ ConservedVariable GKSMesh::getL2GlobalResidual()
         }
     }
 
-    residual.rho  = sqrt( residual.rho  ) / sqrt( cons.rho  );
-    residual.rhoU = sqrt( residual.rhoU ) / sqrt( cons.rhoU );
-    residual.rhoV = sqrt( residual.rhoV ) / sqrt( cons.rhoV );
-    residual.rhoE = sqrt( residual.rhoE ) / sqrt( cons.rhoE );
+    residual.rho  = sqrt( residualSquare.rho  ) / sqrt( cons.rho  );
+    residual.rhoU = sqrt( residualSquare.rhoU ) / sqrt( cons.rhoU );
+    residual.rhoV = sqrt( residualSquare.rhoV ) / sqrt( cons.rhoV );
+    residual.rhoE = sqrt( residualSquare.rhoE ) / sqrt( cons.rhoE );
+
+    //// ---------------------- FIX ---------------------------------------------
+    //if(fabs( residualSquare.rhoV ) < 1.0e-12 ) residual.rhoV = 0.0;
+    //// ---------------------- FIX ---------------------------------------------
 
     return residual;
 }
@@ -1044,6 +1049,39 @@ void GKSMesh::writeVelocityProfile(string filename, double x)
 
     cout << "done!" << endl;
 
+}
+
+void GKSMesh::writePressureGradientProfile(string filename, double x)
+{
+    cout << "Wrinting file " << filename << " ... ";
+    // open file stream
+    ofstream file;
+    file.precision(15);
+    file.open(filename.c_str());
+
+    if (!file.is_open()) {
+        cout << " File cound not be opened.\n\nERROR!\n\n\n";
+        return;
+    }
+
+    for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
+    {
+        if ( !( *i )->isGhostCell() )
+        {
+            // check wether the profile location x is located in this cell
+            if ( fabs( ( *i )->getCenter().x - x ) <= 0.5 * ( *i )->getDx().x )
+            {
+                double p1 = 0.5 * (*i)->getNeighborCell(0)->getPrim().rho / (*i)->getNeighborCell(0)->getPrim().L;
+                double p2 = 0.5 * (*i)->getNeighborCell(2)->getPrim().rho / (*i)->getNeighborCell(2)->getPrim().L;
+
+                file << ( *i )->getCenter().y << " " << 0.5 * ( p2 - p1 )/(*i)->getDx().x << "\n";
+            }
+        }
+    }
+
+    file.close();
+
+    cout << "done!" << endl;
 }
 
 void GKSMesh::writeMeshAsText(string filename)
