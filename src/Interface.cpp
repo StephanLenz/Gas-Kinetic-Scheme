@@ -113,12 +113,12 @@ void Interface::computeInternalFlux(double dt)
 
     // ========================================================================
     // interpolated primary variables at the interface
-    //this->interpolatePrim(prim);
-    this->interpolatePrimThirdOrder(prim);
+    this->interpolatePrim(prim);
+    //this->interpolatePrimThirdOrder(prim);
 
     // spacial gradients of the conservative varibles
-    //this->differentiateConsNormal(normalGradCons, prim);
-    this->differentiateConsNormalThirdOrder(normalGradCons, prim);
+    this->differentiateConsNormal(normalGradCons, prim);
+    //this->differentiateConsNormalThirdOrder(normalGradCons, prim);
     this->differentiateConsTangential(tangentialGradCons, prim);
     // ========================================================================
 
