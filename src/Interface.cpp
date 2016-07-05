@@ -219,18 +219,40 @@ void Interface::computeBoundaryFlux(double dt)
     // ========================================================================
 
     // ========================================================================
+    double x1 = this->distance(this->getCellInDomain()->getCenter());
+    double x2 = this->distance(this->getCellInDomain()->getOpposingCell(this)->getCenter());
+    
+    PrimaryVariable Z1 = this->getCellInDomain()->getPrim();
+    PrimaryVariable Z2 = this->getCellInDomain()->getOpposingCell(this)->getPrim();
+    // ========================================================================
+
+    // ========================================================================
     PrimaryVariable prim;
-    prim.rho = this->getCellInDomain()->getPrim().rho;
+    prim.rho = ( x2*x2*Z1.rho - x1*x1*Z2.rho )/( x2*x2 - x1*x1 );
     prim.U   = 0.0;
     prim.V   = 0.0;
-    prim.L   = this->getCellInDomain()->getPrim().L;
+    prim.L   = ( x2*x2*Z1.L - x1*x1*Z2.L )/( x2*x2 - x1*x1 );
 
     ConservedVariable normalGradCons;
     normalGradCons.rho  = 0.0;
-    normalGradCons.rhoU = sign * this->getCellInDomain()->getCons().rhoU / (distance * prim.rho);
-    normalGradCons.rhoV = sign * this->getCellInDomain()->getCons().rhoV / (distance * prim.rho);
+    normalGradCons.rhoU = sign * ( x2*x2*Z1.U - x1*x1*Z2.U )/( (x2*x2 - x1*x1)*x1*x2 );
+    normalGradCons.rhoV = sign * ( x2*x2*Z1.V - x1*x1*Z2.V )/( (x2*x2 - x1*x1)*x1*x2 );
     normalGradCons.rhoE = 0.0;
     // ========================================================================
+
+    //// ========================================================================
+    //PrimaryVariable prim;
+    //prim.rho = this->getCellInDomain()->getPrim().rho;
+    //prim.U   = 0.0;
+    //prim.V   = 0.0;
+    //prim.L   = this->getCellInDomain()->getPrim().L;
+
+    //ConservedVariable normalGradCons;
+    //normalGradCons.rho  = 0.0;
+    //normalGradCons.rhoU = sign * this->getCellInDomain()->getCons().rhoU / (distance * prim.rho);
+    //normalGradCons.rhoV = sign * this->getCellInDomain()->getCons().rhoV / (distance * prim.rho);
+    //normalGradCons.rhoE = 0.0;
+    //// ========================================================================
 
     // ========================================================================
     // Formular as in the Rayleigh-Bernard-Paper (Xu, Lui, 1999)

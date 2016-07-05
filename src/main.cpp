@@ -16,10 +16,11 @@ using namespace std;
 int main(int argc, char* argv[])
 {
     //double ReList[] = {40.0, 100.0, 400.0, 1000.0};
-    //int    nyList[] = {8, 16, 32, 64, 128};
+    int    nyList[] = {8, 16, 32, 64, 128};
     //for (int i = 0; i < 4;i++)
     //for (int j = 0; j < 5;j++)
     {
+
 
         /*
 
@@ -168,7 +169,7 @@ int main(int argc, char* argv[])
 
         */
 
-        /*
+        ///*
 
         // ========================================================================
         //
@@ -181,14 +182,14 @@ int main(int argc, char* argv[])
         double H = 1.0;
         double W = 1.0;
 
-        param.numberOfIterations = 10000000;
-        param.outputIntervalVTK = 100000;
+        param.numberOfIterations = 100000000;
+        param.outputIntervalVTK = 100000000;
         param.outputInterval = 100000;
 
         param.convergenceCriterium = 1.0e-10;
 
         param.L = 1.0;
-        param.CFL = 0.1;
+        param.CFL = 0.3;
 
         param.verbose = false;
         param.fluxOutput = false;
@@ -199,7 +200,7 @@ int main(int argc, char* argv[])
         FluidParameter fluidParam;
 
         // ========== Weidongs Parameters ==========
-        int    ny = 16;//nyList[j];
+        int    ny = 32;//nyList[j];
         double Re = 40.0;//ReList[i];
         double u0 = 0.1;
 
@@ -253,7 +254,7 @@ int main(int argc, char* argv[])
         // Initialize Values
         mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
 
-        */
+        //*/
 
         /*
 
@@ -275,7 +276,7 @@ int main(int argc, char* argv[])
         param.convergenceCriterium = 1.0e-10;
 
         param.L = 1.0;
-        param.CFL = 0.3;
+        param.CFL = 0.01;
 
         param.verbose = false;
         param.fluxOutput = false;
@@ -286,8 +287,8 @@ int main(int argc, char* argv[])
         FluidParameter fluidParam;
 
         // ========== Weidongs Parameters ==========
-        int    ny = nyList[j];
-        double Re = ReList[i];
+        int    ny = 128;
+        double Re = 40.0;
         double u0 = 0.1;
 
         fluidParam.K = 1;
@@ -375,8 +376,8 @@ int main(int argc, char* argv[])
 
         //mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
         //mesh->writeOverviewFile("out/OverviewFile.dat");
-        //mesh->writePressureGradientProfile("out/PressureGradientProfile.dat", 1.0);
-        //mesh->writeVelocityProfile("out/VelocityProfile.dat", 1.0);
+        //mesh->writePressureGradientProfile("out/PressureGradientProfile.dat", 0.5);
+        //mesh->writeVelocityProfile("out/VelocityProfile.dat", 0.5);
 
         //char a; cin >> a;
     }
