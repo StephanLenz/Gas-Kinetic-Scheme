@@ -11,10 +11,10 @@ using namespace std;
 
 class Interface
 {
-protected:
+public:
 	Cell* negCell;
 	Cell* posCell;
-
+protected:
     float2 center;
     float2 normal;
     int axis;
@@ -25,6 +25,9 @@ protected:
 
     double timeIntegratedFlux[4];
     double FluxDensity[4];
+
+    static int interpolationOrder;
+
 public:
 	Interface();
 	Interface(Cell* negCell, Cell* posCell, float2 center, float2 normal, FluidParameter fluidParam, InterfaceBC* BC);
@@ -50,6 +53,10 @@ public:
 	string toString();
 
     string writeCenter();
+
+    static void setInterpolationOrder(int arg );
+
+    static int getInterpolationOrder();
 
 protected:
 

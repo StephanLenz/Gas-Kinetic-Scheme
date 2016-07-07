@@ -6,6 +6,8 @@
 #include "Types.h"
 #include <sstream>
 
+int Interface::interpolationOrder = 3;
+
 Interface::Interface()
 {
 }
@@ -113,12 +115,17 @@ void Interface::computeInternalFlux(double dt)
 
     // ========================================================================
     // interpolated primary variables at the interface
-    this->interpolatePrim(prim);
-    //this->interpolatePrimThirdOrder(prim);
+    if( interpolationOrder == 1 )
+        this->interpolatePrim(prim);
+    else
+        this->interpolatePrimThirdOrder(prim);
 
     // spacial gradients of the conservative varibles
-    this->differentiateConsNormal(normalGradCons, prim);
-    //this->differentiateConsNormalThirdOrder(normalGradCons, prim);
+    if( interpolationOrder == 1 )
+        this->differentiateConsNormal(normalGradCons, prim);
+    else
+        this->differentiateConsNormalThirdOrder(normalGradCons, prim);
+
     this->differentiateConsTangential(tangentialGradCons, prim);
     // ========================================================================
 
@@ -395,6 +402,16 @@ string Interface::writeCenter()
     ostringstream tmp;
     tmp << this->center.x << " " << this->center.y << " 0.0\n";
     return tmp.str();
+}
+
+void Interface::setInterpolationOrder(int arg)
+{
+    interpolationOrder = arg;
+}
+
+int Interface::getInterpolationOrder()
+{
+    return interpolationOrder;
 }
 
 void Interface::interpolatePrim(double * prim)

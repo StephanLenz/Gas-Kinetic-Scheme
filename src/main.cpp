@@ -73,6 +73,8 @@ int main(int argc, char* argv[])
         mesh->addBoundaryCondition(1, 0, 0, 1,  1.0, 0.0,  0.0, 0.0);
         mesh->addBoundaryCondition(1, 0, 0, 1,  1.0, 0.1, 0.0, 0.0);
 
+        Interface::setInterpolationOrder(3);
+
         // Generate Mesh
         mesh->generateRectMeshPeriodic(incompressible, W, H, 1, 16);
 
@@ -161,6 +163,8 @@ int main(int argc, char* argv[])
         mesh->addBoundaryCondition(0, 1, 1, 1,    1.0 ,     0.0, 0.0, 0.0);
         mesh->addBoundaryCondition(1, 0, 0, 1,    0.0 ,     0.0, 0.0, 0.0);
 
+        Interface::setInterpolationOrder(3);
+
         // Generate Mesh
         mesh->generateRectMesh(incompressible, W, H, 2*ny+1, ny+1);
 
@@ -248,6 +252,8 @@ int main(int argc, char* argv[])
         mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0);
         mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0);
 
+        Interface::setInterpolationOrder(3);
+
         // Generate Mesh
         mesh->generateRectMeshPeriodic(compressible, W, H, 1, ny);
 
@@ -335,6 +341,8 @@ int main(int argc, char* argv[])
         mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0);
         mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0);
 
+        Interface::setInterpolationOrder(3);
+
         // Generate Mesh
         mesh->generateRectMeshPeriodic(compressible, W, H, 1, ny);
 
@@ -421,6 +429,8 @@ int main(int argc, char* argv[])
         //    -----------
         mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0);
         mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0);
+
+        Interface::setInterpolationOrder(3);
 
         // Generate Mesh
         mesh->generateRectMeshPeriodic(compressible, W, H, ny, ny);
@@ -513,6 +523,8 @@ int main(int argc, char* argv[])
         mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0);
         mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0);
 
+        Interface::setInterpolationOrder(3);
+
         // Generate Mesh
         mesh->generateRectMesh(compressible, W, H, ny, ny);
 
@@ -552,9 +564,9 @@ int main(int argc, char* argv[])
 
         FluidParameter fluidParam;
 
-        // ========== Weidongs Parameters ==========
-        int    ny = 32;//nyList[j];
-        int    nx = 64;
+        // ========== Parameters ==========
+        int    ny = 64;//nyList[j];
+        int    nx = 128;
         double Re = 40.0;//ReList[i];
         double u0 = 0.1;
 
@@ -571,28 +583,6 @@ int main(int argc, char* argv[])
         double rho[]    = { 1.0, 1.0 };
         double U[] = { 0.0, 0.0 };
         double V[] = { 0.0, 0.0 };
-    
-        // ========== Diffusive Scaling ==========
-        //int nyRef = 8;
-        //int ny    = 256;
-        //double Re = 40.0;
-
-        //double uRef = 0.1;
-
-        //double u    = uRef * ((double)nyRef/(double)ny);
-
-        //fluidParam.K  = 1;
-        //fluidParam.nu = u*param.L / Re;
-        //fluidParam.R = 208.0;
-        //fluidParam.Force.x = 8.0*u*fluidParam.nu / (param.L*param.L);
-        //fluidParam.Force.y = 0.0;
-
-        // ========== Test Paramesters ==========
-        //fluidParam.K = 1;
-        //fluidParam.nu = 1.0e-2;
-        //fluidParam.R = 208.0;
-        //fluidParam.Force.x = 1.0e-4;
-        //fluidParam.Force.y = 0.0;
 
         // ========================================================================
 
@@ -604,16 +594,19 @@ int main(int argc, char* argv[])
         //    | 0     2 |
         //    |    1    |
         //    -----------
-        mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0 );
-        mesh->addBoundaryCondition(1, 0, 0, 0,  0.0, 0.0, 0.0, lambda[0]);
-        mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0 );
-        mesh->addBoundaryCondition(1, 0, 0, 0,  0.0, 0.0, 0.0, lambda[1]);
+        mesh->addBoundaryCondition(1, 1, 1, 1,  0.0, 0.0, 0.0, 0.0 );
+        mesh->addBoundaryCondition(1, 1, 1, 0,  0.0, 0.0, 0.0, lambda[0]);
+        mesh->addBoundaryCondition(1, 1, 1, 1,  0.0, 0.0, 0.0, 0.0 );
+        mesh->addBoundaryCondition(1, 1, 1, 0,  0.0, 0.0, 0.0, lambda[1]);
+
+        Interface::setInterpolationOrder(1);
 
         // Generate Mesh
-        mesh->generateRectMesh(compressible, W, H, ny, ny);
+        mesh->generateRectMesh(compressible, W, H, nx, ny);
 
         // Initialize Values
-        mesh->initMeshLinear(rho, U, V, lambda);
+        //mesh->initMeshLinear(rho, U, V, lambda);
+        mesh->initMeshConstant(1.0, 0.0, 0.0, 0.5*( lambda[0] + lambda[1] ) );
 
         //*/
 
@@ -651,11 +644,22 @@ int main(int argc, char* argv[])
         //mesh->writeOverviewFile(      ( filename.str() + "/OverviewFile.dat" ));
 
 
-        mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
-        mesh->writeOverviewFile("out/OverviewFile.dat");
-        mesh->writePressureGradientProfile("out/PressureGradientProfile.dat", 0.5);
-        mesh->writeVelocityProfile("out/VelocityProfile.dat", 0.5);
+        //mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
+        //mesh->writeOverviewFile("out/OverviewFile.dat");
+        //mesh->writePressureGradientProfile("out/PressureGradientProfile.dat", 0.5);
+        //mesh->writeVelocityProfile("out/VelocityProfile.dat", 0.5);
 
-        //char a; cin >> a;
+        /*Cell* Cell1 = new Cell(compressible, -0.5, 0.5, 1.0, 1.0, NULL, fluidParam);
+        Cell* Cell2 = new Cell(compressible,  0.5, 0.5, 1.0, 1.0, NULL, fluidParam);
+        Cell* Cell3 = new Cell(compressible,  1.5, 0.5, 1.0, 1.0, NULL, fluidParam);
+        Cell* Cell4 = new Cell(compressible,  2.5, 0.5, 1.0, 1.0, NULL, fluidParam);
+
+        Interface* Interface1 = Interface::createInterface(compressible, Cell1, Cell2, float2( 0.0, 0.5 ), float2(1.0, 0.0), fluidParam, NULL);
+        Interface* Interface2 = Interface::createInterface(compressible, Cell2, Cell3, float2( 0.0, 0.5 ), float2(1.0, 0.0), fluidParam, NULL);
+        Interface* Interface3 = Interface::createInterface(compressible, Cell3, Cell4, float2( 0.0, 0.5 ), float2(1.0, 0.0), fluidParam, NULL);
+
+        cout << Interface1->posCell->getOpposingCell(Interface1)->writeNodes() << endl;
+
+        char a; cin >> a;*/
     }
 }

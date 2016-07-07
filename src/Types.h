@@ -22,6 +22,14 @@ struct float2
 {
 	double x;
 	double y;
+
+    float2(){x = 0.0; y = 0.0;}
+
+    float2(double xArg, double yArg)
+    {
+        x = xArg;
+        y = yArg;
+    }
 };
 
 struct FluidParameter
