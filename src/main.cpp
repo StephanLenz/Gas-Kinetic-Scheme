@@ -277,7 +277,7 @@ int main(int argc, char* argv[])
 
         param.numberOfIterations = 100000000;
         param.outputIntervalVTK = 1000000;
-        param.outputInterval = 100000;
+        param.outputInterval = 10000;
 
         param.convergenceCriterium = 1.0e-10;
 
@@ -344,10 +344,10 @@ int main(int argc, char* argv[])
         Interface::setInterpolationOrder(3);
 
         // Generate Mesh
-        mesh->generateRectMeshPeriodic(compressible, W, H, 1, ny);
+        mesh->generateRectMeshPeriodic(incompressible, W, H, 1, ny);
 
         // Initialize Values
-        mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
+        mesh->initMeshConstant(1.0, 0.0, 0.0, 3.0/2.0);
 
         */
 
@@ -545,19 +545,19 @@ int main(int argc, char* argv[])
         Parameters param;
 
         double H = 1.0;
-        double W = 2.0;
+        double W = 1.0;
 
-        param.numberOfIterations = 1000;
-        param.outputIntervalVTK = 10;
-        param.outputInterval = 10;
+        param.numberOfIterations = 10000;
+        param.outputIntervalVTK = 50;
+        param.outputInterval = 50;
 
         param.convergenceCriterium = 1.0e-10;
 
         param.L = 1.0;
-        param.CFL = 0.01;
+        param.CFL = 0.1;
 
         param.verbose = false;
-        param.fluxOutput = false;
+        param.fluxOutput = true;
         param.resOutput = false;
 
         // ========================================================================
@@ -565,8 +565,8 @@ int main(int argc, char* argv[])
         FluidParameter fluidParam;
 
         // ========== Parameters ==========
-        int    ny = 64;//nyList[j];
-        int    nx = 128;
+        int    ny = 8;//nyList[j];
+        int    nx = 1;
         double Re = 40.0;//ReList[i];
         double u0 = 0.1;
 
@@ -579,8 +579,7 @@ int main(int argc, char* argv[])
         double TTop   = 273.15;
         double TBot   = 293.15;
         double lambda[] = { 1.0 / (2.0 * fluidParam.R * TTop), 1.0 / (2.0 * fluidParam.R * TBot) };
-        //double rho[]    = { 1.0 - H*fluidParam.Force.y*(lambda[0] + lambda[1]), 1.0 };
-        double rho[]    = { 1.0, 1.0 };
+        double rho[]    = { 1.0, 1.0 * lambda[1] / lambda[0] };
         double U[] = { 0.0, 0.0 };
         double V[] = { 0.0, 0.0 };
 
@@ -589,24 +588,22 @@ int main(int argc, char* argv[])
         GKSMesh* mesh = new GKSMesh(param, fluidParam);
 
         // Define Boundary Conditions
-        //    -----------
-        //    |    3    |
-        //    | 0     2 |
-        //    |    1    |
-        //    -----------
-        mesh->addBoundaryCondition(1, 1, 1, 1,  0.0, 0.0, 0.0, 0.0 );
-        mesh->addBoundaryCondition(1, 1, 1, 0,  0.0, 0.0, 0.0, lambda[0]);
-        mesh->addBoundaryCondition(1, 1, 1, 1,  0.0, 0.0, 0.0, 0.0 );
-        mesh->addBoundaryCondition(1, 1, 1, 0,  0.0, 0.0, 0.0, lambda[1]);
+        //    -----------    -----------
+        //    |    3    |    |    1    |
+        //    | 0     2 |    |         |
+        //    |    1    |    |    0    |
+        //    -----------    -----------
+        mesh->addBoundaryCondition(1, 0, 0, 0,  0.0, 0.0, 0.0, lambda[0]);
+        mesh->addBoundaryCondition(1, 0, 0, 0,  0.0, 0.0, 0.0, lambda[1]);
 
         Interface::setInterpolationOrder(1);
 
         // Generate Mesh
-        mesh->generateRectMesh(compressible, W, H, nx, ny);
+        mesh->generateRectMeshPeriodic(compressible, W, H, nx, ny);
 
         // Initialize Values
-        //mesh->initMeshLinear(rho, U, V, lambda);
-        mesh->initMeshConstant(1.0, 0.0, 0.0, 0.5*( lambda[0] + lambda[1] ) );
+        mesh->initMeshLinear(rho, U, V, lambda);
+        //mesh->initMeshConstant(1.0, 0.0, 0.0, 0.5*( lambda[0] + lambda[1] ) );
 
         //*/
 
@@ -644,10 +641,11 @@ int main(int argc, char* argv[])
         //mesh->writeOverviewFile(      ( filename.str() + "/OverviewFile.dat" ));
 
 
-        //mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
-        //mesh->writeOverviewFile("out/OverviewFile.dat");
-        //mesh->writePressureGradientProfile("out/PressureGradientProfile.dat", 0.5);
-        //mesh->writeVelocityProfile("out/VelocityProfile.dat", 0.5);
+        mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
+        mesh->writeOverviewFile("out/OverviewFile.dat");
+        mesh->writePressureGradientProfile("out/PressureGradientProfile.dat", 0.5);
+        mesh->writeVelocityProfile("out/VelocityProfile.dat", 0.5);
+        mesh->writeTimeSteps("out/TimeSteps.dat");
 
         /*Cell* Cell1 = new Cell(compressible, -0.5, 0.5, 1.0, 1.0, NULL, fluidParam);
         Cell* Cell2 = new Cell(compressible,  0.5, 0.5, 1.0, 1.0, NULL, fluidParam);

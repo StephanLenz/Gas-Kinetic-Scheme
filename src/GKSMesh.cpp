@@ -1283,7 +1283,7 @@ void GKSMesh::writeInterfaceGeometry(ofstream& file)
 
 void GKSMesh::writeCellData(ofstream& file)
 {
-    int numberOfFields = 9;
+    int numberOfFields = 10;
     if ( this->param.resOutput )
         numberOfFields += 4;
     
@@ -1354,6 +1354,12 @@ void GKSMesh::writeCellData(ofstream& file)
     for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
         file << ( *i )->getPrim().rho / ( 2.0 * ( *i )->getPrim().L ) << endl;
+    }
+
+    file << "T 1 " << this->CellList.size() << " double\n";
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+    {
+        file << 1.0 / ( 2.0 * this->fluidParam.R * ( *i )->getPrim().L ) << endl;
     }
 
     // ================================================================================================================
