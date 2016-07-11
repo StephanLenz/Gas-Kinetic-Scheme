@@ -776,6 +776,24 @@ The Problem with the latter condition is, that $Re^* = \frac{u_{max} \Delta x}{\
 \Delta t \leq CFL \dfrac{\Delta x}{u_{max} + c_s + \frac{2 \nu}{\Delta x}}
 \end{equation}
 
+\subsection{Forcing}
+
+the forcing is implemented as:
+
+\begin{equation}
+\begin{pmatrix}
+\rho \\ \rho U \\ \rho V \\ \rho E
+\end{pmatrix}^{n+1}
+=
+\begin{pmatrix}
+\rho \\ \rho U \\ \rho V \\ \rho E
+\end{pmatrix}^n
++ Fluxes +
+\begin{pmatrix}
+0 \\ \Delta~t~\rho F_x \\ \Delta t~\rho~F_y \\ 0
+\end{pmatrix} 
+\end{equation}
+
 \clearpage
 
 \section{Poiseuille Flow}

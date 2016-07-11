@@ -74,10 +74,17 @@ void Cell::update(double dt)
     //// ---------------------- FIX ---------------------------------------------
     //if( fabs(this->cons[2]) < 1.0e-12  ) this->cons[2] = 0.0;
     //// ---------------------- FIX ---------------------------------------------
+    
+    // compute density and temperature
+    //this->computePrim();
 
-    // Apply Forcing
+    // Apply Forcing to momentum components
     this->cons[1] += dt * cons_old[0] * this->fluidParam.Force.x;
     this->cons[2] += dt * cons_old[0] * this->fluidParam.Force.y;
+
+    // compute new Energy with increased momentum
+    //this->cons[3] = this->prim[0] * (this->fluidParam.K + 2.0) / (4.0*this->prim[3])
+    //              + 0.5 * (this->cons[1] * this->cons[1] + this->cons[2] * this->cons[2])/this->prim[0];
 
     // compute primary Variables
     this->computePrim();

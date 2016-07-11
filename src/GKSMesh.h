@@ -56,6 +56,10 @@ public:
 
     void generateRectMeshPeriodicInterfaceBCs(InterfaceType type, double lengthX, double lengthY, int nx, int ny);
 
+    void generateRectMeshPeriodicTwoDirections(InterfaceType type, double lengthX, double lengthY, int nx, int ny);
+
+
+
 	void initMeshConstant(double rho, double u, double v, double T);
 
 	void initMeshLinearTemperature(double rho, double u, double v, double * T);
@@ -63,6 +67,8 @@ public:
     void initMeshLinear(double * rho, double * u, double * v, double * lambda);
 
     void initMeshLinearDensity(double* rho, double u, double v, double T);
+
+
 
     void addBoundaryCondition(  int rhoType, int UType, int VType, int TType,
                                 double rho, double U, double V, double T);
