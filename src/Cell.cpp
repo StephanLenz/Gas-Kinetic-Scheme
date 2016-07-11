@@ -45,6 +45,7 @@ void Cell::update(double dt)
     cons_old[2] = this->cons[2];
     cons_old[3] = this->cons[3];
 
+    // ========================================================================
     // negative interfaces = in flux
     // positive interfaces = out flux
     this->cons[0] += ( this->InterfaceList[0]->getTimeIntegratedFlux().rho
@@ -70,6 +71,7 @@ void Cell::update(double dt)
                      - this->InterfaceList[2]->getTimeIntegratedFlux().rhoE
                      - this->InterfaceList[3]->getTimeIntegratedFlux().rhoE
                      ) / (this->dx*this->dy);
+    // ========================================================================
 
     //// ---------------------- FIX ---------------------------------------------
     //if( fabs(this->cons[2]) < 1.0e-12  ) this->cons[2] = 0.0;
@@ -78,11 +80,11 @@ void Cell::update(double dt)
     // compute density and temperature
     //this->computePrim();
 
-    // Apply Forcing to momentum components
-    this->cons[1] += dt * cons_old[0] * this->fluidParam.Force.x;
-    this->cons[2] += dt * cons_old[0] * this->fluidParam.Force.y;
+    //// Apply Forcing to momentum components
+    //this->cons[1] += dt * cons_old[0] * this->fluidParam.Force.x;
+    //this->cons[2] += dt * cons_old[0] * this->fluidParam.Force.y;
 
-    // compute new Energy with increased momentum
+    //// compute new Energy with increased momentum
     //this->cons[3] = this->prim[0] * (this->fluidParam.K + 2.0) / (4.0*this->prim[3])
     //              + 0.5 * (this->cons[1] * this->cons[1] + this->cons[2] * this->cons[2])/this->prim[0];
 
@@ -149,6 +151,20 @@ void Cell::applyBoundaryCondition()
     }
     
     this->computeCons();
+}
+
+void Cell::applyForcing(double dt)
+{
+    // Apply Forcing to momentum components
+    this->cons[1] += dt * this->cons[0] * this->fluidParam.Force.x;
+    this->cons[2] += dt * this->cons[0] * this->fluidParam.Force.y;
+
+    // compute new Energy with increased momentum
+    this->cons[3] = this->prim[0] * (this->fluidParam.K + 2.0) / (4.0*this->prim[3])
+                  + 0.5 * (this->cons[1] * this->cons[1] + this->cons[2] * this->cons[2])/this->prim[0];
+
+    this->computePrim();
+
 }
 
 void Cell::addInterface(Interface* newInterface, int direction)

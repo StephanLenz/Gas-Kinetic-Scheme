@@ -77,6 +77,8 @@ public:
 
     void applyBoundaryCondition();
 
+    void applyForcing();
+
     void computeGlobalTimestep();
 
     ConservedVariable getMaxGlobalResidual();

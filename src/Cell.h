@@ -56,6 +56,8 @@ public:
 
     void applyBoundaryCondition();
 
+    void applyForcing(double dt);
+
 	void setValues(double rho, double u, double v, double T);
 
     void computePrim();

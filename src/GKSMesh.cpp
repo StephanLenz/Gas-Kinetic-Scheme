@@ -721,6 +721,16 @@ void GKSMesh::applyBoundaryCondition()
     }
 }
 
+void GKSMesh::applyForcing()
+{
+    #pragma omp parallel for
+    for ( int i = 0; i < CellList.size(); i++ )
+    {
+        if ( ! CellList[i]->isGhostCell() )
+            CellList[i]->applyForcing(this->dt);
+    }
+}
+
 void GKSMesh::computeGlobalTimestep()
 {
     this->dt = 1.0e99;
@@ -813,6 +823,12 @@ void GKSMesh::timeStep()
 
     // ========================================================================
 
+    this->applyForcing();
+
+    this->applyBoundaryCondition();
+
+    // ========================================================================
+
     if (this->param.verbose) cout << "  Compute Fluxes ..." << endl;
 
     #pragma omp parallel for
@@ -833,8 +849,8 @@ void GKSMesh::timeStep()
 
     // ========================================================================
 
-    if ( this->param.verbose ) cout << "  Apply Boundary Conditions ..." << endl;
-    this->applyBoundaryCondition();
+    //if ( this->param.verbose ) cout << "  Apply Boundary Conditions ..." << endl;
+    //this->applyBoundaryCondition();
 
 }
 
