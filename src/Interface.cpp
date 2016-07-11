@@ -116,9 +116,13 @@ void Interface::computeInternalFlux(double dt)
     // ========================================================================
     // interpolated primary variables at the interface
     if( interpolationOrder == 1 )
+    {
         this->interpolatePrim(prim);
+    }
     else
+    {
         this->interpolatePrimThirdOrder(prim);
+    }
 
     // spacial gradients of the conservative varibles
     if( interpolationOrder == 1 )

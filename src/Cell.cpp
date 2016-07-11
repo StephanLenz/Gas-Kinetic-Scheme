@@ -133,6 +133,12 @@ void Cell::applyBoundaryCondition()
             double localValue = 4.0 * value * ( this->centerY - this->centerY*this->centerY );
             this->prim[i] = 2.0*localValue - neighborCell->prim[i];
         }
+        else if ( type == 3 )
+        {
+            double lambda_0 = this->BoundaryContitionPointer->getValue(3);
+            double lambda_1 = neighborCell->prim[3];
+            this->prim[i] = neighborCell->prim[i] * ( 2.0*lambda_0 - lambda_1 ) / lambda_1;
+        }
     }
     
     this->computeCons();

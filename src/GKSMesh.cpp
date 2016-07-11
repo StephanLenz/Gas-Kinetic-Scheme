@@ -713,7 +713,7 @@ void GKSMesh::timeStep()
     this->computeGlobalTimestep();
     if (this->param.verbose) cout << "    dt = " << this->dt << endl;
 
-    this->dtList.push_back(this->dt);
+    //this->dtList.push_back(this->dt);
 
     // ========================================================================
 
@@ -739,8 +739,7 @@ void GKSMesh::timeStep()
 
     if ( this->param.verbose ) cout << "  Apply Boundary Conditions ..." << endl;
     this->applyBoundaryCondition();
-    
-    int test = 1;
+
 }
 
 void GKSMesh::iterate()
