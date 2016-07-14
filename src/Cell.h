@@ -29,13 +29,14 @@ private:
 	//    | 0     2 |
 	//    |    1    |
 	//    -----------
-	Interface** InterfaceList;
+	Interface* InterfaceList[4];
 
 	// Primary Variables
 	double prim[4];
 
 	// Conseved Variables
 	double cons[4];
+    double cons_old[4];
 
     ConservedVariable residual;
 

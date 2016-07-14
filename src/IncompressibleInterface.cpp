@@ -84,9 +84,9 @@ void IncompressibleInterface::assembleFlux(double * MomentU, double * MomentV, d
     Flux_2[1] = ( a[0] * MomentU[2+u] * MomentV[0+v]
                 + a[1] * MomentU[3+u] * MomentV[0+v]
                 + a[2] * MomentU[2+u] * MomentV[1+v]
-                + b[0] * MomentU[3+u] * MomentV[1+v]
+                + b[0] * MomentU[1+u] * MomentV[1+v]
                 + b[1] * MomentU[2+u] * MomentV[1+v]
-                + b[2] * MomentU[3+u] * MomentV[2+v]
+                + b[2] * MomentU[1+u] * MomentV[2+v]
                 );
     Flux_2[2] = ( a[0] * MomentU[1+u] * MomentV[1+v]
                 + a[1] * MomentU[2+u] * MomentV[1+v]
@@ -122,6 +122,7 @@ void IncompressibleInterface::assembleFlux(double * MomentU, double * MomentV, d
         this->FluxDensity[i] = ( Flux_1[i] - tau*( Flux_2[i] + Flux_3[i] ) ) * prim[0];
     }
     // ========================================================================
+    int i = 1;
 }
 
 void IncompressibleInterface::computeMicroSlope(double * prim, double * macroSlope, double * microSlope)

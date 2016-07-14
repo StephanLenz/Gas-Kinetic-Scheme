@@ -142,15 +142,7 @@ void Interface::computeInternalFlux(double dt)
     // time integration Coefficients
     double timeCoefficients[3] = { dt, -tau*dt, 0.5*dt*dt - tau*dt };
     // ========================================================================
-
-    // in case of horizontal interface (G interface), swap velocity directions
-    //if ( this->axis == 1 )
-    //{
-    //    this->rotate(prim);
-    //    this->rotate(normalGradCons);
-    //    this->rotate(tangentialGradCons);
-    //}
-
+    
     // ========================================================================
     // spacial micro slopes a = a1 + a2 u + a3 v
     //                      b = b1 + b2 u + b3 v
@@ -171,7 +163,12 @@ void Interface::computeInternalFlux(double dt)
     // ========================================================================
     // ========================================================================
     //for ( int i = 0; i < 4; i++ )
-    //    b[i] = 0.0;
+    //{
+    //    if ( this->axis == 0 )
+    //        b[i] = 0.0;
+    //    else
+    //        a[i] = 0.0;
+    //}
     // ========================================================================
     // ========================================================================
     // ========================================================================
@@ -195,13 +192,8 @@ void Interface::computeInternalFlux(double dt)
     // compute mass and momentum fluxes
     this->assembleFlux(MomentU, MomentV, MomentXi, a, b, A, timeCoefficients, dy, prim, tau);
     // ========================================================================
-
-    // in case of horizontal interface (G interface), swap velocity fluxes
-    //if ( this->axis == 1 )
-    //{
-    //    this->rotate(this->timeIntegratedFlux);
-    //    this->rotate(this->FluxDensity);
-    //}
+    
+    int i = 1;
 }
 
 void Interface::computeBoundaryFlux(double dt)
@@ -307,6 +299,7 @@ void Interface::computeBoundaryFlux(double dt)
     this->assembleFlux(MomentU, MomentV, MomentXi, a, b, A, timeCoefficients, dy, (double*)&prim, tau);
     // ========================================================================
 
+    int i = 1;
 }
 
 Cell * Interface::getNeigborCell(Cell * askingCell)

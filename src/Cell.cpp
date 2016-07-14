@@ -9,13 +9,11 @@ using namespace std;
 
 Cell::Cell()
 {
-	this->InterfaceList = new Interface*[4];
     memset(InterfaceList, NULL, 4 * sizeof(Interface*));
 }
 
 Cell::Cell(InterfaceType interfaceType, double centerX, double centerY, double dx, double dy, BoundaryCondition* BC, FluidParameter fluidParam)
 {
-	this->InterfaceList = new Interface*[4];
     memset(InterfaceList, NULL, 4 * sizeof(Interface*));
 
 	this->centerX = centerX;
@@ -34,16 +32,10 @@ Cell::Cell(InterfaceType interfaceType, double centerX, double centerY, double d
 
 Cell::~Cell()
 {
-	delete [] InterfaceList;
 }
 
 void Cell::update(double dt)
 {
-    double cons_old[4];
-    cons_old[0] = this->cons[0];
-    cons_old[1] = this->cons[1];
-    cons_old[2] = this->cons[2];
-    cons_old[3] = this->cons[3];
 
     // ========================================================================
     // negative interfaces = in flux
@@ -97,10 +89,16 @@ void Cell::update(double dt)
     //this->residual.rhoV = (fabs(cons_old[2]) > 1.0e-12) ? fabs(this->cons[2] - cons_old[2]) / fabs(cons_old[2]) : 0.0;
     //this->residual.rhoE = (fabs(cons_old[3]) > 1.0e-12) ? fabs(this->cons[3] - cons_old[3]) / fabs(cons_old[3]) : 0.0;
 
-    this->residual.rho  = fabs(this->cons[0] - cons_old[0]);
-    this->residual.rhoU = fabs(this->cons[1] - cons_old[1]);
-    this->residual.rhoV = fabs(this->cons[2] - cons_old[2]);
-    this->residual.rhoE = fabs(this->cons[3] - cons_old[3]);
+    this->residual.rho  = fabs(this->cons[0] - this->cons_old[0]);
+    this->residual.rhoU = fabs(this->cons[1] - this->cons_old[1]);
+    this->residual.rhoV = fabs(this->cons[2] - this->cons_old[2]);
+    this->residual.rhoE = fabs(this->cons[3] - this->cons_old[3]);
+
+    // store values of this time step for residual computation in the next one
+    this->cons_old[0] = this->cons[0];
+    this->cons_old[1] = this->cons[1];
+    this->cons_old[2] = this->cons[2];
+    this->cons_old[3] = this->cons[3];
 
 }
 
@@ -163,8 +161,8 @@ void Cell::applyForcing(double dt)
     this->cons[3] = this->prim[0] * (this->fluidParam.K + 2.0) / (4.0*this->prim[3])
                   + 0.5 * (this->cons[1] * this->cons[1] + this->cons[2] * this->cons[2])/this->prim[0];
 
+    // Compute primitive Variables
     this->computePrim();
-
 }
 
 void Cell::addInterface(Interface* newInterface, int direction)

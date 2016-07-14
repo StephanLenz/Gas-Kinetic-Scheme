@@ -24,29 +24,29 @@ void CompressibleInterface::computeTimeDerivative(double * prim, double * Moment
     timeGrad[0] = a[0] * MomentU[1] * MomentV[0]
                 + a[1] * MomentU[2] * MomentV[0]
                 + a[2] * MomentU[1] * MomentV[1]
-                + a[3] * ( MomentU[3] * MomentV[0] + MomentU[1] * MomentV[2] + MomentU[1] * MomentV[0] * MomentXi[2] )
+                + a[3] * 0.5 * ( MomentU[3] * MomentV[0] + MomentU[1] * MomentV[2] + MomentU[1] * MomentV[0] * MomentXi[2] )
                 + b[0] * MomentU[0] * MomentV[1]
                 + b[1] * MomentU[1] * MomentV[1]
                 + b[2] * MomentU[0] * MomentV[2]
-                + b[3] * ( MomentU[2] * MomentV[1] + MomentU[0] * MomentV[3] + MomentU[0] * MomentV[1] * MomentXi[2] ) ;
+                + b[3] * 0.5 * ( MomentU[2] * MomentV[1] + MomentU[0] * MomentV[3] + MomentU[0] * MomentV[1] * MomentXi[2] ) ;
 
     timeGrad[1] = a[0] * MomentU[2] * MomentV[0]
                 + a[1] * MomentU[3] * MomentV[0]
                 + a[2] * MomentU[2] * MomentV[1]
-                + a[3] * ( MomentU[4] * MomentV[0] + MomentU[2] * MomentV[2] + MomentU[2] * MomentV[0] * MomentXi[2] )
+                + a[3] * 0.5 * ( MomentU[4] * MomentV[0] + MomentU[2] * MomentV[2] + MomentU[2] * MomentV[0] * MomentXi[2] )
                 + b[0] * MomentU[1] * MomentV[1]
                 + b[1] * MomentU[2] * MomentV[1]
                 + b[2] * MomentU[1] * MomentV[2]
-                + b[3] * ( MomentU[3] * MomentV[1] + MomentU[1] * MomentV[3] + MomentU[1] * MomentV[1] * MomentXi[2] );
+                + b[3] * 0.5 * ( MomentU[3] * MomentV[1] + MomentU[1] * MomentV[3] + MomentU[1] * MomentV[1] * MomentXi[2] );
 
     timeGrad[2] = a[0] * MomentU[1] * MomentV[1]
                 + a[1] * MomentU[2] * MomentV[1]
                 + a[2] * MomentU[1] * MomentV[2]
-                + a[3] * ( MomentU[3] * MomentV[1] + MomentU[1] * MomentV[3] + MomentU[1] * MomentV[1] * MomentXi[2] )
+                + a[3] * 0.5 * ( MomentU[3] * MomentV[1] + MomentU[1] * MomentV[3] + MomentU[1] * MomentV[1] * MomentXi[2] )
                 + b[0] * MomentU[0] * MomentV[2]
                 + b[1] * MomentU[1] * MomentV[2]
                 + b[2] * MomentU[0] * MomentV[3]
-                + b[3] * ( MomentU[2] * MomentV[2] + MomentU[0] * MomentV[4] + MomentU[0] * MomentV[2] * MomentXi[2] );
+                + b[3] * 0.5 * ( MomentU[2] * MomentV[2] + MomentU[0] * MomentV[4] + MomentU[0] * MomentV[2] * MomentXi[2] );
 
     timeGrad[3] = a[0] * 0.50 * ( MomentU[3] * MomentV[0] + MomentU[1] * MomentV[2] + MomentU[1] * MomentV[0] * MomentXi[2] )
                 + a[1] * 0.50 * ( MomentU[4] * MomentV[0] + MomentU[2] * MomentV[2] + MomentU[2] * MomentV[0] * MomentXi[2] )
@@ -54,14 +54,16 @@ void CompressibleInterface::computeTimeDerivative(double * prim, double * Moment
                 + a[3] * 0.25 * ( MomentU[5] + MomentU[1]* ( MomentV[4] + MomentXi[4] )
                                 + 2.0 * MomentU[3] * MomentV[2]
                                 + 2.0 * MomentU[3] * MomentXi[2]
-                                + 2.0 * MomentU[1] * MomentV[2] * MomentXi[2] )
+                                + 2.0 * MomentU[1] * MomentV[2] * MomentXi[2]
+                                )
                 + b[0] * 0.50 * ( MomentU[2] * MomentV[1] + MomentU[0] * MomentV[3] + MomentU[0] * MomentV[1] * MomentXi[2] )
                 + b[1] * 0.50 * ( MomentU[3] * MomentV[1] + MomentU[1] * MomentV[3] + MomentU[1] * MomentV[1] * MomentXi[2] )
                 + b[2] * 0.50 * ( MomentU[2] * MomentV[2] + MomentU[0] * MomentV[4] + MomentU[0] * MomentV[2] * MomentXi[2] )
                 + b[3] * 0.25 * ( MomentV[5] + MomentV[1] * ( MomentU[4] + MomentXi[4] )
                                 + 2.0 * MomentU[2] * MomentV[3]
                                 + 2.0 * MomentU[2] * MomentV[1] * MomentXi[2]
-                                + 2.0 * MomentV[3] * MomentXi[2] );
+                                + 2.0 * MomentV[3] * MomentXi[2]
+                                );
 
     timeGrad[0] *= -1.0;
     timeGrad[1] *= -1.0;
@@ -226,6 +228,9 @@ void CompressibleInterface::assembleFlux(double * MomentU, double * MomentV, dou
         this->FluxDensity[i] = ( Flux_1[i] - tau*( Flux_2[i] + Flux_3[i] ) ) * prim[0];
     }
     // ========================================================================
+
+    if( axis == 1 )
+        int i = 1;
 }
 
 void CompressibleInterface::computeMicroSlope(double * prim, double * macroSlope, double * microSlope)

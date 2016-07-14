@@ -68,6 +68,10 @@ public:
 
     void initMeshLinearDensity(double* rho, double u, double v, double T);
 
+    void initMeshParabularVelocity(double rho, double u, double v, double T);
+
+    void initMeshSineVelocity(double rho, double u, double v, double T);
+
 
 
     void addBoundaryCondition(  int rhoType, int UType, int VType, int TType,

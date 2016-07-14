@@ -46,7 +46,7 @@ struct Parameters
     unsigned int outputInterval;
     unsigned int outputIntervalVTK;
 
-    double convergenceCriterium;
+    double convergenceCriterium[4];
     
     bool resOutput;
     bool fluxOutput;

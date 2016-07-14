@@ -9,6 +9,8 @@
 #include <algorithm>    //min()
 #include <chrono>
 
+# define M_PI           3.14159265358979323846  /* pi */
+
 using namespace std;
 
 GKSMesh::GKSMesh()
@@ -697,6 +699,34 @@ void GKSMesh::initMeshLinearDensity(double * rho, double u, double v, double T)
     }
 }
 
+void GKSMesh::initMeshParabularVelocity(double rho, double u, double v, double T)
+{    
+    double uValue;
+    float2 center;
+    for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
+    {
+        center = (*i)->getCenter();
+
+        uValue = 4.0 * u * ( center.y - center.y*center.y );
+
+        (*i)->setValues(rho, uValue, v, T);
+    }
+}
+
+void GKSMesh::initMeshSineVelocity(double rho, double u, double v, double T)
+{    
+    double uValue;
+    float2 center;
+    for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
+    {
+        center = (*i)->getCenter();
+
+        uValue = u * sin( 2.0 * center.y * M_PI );
+
+        (*i)->setValues(rho, uValue, v, T);
+    }
+}
+
 void GKSMesh::addBoundaryCondition( int rhoType, int UType, int VType, int TType, 
                                     double rho, double U, double V, double T)
 {
@@ -819,8 +849,6 @@ void GKSMesh::timeStep()
     this->computeGlobalTimestep();
     if (this->param.verbose) cout << "    dt = " << this->dt << endl;
 
-    this->dtList.push_back(this->dt);
-
     // ========================================================================
 
     this->applyForcing();
@@ -849,8 +877,12 @@ void GKSMesh::timeStep()
 
     // ========================================================================
 
+    //this->applyForcing();
+
+    // ========================================================================
+
     //if ( this->param.verbose ) cout << "  Apply Boundary Conditions ..." << endl;
-    //this->applyBoundaryCondition();
+    this->applyBoundaryCondition();
 
 }
 
@@ -883,6 +915,8 @@ void GKSMesh::iterate()
 
         if ( this->iter % this->param.outputInterval == 0 )
         {
+            this->dtList.push_back(this->dt);
+
             ConservedVariable residual = this->getL2GlobalResidual();
 
             cout << "t = " << this->time << "  \t|  timestep: " << this->iter << endl;
@@ -993,10 +1027,10 @@ bool GKSMesh::isConverged(ConservedVariable residual)
 {
     bool flag = true;
 
-    flag = flag && ( residual.rho  < this->param.convergenceCriterium );
-    flag = flag && ( residual.rhoU < this->param.convergenceCriterium );
-    flag = flag && ( residual.rhoV < this->param.convergenceCriterium );
-    flag = flag && ( residual.rhoE < this->param.convergenceCriterium );
+    flag = flag && ( residual.rho  < this->param.convergenceCriterium[0] );
+    flag = flag && ( residual.rhoU < this->param.convergenceCriterium[1] );
+    flag = flag && ( residual.rhoV < this->param.convergenceCriterium[2] );
+    flag = flag && ( residual.rhoE < this->param.convergenceCriterium[3] );
 
     return flag;
 }
@@ -1053,7 +1087,11 @@ void GKSMesh::writeOverviewFile(string filename)
     file << "Max Number of Iteratios:             " << this->param.numberOfIterations << endl;
     file << "VTK-File Output Intervat:            " << this->param.outputIntervalVTK << endl;
     file << "Convergence History Output Interval: " << this->param.outputInterval << endl;
-    file << "Convergence Criterium:               " << this->param.convergenceCriterium << endl;
+    file << "Convergence Criterium:               ( " << this->param.convergenceCriterium[0] << ", "
+                                                      << this->param.convergenceCriterium[1] << ", "
+                                                      << this->param.convergenceCriterium[2] << ", "
+                                                      << this->param.convergenceCriterium[3] << " )" << endl;
+    file << "CFL =\t" << this->param.CFL << endl;
     file << endl;
 
     file << " ========== Flow Characteristics ==========";
@@ -1508,7 +1546,7 @@ void GKSMesh::writeInterfaceData(ofstream & file)
 {
     // write cell data ( ID and stress )
     file << "POINT_DATA " << this->InterfaceList.size() << endl;
-    file << "FIELD Lable 5\n";
+    file << "FIELD Lable 9\n";
 
     file << "F_rho 1 " << this->InterfaceList.size() << " double\n";
     for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
@@ -1536,6 +1574,30 @@ void GKSMesh::writeInterfaceData(ofstream & file)
     {
         //file << (*i)->getTimeIntegratedFlux().rhoE << endl;
         file << ( *i )->getFluxDensity().rhoE << endl;
+    }
+
+    file << "F_rho_t 1 " << this->InterfaceList.size() << " double\n";
+    for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
+    {
+        file << (*i)->getTimeIntegratedFlux().rho << endl;
+    }
+
+    file << "F_rhoU_t 1 " << this->InterfaceList.size() << " double\n";
+    for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
+    {
+        file << (*i)->getTimeIntegratedFlux().rhoU << endl;
+    }
+
+    file << "F_rhoV_t 1 " << this->InterfaceList.size() << " double\n";
+    for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
+    {
+        file << (*i)->getTimeIntegratedFlux().rhoV << endl;
+    }
+
+    file << "F_rhoE_t 1 " << this->InterfaceList.size() << " double\n";
+    for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
+    {
+        file << (*i)->getTimeIntegratedFlux().rhoE << endl;
     }
 
     file << "GhostInterface 1 " << this->InterfaceList.size() << " int\n";
