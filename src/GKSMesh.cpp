@@ -1223,6 +1223,37 @@ void GKSMesh::writeVelocityProfile(string filename, double x)
 
 }
 
+void GKSMesh::writeTemperatureProfile(string filename, double x)
+{
+
+    cout << "Wrinting file " << filename << " ... ";
+    // open file stream
+    ofstream file;
+    file.precision(15);
+    file.open(filename.c_str());
+
+    if (!file.is_open()) {
+        cout << " File cound not be opened.\n\nERROR!\n\n\n";
+        return;
+    }
+
+    for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
+    {
+        if ( !( *i )->isGhostCell() )
+        {
+            // check wether the profile location x is located in this cell
+            if ( fabs( ( *i )->getCenter().x - x ) <= 0.5 * ( *i )->getDx().x )
+            {
+                file << ( *i )->getCenter().y << " " << 1.0 / ( 2.0 * this->fluidParam.R * ( *i )->getPrim().L ) << "\n";
+            }
+        }
+    }
+
+    file.close();
+
+    cout << "done!" << endl;
+}
+
 void GKSMesh::writePressureGradientProfile(string filename, double x)
 {
     cout << "Wrinting file " << filename << " ... ";

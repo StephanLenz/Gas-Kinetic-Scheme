@@ -111,6 +111,7 @@ public:
     void writeTimeSteps(string filename);
 
     void writeVelocityProfile(string filename, double x);
+    void writeTemperatureProfile(string filename, double x);
     void writePressureGradientProfile(string filename, double x);
 
     void writeMeshAsText(string filename);
