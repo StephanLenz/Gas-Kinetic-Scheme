@@ -677,6 +677,29 @@ void GKSMesh::initMeshLinear(double* rho, double* u, double* v, double* lambda)
 	}
 }
 
+void GKSMesh::initMeshLinearHorizontal(double * rho, double * u, double * v, double * lambda)
+{
+	// Temprature definition
+	//    --------------
+	//    |            |
+	//    | Z[0]  Z[1] |
+	//    |            |
+	//    --------------
+	double interpolatedRho, interpolatedU, interpolatedV, interpolatedLambda;
+	float2 center;
+	for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
+	{
+		center = (*i)->getCenter();
+
+        interpolatedRho    = rho[0]    + center.x*(rho[1]    - rho[0])    / this->lengthX;
+        interpolatedU      = u[0]      + center.x*(u[1]      - u[0])      / this->lengthX;
+        interpolatedV      = v[0]      + center.x*(v[1]      - v[0])      / this->lengthX;
+        interpolatedLambda = lambda[0] + center.x*(lambda[1] - lambda[0]) / this->lengthX;
+
+		(*i)->setValues(interpolatedRho, interpolatedU, interpolatedV, interpolatedLambda);
+	}
+}
+
 void GKSMesh::initMeshLinearDensity(double * rho, double u, double v, double T)
 {
     // Densitsy definition

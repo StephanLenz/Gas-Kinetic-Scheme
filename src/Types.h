@@ -38,6 +38,8 @@ struct FluidParameter
     double nu;  // viscosity
     double R;   // spez gasconstant
     float2 Force;
+    float2 BoussinesqForce;
+    double rhoReference;
 };
 
 struct Parameters

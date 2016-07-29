@@ -170,9 +170,14 @@ void Cell::applyBoundaryCondition()
 
 void Cell::applyForcing(double dt)
 {
+    float2 Force;
+
+    Force.x = this->fluidParam.Force.x + this->fluidParam.BoussinesqForce.x * (  this->cons[0] - this->fluidParam.rhoReference ) / this->fluidParam.rhoReference;
+    Force.y = this->fluidParam.Force.y + this->fluidParam.BoussinesqForce.y * (  this->cons[0] - this->fluidParam.rhoReference ) / this->fluidParam.rhoReference;
+
     // Apply Forcing to momentum components
-    this->cons[1] += dt * this->cons[0] * this->fluidParam.Force.x;
-    this->cons[2] += dt * this->cons[0] * this->fluidParam.Force.y;
+    this->cons[1] += dt * this->cons[0] * Force.x;
+    this->cons[2] += dt * this->cons[0] * Force.y;
 
     // compute new Energy with increased momentum
     this->cons[3] = this->prim[0] * (this->fluidParam.K + 2.0) / (4.0*this->prim[3])

@@ -66,6 +66,8 @@ public:
 
     void initMeshLinear(double * rho, double * u, double * v, double * lambda);
 
+    void initMeshLinearHorizontal(double * rho, double * u, double * v, double * lambda);
+
     void initMeshLinearDensity(double* rho, double u, double v, double T);
 
     void initMeshParabularVelocity(double rho, double u, double v, double T);

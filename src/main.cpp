@@ -120,8 +120,8 @@ int main(int argc, char* argv[])
         param.outputInterval = 100000;
 
         param.convergenceCriterium[0] = 1.0;
-        param.convergenceCriterium[1] = 1.0e-10;
-        param.convergenceCriterium[2] = 1.0;
+        param.convergenceCriterium[1] = 1.0;
+        param.convergenceCriterium[2] = 1.0e-10;
         param.convergenceCriterium[3] = 1.0;
 
         param.L = 1.0;
@@ -136,16 +136,19 @@ int main(int argc, char* argv[])
         FluidParameter fluidParam;
 
         // ========== Weidongs Parameters ==========
-        int    nx = 1;
-        int    ny = 8;//nyList[j];
+        int    nx = 8;
+        int    ny = 1;//nyList[j];
         double Re = 40.0;
         double u0 = 0.1;
 
         fluidParam.K = 1;
         fluidParam.nu = (u0*param.L)/Re;
         fluidParam.R = 208.0;
-        fluidParam.Force.x = (u0*8.0*fluidParam.nu) / (param.L*param.L);
-        fluidParam.Force.y = 0.0;
+        fluidParam.Force.x = 0.0;
+        fluidParam.Force.y = (u0*8.0*fluidParam.nu) / (param.L*param.L);
+        fluidParam.BoussinesqForce.x = 0.0;
+        fluidParam.BoussinesqForce.y = 0.0;
+        fluidParam.rhoReference = 1.0;
 
         double T      = 293.15;
         double lambda = 1.0 / (2.0 * fluidParam.R * T);
@@ -166,7 +169,7 @@ int main(int argc, char* argv[])
         Interface::setInterpolationOrder(1);
 
         // Generate Mesh
-        mesh->generateRectMeshPeriodic(compressible, W, H, nx, ny);
+        mesh->generateRectMeshPeriodicVertical(compressible, W, H, nx, ny);
 
         // Initialize Values
         mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
@@ -178,7 +181,7 @@ int main(int argc, char* argv[])
 
         // ========================================================================
         //
-        //                  Thermal Driven Cavity
+        //                  Atmospheric Pressure
         //
         // ========================================================================
 
@@ -187,9 +190,9 @@ int main(int argc, char* argv[])
         double H = 1.0;
         double W = 1.0;
 
-        param.numberOfIterations = 5000;
-        param.outputIntervalVTK = 100;
-        param.outputInterval = 100;
+        param.numberOfIterations = 50000;
+        param.outputIntervalVTK = 1000;
+        param.outputInterval = 1000;
 
         param.convergenceCriterium[0] = 1.0e-10;
         param.convergenceCriterium[1] = 1.0e-10;
@@ -207,14 +210,17 @@ int main(int argc, char* argv[])
 
         FluidParameter fluidParam;
 
-        int    nx = 1;
-        int    ny = 32;//nyList[j];
+        int    nx = 32;
+        int    ny = 1;//nyList[j];
 
         fluidParam.K = 1;
         fluidParam.nu = 1.0;
         fluidParam.R = 200.0;
-        fluidParam.Force.x = 0.0;
-        fluidParam.Force.y = -10.0;
+        fluidParam.Force.x = -10.0;
+        fluidParam.Force.y = 0.0;
+        fluidParam.BoussinesqForce.x = 0.0;
+        fluidParam.BoussinesqForce.y = 0.0;
+        fluidParam.rhoReference = 1.0;
 
         double TTop   = 293.15;
         double TBot   = 293.15;// + 1.0;
@@ -243,7 +249,7 @@ int main(int argc, char* argv[])
         
         // Generate Mesh
         //mesh->generateRectMesh(compressible, W, H, nx, ny);
-        mesh->generateRectMeshPeriodic(compressible, W, H, nx, ny);
+        mesh->generateRectMeshPeriodicVertical(compressible, W, H, nx, ny);
 
          // Initialize Values
         //mesh->initMeshConstant(1.0, 0.0, 0.0, lambda[0]);
@@ -251,6 +257,88 @@ int main(int argc, char* argv[])
         //mesh->initMeshParabularVelocity(1.0, u0, 0.0, lambda);
 
         //*/
+    
+        /*
+
+        // ========================================================================
+        //
+        //                  Thermal Driven Cavity
+        //
+        // ========================================================================
+
+        Parameters param;
+
+        double H = 1.0;
+        double W = 1.0;
+
+        param.numberOfIterations = 100;
+        param.outputIntervalVTK = 1;
+        param.outputInterval = 1;
+
+        param.convergenceCriterium[0] = 1.0e-10;
+        param.convergenceCriterium[1] = 1.0e-10;
+        param.convergenceCriterium[2] = 1.0e-10;
+        param.convergenceCriterium[3] = 1.0e-10;
+
+        param.L = 1.0;
+        param.CFL = 0.1;
+
+        param.verbose = false;
+        param.fluxOutput = false;
+        param.resOutput = false;
+
+        // ========================================================================
+
+        FluidParameter fluidParam;
+
+        int    nx = 32;
+        int    ny = 32;//nyList[j];
+
+        fluidParam.K = 1;
+        fluidParam.nu = 1.0;
+        fluidParam.R = 200.0;
+        fluidParam.Force.x = 0.0;
+        fluidParam.Force.y = 0.0;
+        fluidParam.BoussinesqForce.x = -10.0;
+        fluidParam.BoussinesqForce.y = 0.0;
+        fluidParam.rhoReference = 1.0;
+
+        double TReference = 300.0;
+        double TTop   = TReference - 1.0;
+        double TBot   = TReference + 1.0;
+        double lambdaReference = 1.0 / (2.0 * fluidParam.R * TReference);
+        double lambda[] = { 1.0 / (2.0 * fluidParam.R * TBot), 1.0 / (2.0 * fluidParam.R * TTop) };
+        double rho[]    = { fluidParam.rhoReference * lambda[0]/lambdaReference, fluidParam.rhoReference * lambda[1]/lambdaReference };
+        double U[] = { 0.0, 0.0 };
+        double V[] = { 0.0, 0.0 };
+
+        // ========================================================================
+
+        GKSMesh* mesh = new GKSMesh(param, fluidParam);
+
+        // Define Boundary Conditions
+        //    -----------
+        //    |    3    |
+        //    | 0     2 |
+        //    |    1    |
+        //    -----------
+        mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0   );
+        mesh->addBoundaryCondition(3, 0, 0, 0,  0.0, 0.0, 0.0, lambda[0]);
+        mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0   );
+        mesh->addBoundaryCondition(3, 0, 0, 0,  0.0, 0.0, 0.0, lambda[1]);
+
+        Interface::setInterpolationOrder(1);
+        
+        // Generate Mesh
+        //mesh->generateRectMesh(compressible, W, H, nx, ny);
+        mesh->generateRectMesh(compressible, W, H, nx, ny);
+
+         // Initialize Values
+        //mesh->initMeshConstant(1.0, 0.0, 0.0, 0.5*(lambda[0] + lambda[1]));
+        mesh->initMeshLinear(rho, U, V, lambda);
+        //mesh->initMeshParabularVelocity(1.0, u0, 0.0, lambda);
+
+        */
 
         // ================================================================================================================================================
         // ================================================================================================================================================

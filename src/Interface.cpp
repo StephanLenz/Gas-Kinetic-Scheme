@@ -162,13 +162,13 @@ void Interface::computeInternalFlux(double dt)
     // ========================================================================
     // ========================================================================
     // ========================================================================
-    //for ( int i = 0; i < 4; i++ )
-    //{
-    //    if ( this->axis == 0 )
-    //        b[i] = 0.0;
-    //    else
-    //        a[i] = 0.0;
-    //}
+    for ( int i = 0; i < 4; i++ )
+    {
+        if ( this->axis == 0 )
+            b[i] = 0.0;
+        else
+            a[i] = 0.0;
+    }
     // ========================================================================
     // ========================================================================
     // ========================================================================
@@ -182,7 +182,6 @@ void Interface::computeInternalFlux(double dt)
 
     // ========================================================================
     // temporal micro slopes A = A1 + A2 u + A3 v
-    // The temporal macro slopes (timeGrad) also contain the density by explicit multiplication
     this->computeTimeDerivative(prim, MomentU, MomentV, MomentXi, a, b, timeGrad);
 
     this->computeMicroSlope(prim, timeGrad, A);
@@ -418,10 +417,13 @@ void Interface::interpolatePrim(double * prim)
 
     prim[0] = 0.5*( this->negCell->getPrim().rho
                   + this->posCell->getPrim().rho );
+
     prim[1] = 0.5*( this->negCell->getPrim().U
                   + this->posCell->getPrim().U   );
+
     prim[2] = 0.5*( this->negCell->getPrim().V
                   + this->posCell->getPrim().V   );
+
     prim[3] = 0.5*( this->negCell->getPrim().L
                   + this->posCell->getPrim().L   );
 }
