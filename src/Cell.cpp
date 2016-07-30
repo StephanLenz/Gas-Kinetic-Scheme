@@ -181,7 +181,7 @@ void Cell::applyForcing(double dt)
 
     // compute new Energy with increased momentum
     this->cons[3] = this->prim[0] * (this->fluidParam.K + 2.0) / (4.0*this->prim[3])
-                  + 0.5 * (this->cons[1] * this->cons[1] + this->cons[2] * this->cons[2])/this->prim[0];
+                  + 0.5 * ( this->cons[1] * this->cons[1] + this->cons[2] * this->cons[2] ) / this->prim[0];
 
     // Compute primitive Variables
     this->computePrim();
