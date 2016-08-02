@@ -137,9 +137,9 @@ void CompressibleInterface::assembleFlux(double * MomentU, double * MomentV, dou
                 + a[3] * 0.5 * ( MomentU[3+u] * MomentV[1+v]
                                + MomentU[1+u] * MomentV[3+v]
                                + MomentU[1+u] * MomentV[1+v] * MomentXi[2] )
-                + b[0] * MomentU[0+v] * MomentV[2+v]
-                + b[1] * MomentU[1+v] * MomentV[2+v]
-                + b[2] * MomentU[0+v] * MomentV[3+v]
+                + b[0] * MomentU[0+u] * MomentV[2+v]
+                + b[1] * MomentU[1+u] * MomentV[2+v]
+                + b[2] * MomentU[0+u] * MomentV[3+v]
                 + b[3] * 0.5 * ( MomentU[2+u] * MomentV[2+v]
                                + MomentU[0+u] * MomentV[4+v]
                                + MomentU[0+u] * MomentV[2+v] * MomentXi[2] )
@@ -229,8 +229,7 @@ void CompressibleInterface::assembleFlux(double * MomentU, double * MomentV, dou
     }
     // ========================================================================
 
-    if( axis == 1 )
-        int i = 1;
+    int i = 1;
 }
 
 void CompressibleInterface::computeMicroSlope(double * prim, double * macroSlope, double * microSlope)

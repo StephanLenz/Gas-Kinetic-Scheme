@@ -122,6 +122,8 @@ public:
 
     void writeVelocityV(string filename);
 
+    void writeTemperature(string filename);
+
     void writeConvergenceHistory(string filename);
 
 private:

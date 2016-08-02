@@ -68,18 +68,13 @@ void Cell::update(double dt)
     // ========================================================================
     //                        Some Test
     // ========================================================================
-    
-    //double lefFlux = this->InterfaceList[0]->getTimeIntegratedFlux().rhoV / (this->dx*this->dy);
-    //double botFlux = this->InterfaceList[1]->getTimeIntegratedFlux().rhoV / (this->dx*this->dy);
-    //double rigFlux = this->InterfaceList[2]->getTimeIntegratedFlux().rhoV / (this->dx*this->dy);
-    //double topFlux = this->InterfaceList[3]->getTimeIntegratedFlux().rhoV / (this->dx*this->dy);
 
+    ConservedVariable lefFlux = this->InterfaceList[0]->getTimeIntegratedFlux();
+    ConservedVariable botFlux = this->InterfaceList[1]->getTimeIntegratedFlux();
+    ConservedVariable rigFlux = this->InterfaceList[2]->getTimeIntegratedFlux();
+    ConservedVariable topFlux = this->InterfaceList[3]->getTimeIntegratedFlux();
 
-    //double Force   = dt * this->cons[0] * this->fluidParam.Force.y;
-
-    //double result = botFlux - topFlux + Force;
-
-    //int i = 0;
+    int i = 0;
     // ========================================================================
 
     //// ---------------------- FIX ---------------------------------------------

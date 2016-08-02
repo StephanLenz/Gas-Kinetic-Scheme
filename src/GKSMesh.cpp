@@ -1356,7 +1356,7 @@ void GKSMesh::writeVelocityU(string filename)
 
     for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
-        if ( !( *i )->isGhostCell() )
+        //if ( !( *i )->isGhostCell() )
             file << ( *i )->getPrim().U << endl;
     }
 
@@ -1381,6 +1381,29 @@ void GKSMesh::writeVelocityV(string filename)
     {
         //if( !(*i)->isGhostCell() )
             file << ( *i )->getPrim().V << endl;
+    }
+
+    file.close();
+
+    cout << "done!" << endl;
+}
+
+void GKSMesh::writeTemperature(string filename)
+{
+    cout << "Wrinting file " << filename << " ... ";
+    // open file stream
+    ofstream file;
+    file.open(filename.c_str());
+
+    if ( !file.is_open() ) {
+        cout << " File cound not be opened.\n\nERROR!\n\n\n";
+        return;
+    }
+
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+    {
+        //if( !(*i)->isGhostCell() )
+            file << 1.0 / (2.0 * this->fluidParam.R * ( *i )->getPrim().L ) << endl;
     }
 
     file.close();
