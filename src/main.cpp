@@ -210,20 +210,20 @@ int main(int argc, char* argv[])
 
         FluidParameter fluidParam;
 
-        int    nx = 33;
-        int    ny = 1;//nyList[j];
+        int    nx = 1;
+        int    ny = 33;//nyList[j];
 
         fluidParam.K = 1;
         fluidParam.nu = 1.0;
         fluidParam.R = 200.0;
-        fluidParam.Force.x = -10.0;
-        fluidParam.Force.y = 0.0;
+        fluidParam.Force.x = 0.0;
+        fluidParam.Force.y = -10.0;
         fluidParam.BoussinesqForce.x = 0.0;
         fluidParam.BoussinesqForce.y = 0.0;
         fluidParam.rhoReference = 1.0;
 
-        double TTop   = 293.15;
-        double TBot   = 293.15;// + 1.0;
+        double TTop   = 300.0;
+        double TBot   = 300.0;// + 1.0;
         double lambda[] = { 1.0 / (2.0 * fluidParam.R * TBot), 1.0 / (2.0 * fluidParam.R * TTop) };
         double rho[] = {1.0 * (1.0/lambda[0] + 10.0*H)/(1.0/lambda[0] - 10.0*H), 1.0};
         double U[] = { 0.0, 0.0 };
@@ -248,11 +248,11 @@ int main(int argc, char* argv[])
         
         // Generate Mesh
         //mesh->generateRectMesh(compressible, W, H, nx, ny);
-        mesh->generateRectMeshPeriodicVertical(compressible, W, H, nx, ny);
+        mesh->generateRectMeshPeriodic(compressible, W, H, nx, ny);
 
          // Initialize Values
-        //mesh->initMeshConstant(1.0, 0.0, 0.0, lambda[0]);
-        mesh->initMeshLinearHorizontal(rho, U, V, lambda);
+        mesh->initMeshConstant(1.0, 0.0, 0.0, lambda[0]);
+        //mesh->initMeshLinear(rho, U, V, lambda);
         //mesh->initMeshParabularVelocity(1.0, u0, 0.0, lambda);
 
         */
@@ -270,9 +270,9 @@ int main(int argc, char* argv[])
         double H = 1.0;
         double W = 1.0;
 
-        param.numberOfIterations = 1000000;
+        param.numberOfIterations = 10000000;
         param.outputIntervalVTK = 10000;
-        param.outputInterval = 1000;
+        param.outputInterval = 10000;
 
         param.convergenceCriterium[0] = 1.0e-10;
         param.convergenceCriterium[1] = 1.0e-10;
@@ -280,7 +280,7 @@ int main(int argc, char* argv[])
         param.convergenceCriterium[3] = 1.0e-10;
 
         param.L = 1.0;
-        param.CFL = 0.5;
+        param.CFL = 0.3;
 
         param.verbose = false;
         param.fluxOutput = false;
@@ -290,10 +290,10 @@ int main(int argc, char* argv[])
 
         FluidParameter fluidParam;
 
-        int    nx = 64;
-        int    ny = 64;//nyList[j];
+        int    nx = 32;
+        int    ny = 32;//nyList[j];
 
-        double Ra = 100000.0;
+        double Ra = 1.0e3;
 
         double TReference = 300.0;
         double TTop   = TReference - 100.0;
@@ -304,9 +304,9 @@ int main(int argc, char* argv[])
         fluidParam.nu = sqrt( (g * H)/Ra * (TBot - TTop)/TReference );
         fluidParam.R = 200.0;
         fluidParam.Force.x = 0.0;
-        fluidParam.Force.y = 0.0;
+        fluidParam.Force.y = -g;
         fluidParam.BoussinesqForce.x = 0.0;
-        fluidParam.BoussinesqForce.y = -g;
+        fluidParam.BoussinesqForce.y = 0.0;
         fluidParam.rhoReference = 1.0;
 
         double lambdaReference = 1.0 / (2.0 * fluidParam.R * TReference);
@@ -354,9 +354,9 @@ int main(int argc, char* argv[])
         Parameters param;
 
         double H = 1.0;
-        double W = 2.0;
+        double W = 1.0;
 
-        param.numberOfIterations = 1000000;
+        param.numberOfIterations = 10000000;
         param.outputIntervalVTK = 10000;
         param.outputInterval = 10000;
 
@@ -376,23 +376,23 @@ int main(int argc, char* argv[])
 
         FluidParameter fluidParam;
 
-        int    nx = 64;
+        int    nx = 32;
         int    ny = 32;//nyList[j];
 
-        double Ra = 50000.0;
+        double Ra = 10000.0;
 
         double TReference = 300.0;
-        double TTop   = TReference - 200.0;
-        double TBot   = TReference + 200.0;
+        double TTop   = TReference - 100.0;
+        double TBot   = TReference + 100.0;
         double g      = 10.0;
 
         fluidParam.K = 1;
-        fluidParam.nu = sqrt( (g * H)/Ra * (TBot - TTop)/TReference );
+        fluidParam.nu = sqrt( (g * H*H*H)/Ra * (TBot - TTop)/TReference );
         fluidParam.R = 200.0;
         fluidParam.Force.x = 0.0;
-        fluidParam.Force.y = 0.0;
+        fluidParam.Force.y = -g;
         fluidParam.BoussinesqForce.x = 0.0;
-        fluidParam.BoussinesqForce.y = -g;
+        fluidParam.BoussinesqForce.y = 0.0;
         fluidParam.rhoReference = 1.0;
 
         double lambdaReference = 1.0 / (2.0 * fluidParam.R * TReference);
@@ -423,8 +423,8 @@ int main(int argc, char* argv[])
         mesh->generateRectMesh(compressible, W, H, nx, ny);
 
          // Initialize Values
-        //mesh->initMeshConstant(1.0, 0.0, 0.0, 0.5*(lambda[0] + lambda[1]));
-        mesh->initMeshLinear(rho, U, V, lambda);
+        mesh->initMeshConstant(1.0, 0.0, 0.0, 0.5*(lambda[0] + lambda[1]));
+        //mesh->initMeshLinear(rho, U, V, lambda);
         //mesh->initMeshParabularVelocity(1.0, u0, 0.0, lambda);
 
         //*/
