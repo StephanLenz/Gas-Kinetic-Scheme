@@ -177,7 +177,7 @@ int main(int argc, char* argv[])
 
         */
     
-        /*
+        ///*
 
         // ========================================================================
         //
@@ -190,14 +190,14 @@ int main(int argc, char* argv[])
         double H = 1.0;
         double W = 1.0;
 
-        param.numberOfIterations = 100000;
-        param.outputIntervalVTK = 10000;
-        param.outputInterval = 10000;
+        param.numberOfIterations = 10000000;
+        param.outputIntervalVTK = 100000;
+        param.outputInterval = 100000;
 
-        param.convergenceCriterium[0] = 1.0e-10;
-        param.convergenceCriterium[1] = 1.0e-10;
-        param.convergenceCriterium[2] = 1.0e-10;
-        param.convergenceCriterium[3] = 1.0e-10;
+        param.convergenceCriterium[0] = -1.0e-10;
+        param.convergenceCriterium[1] = -1.0e-10;
+        param.convergenceCriterium[2] = -1.0e-10;
+        param.convergenceCriterium[3] = -1.0e-10;
 
         param.L = 1.0;
         param.CFL = 0.1;
@@ -239,10 +239,10 @@ int main(int argc, char* argv[])
         //    | 0     2 |
         //    |    1    |
         //    -----------
-        mesh->addBoundaryCondition(3, 0, 0, 0,  0.0,    0.0, 0.0, lambda[0]);
-        //mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0   );
-        mesh->addBoundaryCondition(3, 0, 0, 0,  0.0,    0.0, 0.0, lambda[1]);
-        //mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0   );
+        //mesh->addBoundaryCondition(3, 0, 0, 0,  0.0,    0.0, 0.0, lambda[0]);
+        mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0   );
+        //mesh->addBoundaryCondition(3, 0, 0, 0,  0.0,    0.0, 0.0, lambda[1]);
+        mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0   );
 
         Interface::setInterpolationOrder(1);
         
@@ -255,7 +255,7 @@ int main(int argc, char* argv[])
         //mesh->initMeshLinear(rho, U, V, lambda);
         //mesh->initMeshParabularVelocity(1.0, u0, 0.0, lambda);
 
-        */
+        //*/
     
         /*
 
@@ -343,7 +343,7 @@ int main(int argc, char* argv[])
 
         */
     
-        ///*
+        /*
 
         // ========================================================================
         //
@@ -427,7 +427,7 @@ int main(int argc, char* argv[])
         //mesh->initMeshLinear(rho, U, V, lambda);
         //mesh->initMeshParabularVelocity(1.0, u0, 0.0, lambda);
 
-        //*/
+        */
 
         // ================================================================================================================================================
         // ================================================================================================================================================
