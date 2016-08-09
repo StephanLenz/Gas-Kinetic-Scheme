@@ -112,6 +112,8 @@ void Cell::update(double dt)
     this->cons_old[2] = this->cons[2];
     this->cons_old[3] = this->cons[3];
 
+   int j = 0;
+
 }
 
 void Cell::applyBoundaryCondition()
@@ -174,12 +176,21 @@ void Cell::applyForcing(double dt)
     this->cons[1] += dt * this->cons[0] * Force.x;
     this->cons[2] += dt * this->cons[0] * Force.y;
 
+    // ========== some Tests ==================================================
+    double xForce = dt * this->cons[0] * Force.x;
+    double yForce = dt * this->cons[0] * Force.y;
+
+    int i = 0;
+    // ========================================================================
+
     // compute new Energy with increased momentum
     this->cons[3] = this->prim[0] * (this->fluidParam.K + 2.0) / (4.0*this->prim[3])
                   + 0.5 * ( this->cons[1] * this->cons[1] + this->cons[2] * this->cons[2] ) / this->prim[0];
 
     // Compute primitive Variables
     this->computePrim();
+
+    int j = 0;
 }
 
 void Cell::addInterface(Interface* newInterface, int direction)
