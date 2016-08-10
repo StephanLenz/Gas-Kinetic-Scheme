@@ -124,6 +124,8 @@ public:
 
     void writeTemperature(string filename);
 
+    void writeDensity(string filename);
+
     void writeConvergenceHistory(string filename);
 
 private:

@@ -671,7 +671,8 @@ void GKSMesh::initMeshLinear(double* rho, double* u, double* v, double* lambda)
         interpolatedRho    = rho[0]    + center.y*(rho[1]    - rho[0])    / this->lengthY;
         interpolatedU      = u[0]      + center.y*(u[1]      - u[0])      / this->lengthY;
         interpolatedV      = v[0]      + center.y*(v[1]      - v[0])      / this->lengthY;
-        interpolatedLambda = lambda[0] + center.y*(lambda[1] - lambda[0]) / this->lengthY;
+        //interpolatedLambda = lambda[0] + center.y*(lambda[1] - lambda[0]) / this->lengthY;
+        interpolatedLambda = ( lambda[0] ) / ( 1.0 + center.y/this->lengthY * ( lambda[0]/lambda[1] - 1.0 ) );
 
 		(*i)->setValues(interpolatedRho, interpolatedU, interpolatedV, interpolatedLambda);
 	}
@@ -1404,6 +1405,29 @@ void GKSMesh::writeTemperature(string filename)
     {
         //if( !(*i)->isGhostCell() )
             file << 1.0 / (2.0 * this->fluidParam.R * ( *i )->getPrim().L ) << endl;
+    }
+
+    file.close();
+
+    cout << "done!" << endl;
+}
+
+void GKSMesh::writeDensity(string filename)
+{
+    cout << "Wrinting file " << filename << " ... ";
+    // open file stream
+    ofstream file;
+    file.open(filename.c_str());
+
+    if ( !file.is_open() ) {
+        cout << " File cound not be opened.\n\nERROR!\n\n\n";
+        return;
+    }
+
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+    {
+        //if( !(*i)->isGhostCell() )
+            file << ( *i )->getPrim().rho << endl;
     }
 
     file.close();

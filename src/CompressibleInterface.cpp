@@ -20,7 +20,7 @@ CompressibleInterface::~CompressibleInterface()
 void CompressibleInterface::computeTimeDerivative(double * prim, double * MomentU, double * MomentV, double * MomentXi,
                                       double* a, double* b, double * timeGrad)
 {
-
+    // ========================================================================
     timeGrad[0] = a[0] * MomentU[1] * MomentV[0]
                 + a[1] * MomentU[2] * MomentV[0]
                 + a[2] * MomentU[1] * MomentV[1]
@@ -28,11 +28,14 @@ void CompressibleInterface::computeTimeDerivative(double * prim, double * Moment
                 + b[0] * MomentU[0] * MomentV[1]
                 + b[1] * MomentU[1] * MomentV[1]
                 + b[2] * MomentU[0] * MomentV[2]
-                + b[3] * 0.5 * ( MomentU[2] * MomentV[1] + MomentU[0] * MomentV[3] + MomentU[0] * MomentV[1] * MomentXi[2] );
+                + b[3] * 0.5 * ( MomentU[2] * MomentV[1] + MomentU[0] * MomentV[3] + MomentU[0] * MomentV[1] * MomentXi[2] )
     // this part comes from the inclusion of the forcing into the flux computation
                 //+ 2.0 * prim[3] * ( MomentU[0]*MomentV[0] * prim[1] - MomentU[1]*MomentV[0] ) * this->fluidParam.Force.x
-                //+ 2.0 * prim[3] * ( MomentU[0]*MomentV[0] * prim[2] - MomentU[0]*MomentV[1] ) * this->fluidParam.Force.y;
-
+                //+ 2.0 * prim[3] * ( MomentU[0]*MomentV[0] * prim[2] - MomentU[0]*MomentV[1] ) * this->fluidParam.Force.y
+                ;
+    // ========================================================================
+    
+    // ========================================================================
     timeGrad[1] = a[0] * MomentU[2] * MomentV[0]
                 + a[1] * MomentU[3] * MomentV[0]
                 + a[2] * MomentU[2] * MomentV[1]
@@ -40,11 +43,14 @@ void CompressibleInterface::computeTimeDerivative(double * prim, double * Moment
                 + b[0] * MomentU[1] * MomentV[1]
                 + b[1] * MomentU[2] * MomentV[1]
                 + b[2] * MomentU[1] * MomentV[2]
-                + b[3] * 0.5 * ( MomentU[3] * MomentV[1] + MomentU[1] * MomentV[3] + MomentU[1] * MomentV[1] * MomentXi[2] );
+                + b[3] * 0.5 * ( MomentU[3] * MomentV[1] + MomentU[1] * MomentV[3] + MomentU[1] * MomentV[1] * MomentXi[2] )
     // this part comes from the inclusion of the forcing into the flux computation
                 //+ 2.0 * prim[3] * ( MomentU[1]*MomentV[0] * prim[1] - MomentU[2]*MomentV[0] ) * this->fluidParam.Force.x
-                //+ 2.0 * prim[3] * ( MomentU[1]*MomentV[0] * prim[2] - MomentU[1]*MomentV[1] ) * this->fluidParam.Force.y;
-
+                //+ 2.0 * prim[3] * ( MomentU[1]*MomentV[0] * prim[2] - MomentU[1]*MomentV[1] ) * this->fluidParam.Force.y
+                ;
+    // ========================================================================
+    
+    // ========================================================================
     timeGrad[2] = a[0] * MomentU[1] * MomentV[1]
                 + a[1] * MomentU[2] * MomentV[1]
                 + a[2] * MomentU[1] * MomentV[2]
@@ -52,11 +58,14 @@ void CompressibleInterface::computeTimeDerivative(double * prim, double * Moment
                 + b[0] * MomentU[0] * MomentV[2]
                 + b[1] * MomentU[1] * MomentV[2]
                 + b[2] * MomentU[0] * MomentV[3]
-                + b[3] * 0.5 * ( MomentU[2] * MomentV[2] + MomentU[0] * MomentV[4] + MomentU[0] * MomentV[2] * MomentXi[2] );
+                + b[3] * 0.5 * ( MomentU[2] * MomentV[2] + MomentU[0] * MomentV[4] + MomentU[0] * MomentV[2] * MomentXi[2] )
     // this part comes from the inclusion of the forcing into the flux computation
                 //+ 2.0 * prim[3] * ( MomentU[0]*MomentV[1] * prim[1] - MomentU[1]*MomentV[1] ) * this->fluidParam.Force.x
-                //+ 2.0 * prim[3] * ( MomentU[0]*MomentV[1] * prim[2] - MomentU[0]*MomentV[2] ) * this->fluidParam.Force.y;
-
+                //+ 2.0 * prim[3] * ( MomentU[0]*MomentV[1] * prim[2] - MomentU[0]*MomentV[2] ) * this->fluidParam.Force.y
+                ;
+    // ========================================================================
+    
+    // ========================================================================
     timeGrad[3] = a[0] * 0.50 * ( MomentU[3] * MomentV[0] + MomentU[1] * MomentV[2] + MomentU[1] * MomentV[0] * MomentXi[2] )
                 + a[1] * 0.50 * ( MomentU[4] * MomentV[0] + MomentU[2] * MomentV[2] + MomentU[2] * MomentV[0] * MomentXi[2] )
                 + a[2] * 0.50 * ( MomentU[3] * MomentV[1] + MomentU[1] * MomentV[3] + MomentU[1] * MomentV[1] * MomentXi[2] )
@@ -72,14 +81,16 @@ void CompressibleInterface::computeTimeDerivative(double * prim, double * Moment
                                 + 2.0 * MomentU[2] * MomentV[3]
                                 + 2.0 * MomentU[2] * MomentV[1] * MomentXi[2]
                                 + 2.0 * MomentV[3] * MomentXi[2]
-                                );
+                                )
     // this part comes from the inclusion of the forcing into the flux computation
-                //+ prim[3] * ( (MomentU[2] + MomentV[2] + MomentXi[2]) * prim[1] 
-                //              - (MomentU[3] * MomentV[0] + MomentU[1] * MomentV[2] + MomentU[1] * MomentV[0] * MomentXi[2])
-                //              ) * this->fluidParam.Force.x
-                //+ prim[3] * ( (MomentU[2] + MomentV[2] + MomentXi[2]) * prim[2] 
-                //              - (MomentU[2] * MomentV[1] + MomentU[0] * MomentV[3] + MomentU[0] * MomentV[1] * MomentXi[2]) 
-                //              ) * this->fluidParam.Force.y;
+                //+ prim[3] * ( ( MomentU[2] + MomentV[2] + MomentXi[2] ) * prim[1] 
+                //            - ( MomentU[3] * MomentV[0] + MomentU[1] * MomentV[2] + MomentU[1] * MomentV[0] * MomentXi[2] )
+                //            ) * this->fluidParam.Force.x
+                //+ prim[3] * ( ( MomentU[2] + MomentV[2] + MomentXi[2] ) * prim[2] 
+                //            - ( MomentU[2] * MomentV[1] + MomentU[0] * MomentV[3] + MomentU[0] * MomentV[1] * MomentXi[2] ) 
+                //            ) * this->fluidParam.Force.y
+                ;
+    // ========================================================================
 
     timeGrad[0] *= -1.0;
     timeGrad[1] *= -1.0;
@@ -112,6 +123,10 @@ void CompressibleInterface::assembleFlux(double * MomentU, double * MomentV, dou
                       + MomentU[0+u] * MomentV[2+v] 
                       + MomentU[0+u] * MomentV[0+v] * MomentXi[2] );
     // ========================================================================
+    
+    // ================================================================================================================================================
+    // ================================================================================================================================================
+    // ================================================================================================================================================
 
     // ========================================================================
     Flux_2[0] = ( a[0] * MomentU[1+u] * MomentV[0+v]
@@ -126,11 +141,14 @@ void CompressibleInterface::assembleFlux(double * MomentU, double * MomentV, dou
                 + b[3] * 0.5 * ( MomentU[2+u] * MomentV[1+v] 
                                + MomentU[0+u] * MomentV[3+v] 
                                + MomentU[0+u] * MomentV[1+v] * MomentXi[2] )
-                );
+                )
     // this part comes from the inclusion of the forcing into the flux computation
                 //+ 2.0 * prim[3] * ( MomentU[0+u]*MomentV[0+v] * prim[1] - MomentU[1+u]*MomentV[0+v] ) * this->fluidParam.Force.x
-                //+ 2.0 * prim[3] * ( MomentU[0+u]*MomentV[0+v] * prim[2] - MomentU[0+u]*MomentV[1+v] ) * this->fluidParam.Force.y;
-
+                //+ 2.0 * prim[3] * ( MomentU[0+u]*MomentV[0+v] * prim[2] - MomentU[0+u]*MomentV[1+v] ) * this->fluidParam.Force.y
+                ;
+    // ========================================================================
+    
+    // ========================================================================
     Flux_2[1] = ( a[0] * MomentU[2+u] * MomentV[0+v]
                 + a[1] * MomentU[3+u] * MomentV[0+v]
                 + a[2] * MomentU[2+u] * MomentV[1+v]
@@ -143,11 +161,14 @@ void CompressibleInterface::assembleFlux(double * MomentU, double * MomentV, dou
                 + b[3] * 0.5 * ( MomentU[3+u] * MomentV[1+v] 
                                + MomentU[1+u] * MomentV[3+v] 
                                + MomentU[1+u] * MomentV[1+v] * MomentXi[2] )
-                );
+                )
     // this part comes from the inclusion of the forcing into the flux computation
                 //+ 2.0 * prim[3] * ( MomentU[1+u]*MomentV[0+v] * prim[1] - MomentU[2+u]*MomentV[0+v] ) * this->fluidParam.Force.x
-                //+ 2.0 * prim[3] * ( MomentU[1+u]*MomentV[0+v] * prim[2] - MomentU[1+u]*MomentV[1+v] ) * this->fluidParam.Force.y;
-
+                //+ 2.0 * prim[3] * ( MomentU[1+u]*MomentV[0+v] * prim[2] - MomentU[1+u]*MomentV[1+v] ) * this->fluidParam.Force.y
+                ;
+    // ========================================================================
+    
+    // ========================================================================
     Flux_2[2] = ( a[0] * MomentU[1+u] * MomentV[1+v]
                 + a[1] * MomentU[2+u] * MomentV[1+v]
                 + a[2] * MomentU[1+u] * MomentV[2+v]
@@ -160,11 +181,14 @@ void CompressibleInterface::assembleFlux(double * MomentU, double * MomentV, dou
                 + b[3] * 0.5 * ( MomentU[2+u] * MomentV[2+v]
                                + MomentU[0+u] * MomentV[4+v]
                                + MomentU[0+u] * MomentV[2+v] * MomentXi[2] )
-                );
+                )
     // this part comes from the inclusion of the forcing into the flux computation
                 //+ 2.0 * prim[3] * ( MomentU[0+u]*MomentV[1+v] * prim[1] - MomentU[1+u]*MomentV[1+v] ) * this->fluidParam.Force.x
-                //+ 2.0 * prim[3] * ( MomentU[0+u]*MomentV[1+v] * prim[2] - MomentU[0+u]*MomentV[2+v] ) * this->fluidParam.Force.y;
-
+                //+ 2.0 * prim[3] * ( MomentU[0+u]*MomentV[1+v] * prim[2] - MomentU[0+u]*MomentV[2+v] ) * this->fluidParam.Force.y
+                ;
+    // ========================================================================
+    
+    // ========================================================================
     Flux_2[3] = 0.5 * ( a[0] * ( MomentU[3+u] * MomentV[0+v] 
                                + MomentU[1+u] * MomentV[2+v]
                                + MomentU[1+u] * MomentV[0+v] * MomentXi[2] )
@@ -197,15 +221,20 @@ void CompressibleInterface::assembleFlux(double * MomentU, double * MomentV, dou
                                        + MomentU[2+u] * MomentV[1+v] * MomentXi[2]
                                        + MomentU[0+u] * MomentV[3+v] * MomentXi[2] )
                                )
-                      );
+                      )
     // this part comes from the inclusion of the forcing into the flux computation
-                    //+ prim[3] * ( (MomentU[2+u] * MomentV[0+v] + MomentU[0+u] * MomentV[2+v] + MomentU[0+u] * MomentV[0+v] * MomentXi[2]) * prim[1] 
-                    //            - (MomentU[3+u] * MomentV[0+v] + MomentU[1+u] * MomentV[2+v] + MomentU[1+u] * MomentV[0+v] * MomentXi[2])
+                    //+ prim[3] * ( ( MomentU[2+u] * MomentV[0+v] + MomentU[0+u] * MomentV[2+v] + MomentU[0+u] * MomentV[0+v] * MomentXi[2] ) * prim[1] 
+                    //            - ( MomentU[3+u] * MomentV[0+v] + MomentU[1+u] * MomentV[2+v] + MomentU[1+u] * MomentV[0+v] * MomentXi[2] )
                     //            ) * this->fluidParam.Force.x
-                    //+ prim[3] * ( (MomentU[2+u] * MomentV[0+v] + MomentU[0+u] * MomentV[2+v] + MomentU[0+u] * MomentV[0+v] * MomentXi[2]) * prim[2] 
-                    //            - (MomentU[2+u] * MomentV[1+v] + MomentU[0+u] * MomentV[3+v] + MomentU[0+u] * MomentV[1+v] * MomentXi[2]) 
-                    //            ) * this->fluidParam.Force.y;
+                    //+ prim[3] * ( ( MomentU[2+u] * MomentV[0+v] + MomentU[0+u] * MomentV[2+v] + MomentU[0+u] * MomentV[0+v] * MomentXi[2] ) * prim[2] 
+                    //            - ( MomentU[2+u] * MomentV[1+v] + MomentU[0+u] * MomentV[3+v] + MomentU[0+u] * MomentV[1+v] * MomentXi[2] ) 
+                    //            ) * this->fluidParam.Force.y
+                    ;
     // ========================================================================
+    
+    // ================================================================================================================================================
+    // ================================================================================================================================================
+    // ================================================================================================================================================
 
     // ========================================================================
     Flux_3[0] = ( A[0] * MomentU[0+u] * MomentV[0+v]
@@ -215,6 +244,9 @@ void CompressibleInterface::assembleFlux(double * MomentU, double * MomentV, dou
                                + MomentU[0+u]*MomentV[2+v]
                                + MomentU[0+u]*MomentV[0+v]*MomentXi[2] )
                 );
+    // ========================================================================
+    
+    // ========================================================================
     Flux_3[1] = ( A[0] * MomentU[1+u] * MomentV[0+v]
                 + A[1] * MomentU[2+u] * MomentV[0+v]
                 + A[2] * MomentU[1+u] * MomentV[1+v]
@@ -222,6 +254,9 @@ void CompressibleInterface::assembleFlux(double * MomentU, double * MomentV, dou
                                + MomentU[1+u]*MomentV[2+v]
                                + MomentU[1+u]*MomentV[0+v]*MomentXi[2] )
                 );
+    // ========================================================================
+    
+    // ========================================================================
     Flux_3[2] = ( A[0] * MomentU[0+u] * MomentV[1+v]
                 + A[1] * MomentU[1+u] * MomentV[1+v]
                 + A[2] * MomentU[0+u] * MomentV[2+v]
@@ -229,6 +264,9 @@ void CompressibleInterface::assembleFlux(double * MomentU, double * MomentV, dou
                                + MomentU[0+u]*MomentV[3+v]
                                + MomentU[0+u]*MomentV[1+v]*MomentXi[2] )
                 );
+    // ========================================================================
+    
+    // ========================================================================
     Flux_3[3] = 0.5 * ( A[0] * ( MomentU[2+u] * MomentV[0+v]
                                + MomentU[0+u] * MomentV[2+v]
                                + MomentU[0+u] * MomentV[0+v] * MomentXi[2] )
@@ -247,6 +285,10 @@ void CompressibleInterface::assembleFlux(double * MomentU, double * MomentV, dou
                                )
                       );
     // ========================================================================
+    
+    // ================================================================================================================================================
+    // ================================================================================================================================================
+    // ================================================================================================================================================
 
     // ========================================================================
     for ( int i = 0; i < 4; i++ )

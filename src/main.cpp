@@ -202,7 +202,7 @@ int main(int argc, char* argv[])
         param.convergenceCriterium[3] = -1.0e-10;
 
         param.L = 1.0;
-        param.CFL = 0.1;
+        param.CFL = 0.7;
 
         param.verbose = false;
         param.fluxOutput = false;
@@ -213,13 +213,13 @@ int main(int argc, char* argv[])
         FluidParameter fluidParam;
 
         int    nx = 1;
-        int    ny = 16;//nyList[j];
+        int    ny = 32;//nyList[j];
 
         double Ra = 1000;
 
         double TReference = 300.0;
-        double TTop   = TReference - 0.0;
-        double TBot   = TReference + 0.0;
+        double TTop   = TReference - 100.0;
+        double TBot   = TReference + 100.0;
         double g      = 10.0;
 
         fluidParam.K = 1;
@@ -252,7 +252,7 @@ int main(int argc, char* argv[])
         mesh->addBoundaryCondition(3, 0, 0, 0,  0.0,    0.0, 0.0, lambda[1]);
         //mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0   );
 
-        Interface::setInterpolationOrder(3);
+        Interface::setInterpolationOrder(1);
         
         // Generate Mesh
         //mesh->generateRectMesh(compressible, W, H, nx, ny);
@@ -297,10 +297,10 @@ int main(int argc, char* argv[])
 
         FluidParameter fluidParam;
 
-        int    nx = 64;
-        int    ny = 64;//nyList[j];
+        int    nx = 32;
+        int    ny = 32;//nyList[j];
 
-        double Ra = RaList[i];
+        double Ra = 1.0e5;
 
         double TReference = 300.0;
         double TTop   = TReference - 100.0;
@@ -446,9 +446,9 @@ int main(int argc, char* argv[])
 
         //mesh->writeMeshAsText("out/Mesh.txt");
 
-        //mesh->writeVTKFile("out/InitialState.vtk");
+        mesh->writeVTKFile("out/InitialState.vtk");
 
-        mesh->iterate();
+        //mesh->iterate();
 
         //mesh->writeTimeSteps("out/timeSteps.dat");
 
@@ -483,6 +483,7 @@ int main(int argc, char* argv[])
         //mesh->writeVelocityU("out/VelocityU.dat");
         //mesh->writeVelocityV("out/VelocityV.dat");
         //mesh->writeTemperature("out/Temperature.dat");
+        //mesh->writeDensity("out/Density.dat");
 
         //system("pause");
     }
