@@ -16,11 +16,11 @@ using namespace std;
 int main(int argc, char* argv[])
 {
     double ReList[] = {40.0, 100.0, 400.0, 1000.0};
-    double RaList[] = {1.0e3, 1.0e4, 1.0e5, 1.0e6, 1.0e7, 1.0e8};
     int    nyList[] = {8, 16, 32, 64};
-    //for (int i = 0; i < 4;i++)
-    //for (int j = 0; j < 4;j++)
-    //for(int i = 0; i < 6; i++)
+    double RaList[] = {1.0e3, 1.0e4, 1.0e5, 1.0e6, 1.0e7, 1.0e8};
+    //for (int i = 0; i < 4;i++)      //ReList
+    //for (int j = 0; j < 4;j++)      // nyList
+    //for(int i = 0; i < 6; i++)      // RaList
     {
 
 
@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
 
         */
     
-        /*
+        ///*
 
         // ========================================================================
         //
@@ -117,9 +117,9 @@ int main(int argc, char* argv[])
         double H = 1.0;
         double W = 1.0;
 
-        param.numberOfIterations = 100;
-        param.outputIntervalVTK = 1;
-        param.outputInterval = 1;
+        param.numberOfIterations = 1000000;
+        param.outputIntervalVTK = 10000;
+        param.outputInterval = 10000;
 
         param.convergenceCriterium[0] = 1.0;
         param.convergenceCriterium[1] = 1.0e-10;
@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
         param.convergenceCriterium[3] = 1.0;
 
         param.L = 1.0;
-        param.CFL = 0.7;
+        param.CFL = 0.1;
 
         param.verbose = false;
         param.fluxOutput = false;
@@ -138,8 +138,8 @@ int main(int argc, char* argv[])
         FluidParameter fluidParam;
 
         // ========== Weidongs Parameters ==========
-        int    nx = 1;
-        int    ny = 3;//nyList[j];
+        int    nx = 2;
+        int    ny = 8;
         double Re = 40.0;
         double u0 = 0.1;
 
@@ -171,15 +171,16 @@ int main(int argc, char* argv[])
         Interface::setInterpolationOrder(1);
 
         // Generate Mesh
-        mesh->generateRectMeshPeriodic(compressible, W, H, nx, ny);
+        //mesh->generateRectMeshPeriodic(compressible, W, H, nx, ny);
+        mesh->generateRectMeshPeriodicGraded(compressible, W, H, nx, ny, 0.9);
 
         // Initialize Values
         mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
         //mesh->initMeshParabularVelocity(1.0, u0, 0.0, lambda);
 
-        */
+        //*/
     
-        ///*
+        /*
 
         // ========================================================================
         //
@@ -263,7 +264,7 @@ int main(int argc, char* argv[])
         //mesh->initMeshLinear(rho, U, V, lambda);
         mesh->initMeshAtmospheric(fluidParam.rhoReference, 0.0, 0.0, lambdaReference, g);
 
-        //*/
+        */
     
         /*
 
@@ -448,24 +449,30 @@ int main(int argc, char* argv[])
         //mesh->writeMeshAsText("out/Mesh.txt");
 
         //mesh->writeVTKFile("out/InitialState.vtk");
+        //mesh->writeVTKFileFlux("out/InitialStateFlux.vtk");
 
         mesh->iterate();
 
         //mesh->writeTimeSteps("out/timeSteps.dat");
 
+        // ========== Poiseuille Convergence Study ============================
         //ostringstream filename;
-        //filename << "out/PoiseuilleFlowCompressible/ConvergenceStudy1stOrder/" << ny;
+        //filename << "out/" << ny;
         //mesh->writeVelocityProfile(            ( filename.str() + "/VelocityProfile.dat" )          , 0.5);
         //mesh->writePressureGradientProfile(    ( filename.str() + "/PressureGradientProfile.dat" )  , 0.5);
         //mesh->writeConvergenceHistory(         ( filename.str() + "/ConvergenceHistory.dat" )            );
         //mesh->writeOverviewFile(               ( filename.str() + "/OverviewFile.dat" )                  );
         //mesh->writeVTKFile(                    ( filename.str() + "/ResultFields.vtk" )                  );
+        // ====================================================================
 
+        // ========== Thermal Couette Convergence Study =======================
         //ostringstream filename;
         //filename << "out/ConvergenceStudyThermalCouette/" << ny;
         //mesh->writeTemperatureProfile(         ( filename.str() + "/TemperatureProfile.dat" )       , 0.5);
         //mesh->writeOverviewFile(               ( filename.str() + "/OverviewFile.dat" )                  );
         //mesh->writeVTKFile(                    ( filename.str() + "/ResultFields.vtk" )                  );
+        // ====================================================================
+
 
         //ostringstream filename;
         //filename << "out/Ra1e" << i + 3;

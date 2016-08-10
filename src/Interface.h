@@ -63,9 +63,6 @@ protected:
     void interpolatePrim(double* prim);
     void interpolatePrimThirdOrder(double* prim);
 
-    void interpolateCons(double* prim);
-    void interpolateConsThirdOrder(double* prim);
-
     void differentiateConsNormal(double* normalGradCons, double* prim);
     void differentiateConsNormalThirdOrder(double* normalGradCons, double* prim);
 

@@ -349,6 +349,12 @@ bool Cell::isGhostCell()
     return !(BoundaryContitionPointer== NULL);
 }
 
+double Cell::distance(float2 point)
+{
+    return sqrt( ( this->centerX - point.x )*( this->centerX - point.x )
+               + ( this->centerY - point.y )*( this->centerY - point.y ) );
+}
+
 string Cell::toString()
 {
 	ostringstream tmp;

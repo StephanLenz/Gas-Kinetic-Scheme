@@ -85,6 +85,8 @@ public:
 
     bool isGhostCell();
 
+    double distance(float2 point);
+
 	string toString();
 
     string valuesToString();

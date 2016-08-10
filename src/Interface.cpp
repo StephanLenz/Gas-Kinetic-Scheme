@@ -111,7 +111,7 @@ void Interface::computeInternalFlux(double dt)
 
     // compute the length of the interface
     double dy = this->posCell->getDx().x * normal.y
-        + this->posCell->getDx().y * normal.x;
+              + this->posCell->getDx().y * normal.x;
 
     // ========================================================================
     // interpolated primary variables at the interface
@@ -415,19 +415,42 @@ void Interface::interpolatePrim(double * prim)
     // This method computes the Values of the primary variables at the interface
     // with linear interpolation
 
-    prim[0] = 0.5*( this->negCell->getPrim().rho
-                  + this->posCell->getPrim().rho );
+    double negDistance = this->distance( this->negCell->getCenter() );
+    double posDistance = this->distance( this->posCell->getCenter() );
 
-    prim[1] = 0.5*( this->negCell->getPrim().U
-                  + this->posCell->getPrim().U   );
+    prim[0] = ( this->negCell->getPrim().rho * posDistance
+              + this->posCell->getPrim().rho * negDistance)
+            / ( negDistance + posDistance );
 
-    prim[2] = 0.5*( this->negCell->getPrim().V
-                  + this->posCell->getPrim().V   );
+    prim[1] = ( this->negCell->getPrim().U   * posDistance
+              + this->posCell->getPrim().U   * negDistance)
+            / ( negDistance + posDistance );
 
-    prim[3] = 0.5*( this->negCell->getPrim().L
-                  + this->posCell->getPrim().L   );
+    prim[2] = ( this->negCell->getPrim().V   * posDistance
+              + this->posCell->getPrim().V   * negDistance)
+            / ( negDistance + posDistance );
+
+    prim[3] = ( this->negCell->getPrim().L   * posDistance
+              + this->posCell->getPrim().L   * negDistance)
+            / ( negDistance + posDistance );
+
+    // old for equidistant grids
+    //prim[0] = 0.5*( this->negCell->getPrim().rho
+    //              + this->posCell->getPrim().rho );
+
+    //prim[1] = 0.5*( this->negCell->getPrim().U
+    //              + this->posCell->getPrim().U   );
+
+    //prim[2] = 0.5*( this->negCell->getPrim().V
+    //              + this->posCell->getPrim().V   );
+
+    //prim[3] = 0.5*( this->negCell->getPrim().L
+    //              + this->posCell->getPrim().L   );
 }
 
+// ========== TODO ============================================================
+// Third Order Interpolation must still be changed for non-equidistant grids
+// ============================================================================
 void Interface::interpolatePrimThirdOrder(double * prim)
 {
     // For Boundary Interfaces use only linear Interpolation (in case of GhostCells)
@@ -457,46 +480,6 @@ void Interface::interpolatePrimThirdOrder(double * prim)
             - 1.0 / 12.0 * ( this->posCell->getOpposingCell(this)->getPrim().L + this->negCell->getOpposingCell(this)->getPrim().L );
 }
 
-void Interface::interpolateCons(double * cons)
-{
-    // This method computes the rhoValues of the consary variables at the interface
-    // with linear interpolation
-
-    cons[0] = 0.5*( this->negCell->getCons().rho
-                  + this->posCell->getCons().rho );
-
-    cons[1] = 0.5*( this->negCell->getCons().rhoU
-                  + this->posCell->getCons().rhoU );
-
-    cons[2] = 0.5*( this->negCell->getCons().rhoV
-                  + this->posCell->getCons().rhoV );
-
-    cons[3] = 0.5*( this->negCell->getCons().rhoE
-                  + this->posCell->getCons().rhoE );
-}
-
-void Interface::interpolateConsThirdOrder(double * cons)
-{
-    // For Boundary Interfaces use only linear Interpolation
-    if ( this->negCell->isGhostCell() || this->posCell->isGhostCell() )
-    {
-        this->interpolateCons(cons);
-        return;
-    }
-
-    cons[0] = 7.0 / 12.0 * ( this->posCell->getCons().rho                        + this->negCell->getCons().rho )
-            - 1.0 / 12.0 * ( this->posCell->getOpposingCell(this)->getCons().rho + this->negCell->getOpposingCell(this)->getCons().rho );
-
-    cons[1] = 7.0 / 12.0 * ( this->posCell->getCons().rhoU                        + this->negCell->getCons().rhoU )
-            - 1.0 / 12.0 * ( this->posCell->getOpposingCell(this)->getCons().rhoU + this->negCell->getOpposingCell(this)->getCons().rhoU );
-
-    cons[2] = 7.0 / 12.0 * ( this->posCell->getCons().rhoV                        + this->negCell->getCons().rhoV )
-            - 1.0 / 12.0 * ( this->posCell->getOpposingCell(this)->getCons().rhoV + this->negCell->getOpposingCell(this)->getCons().rhoV );
-
-    cons[3] = 7.0 / 12.0 * ( this->posCell->getCons().rhoE                        + this->negCell->getCons().rhoE )
-            - 1.0 / 12.0 * ( this->posCell->getOpposingCell(this)->getCons().rhoE + this->negCell->getOpposingCell(this)->getCons().rhoE );
-}
-
 void Interface::differentiateConsNormal(double* normalGradCons, double* prim)
 {
     // This method computes the spacial derivatives of the conservative Variables.
@@ -507,18 +490,36 @@ void Interface::differentiateConsNormal(double* normalGradCons, double* prim)
     // ========================================================================
 
     // compute the distance between 
-    double dn = ( ( this->posCell->getDx().x + this->negCell->getDx().x ) * normal.x
-                + ( this->posCell->getDx().y + this->negCell->getDx().y ) * normal.y ) * 0.5;
+    //double dn = ( ( this->posCell->getDx().x + this->negCell->getDx().x ) * normal.x
+    //            + ( this->posCell->getDx().y + this->negCell->getDx().y ) * normal.y ) * 0.5;
 
-    normalGradCons[0] = ( this->posCell->getCons().rho  - this->negCell->getCons().rho )  / ( dn * prim[0] );
+    double distance = this->distance( this->negCell->getCenter() )
+                    + this->distance( this->posCell->getCenter() );
 
-    normalGradCons[1] = ( this->posCell->getCons().rhoU - this->negCell->getCons().rhoU ) / ( dn * prim[0] );
+    normalGradCons[0] = ( this->posCell->getCons().rho  - this->negCell->getCons().rho )  / ( distance * prim[0] );
 
-    normalGradCons[2] = ( this->posCell->getCons().rhoV - this->negCell->getCons().rhoV ) / ( dn * prim[0] );
+    normalGradCons[1] = ( this->posCell->getCons().rhoU - this->negCell->getCons().rhoU ) / ( distance * prim[0] );
 
-    normalGradCons[3] = ( this->posCell->getCons().rhoE - this->negCell->getCons().rhoE ) / ( dn * prim[0] );
+    normalGradCons[2] = ( this->posCell->getCons().rhoV - this->negCell->getCons().rhoV ) / ( distance * prim[0] );
+
+    normalGradCons[3] = ( this->posCell->getCons().rhoE - this->negCell->getCons().rhoE ) / ( distance * prim[0] );
+
+    //// compute the distance between 
+    //double dn = ( ( this->posCell->getDx().x + this->negCell->getDx().x ) * normal.x
+    //            + ( this->posCell->getDx().y + this->negCell->getDx().y ) * normal.y ) * 0.5;
+
+    //normalGradCons[0] = ( this->posCell->getCons().rho  - this->negCell->getCons().rho )  / ( dn * prim[0] );
+
+    //normalGradCons[1] = ( this->posCell->getCons().rhoU - this->negCell->getCons().rhoU ) / ( dn * prim[0] );
+
+    //normalGradCons[2] = ( this->posCell->getCons().rhoV - this->negCell->getCons().rhoV ) / ( dn * prim[0] );
+
+    //normalGradCons[3] = ( this->posCell->getCons().rhoE - this->negCell->getCons().rhoE ) / ( dn * prim[0] );
 }
 
+// ========== TODO ============================================================
+// Third Order Differentiation must still be changed for non-equidistant grids
+// ============================================================================
 void Interface::differentiateConsNormalThirdOrder(double* normalGradCons, double* prim)
 {
     // This method computes the spacial derivatives of the conservative Variables.
@@ -570,86 +571,127 @@ void Interface::differentiateConsTangential(double* tangentialGradCons, double* 
     //
     //  ---------------------------------
     //  |               |               |
-    //  |    neg pos    |    pos pos    |
+    //  |    neg pos    A    pos pos    |
     //  |               |               |
-    //  --------------- A --------------
+    //  ----------------|---------------
     //  |               |               |
     //  |               |               |
     //  |      neg      |      pos      |
     //  |               |               |
     //  |               |               |
-    //  --------------- B ---------------
+    //  ----------------|----------------
     //  |               |               |
-    //  |    neg neg    |    pos neg    |
+    //  |    neg neg    B    pos neg    |
     //  |               |               |
     //  ---------------------------------
 
     // get the indieces of the perpendicular interfaces for tangential derivative
     int posIdx;
     int negIdx;
-    if (this->axis == 0)
-    {
-        posIdx = 3;
-        negIdx = 1;
-    }
-    else
-    {
-        posIdx = 2;
-        negIdx = 0;
-    }
+    if (this->axis == 0) { posIdx = 3; negIdx = 1; }
+    else                 { posIdx = 2; negIdx = 0; }
 
-    // compute the tangential distance (length of the interface)
-    double dt = this->posCell->getDx().x * normal.y
-              + this->posCell->getDx().y * normal.x;
+    // compute distance to positive and negative cell center
+    double negDistance = this->distance( this->negCell->getCenter() );
+    double posDistance = this->distance( this->posCell->getCenter() );
 
-    tangentialGradCons[0] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rho
-                              + this->negCell->getNeighborCell(posIdx)->getCons().rho
-                              + this->posCell->getCons().rho 
-                              + this->negCell->getCons().rho 
-                              ) * 0.25
-                            - ( this->posCell->getNeighborCell(negIdx)->getCons().rho
-                              + this->negCell->getNeighborCell(negIdx)->getCons().rho 
-                              + this->posCell->getCons().rho 
-                              + this->negCell->getCons().rho
-                              ) * 0.25
-                            ) / ( dt * prim[0] );
+    double tanDistance = this->negCell->distance( this->negCell->getNeighborCell(posIdx)->getCenter() )
+                       + this->negCell->distance( this->negCell->getNeighborCell(negIdx)->getCenter() );
 
-    tangentialGradCons[1] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rhoU
-                              + this->negCell->getNeighborCell(posIdx)->getCons().rhoU
-                              + this->posCell->getCons().rhoU 
-                              + this->negCell->getCons().rhoU 
-                              ) * 0.25
-                            - ( this->posCell->getNeighborCell(negIdx)->getCons().rhoU
-                              + this->negCell->getNeighborCell(negIdx)->getCons().rhoU 
-                              + this->posCell->getCons().rhoU 
-                              + this->negCell->getCons().rhoU 
-                              ) * 0.25
-                            ) / ( dt * prim[0] );
+    // ========== some tests ==================================================
+    double negposDistance = this->negCell->distance( this->negCell->getNeighborCell(posIdx)->getCenter() );
+    double negnegDistance = this->negCell->distance( this->negCell->getNeighborCell(negIdx)->getCenter() );
 
-    tangentialGradCons[2] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rhoV
-                              + this->negCell->getNeighborCell(posIdx)->getCons().rhoV
-                              + this->posCell->getCons().rhoV 
-                              + this->negCell->getCons().rhoV 
-                              ) * 0.25
-                            - ( this->posCell->getNeighborCell(negIdx)->getCons().rhoV
-                              + this->negCell->getNeighborCell(negIdx)->getCons().rhoV 
-                              + this->posCell->getCons().rhoV 
-                              + this->negCell->getCons().rhoV 
-                              ) * 0.25
-                            ) / ( dt * prim[0] );
+    Cell* negposCell = this->negCell->getNeighborCell(posIdx);
+    Cell* negnegCell = this->negCell->getNeighborCell(negIdx);
+    // ========================================================================
 
-    tangentialGradCons[3] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rhoE
-                              + this->negCell->getNeighborCell(posIdx)->getCons().rhoE
-                              + this->posCell->getCons().rhoE 
-                              + this->negCell->getCons().rhoE 
-                              ) * 0.25
-                            - ( this->posCell->getNeighborCell(negIdx)->getCons().rhoE
-                              + this->negCell->getNeighborCell(negIdx)->getCons().rhoE 
-                              + this->posCell->getCons().rhoE 
-                              + this->negCell->getCons().rhoE 
-                              ) * 0.25
-                            ) / ( dt * prim[0] );
 
+    tangentialGradCons[0] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rho * negDistance
+                              + this->negCell->getNeighborCell(posIdx)->getCons().rho * posDistance
+                              ) / ( negDistance + posDistance )
+                            - ( this->posCell->getNeighborCell(negIdx)->getCons().rho * negDistance
+                              + this->negCell->getNeighborCell(negIdx)->getCons().rho * posDistance
+                              ) / ( negDistance + posDistance )
+                            ) / ( tanDistance * prim[0] );
+
+    tangentialGradCons[1] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rhoU * negDistance
+                              + this->negCell->getNeighborCell(posIdx)->getCons().rhoU * posDistance
+                              ) / ( negDistance + posDistance )
+                            - ( this->posCell->getNeighborCell(negIdx)->getCons().rhoU * negDistance
+                              + this->negCell->getNeighborCell(negIdx)->getCons().rhoU * posDistance
+                              ) / ( negDistance + posDistance )
+                            ) / ( tanDistance * prim[0] );
+
+    tangentialGradCons[2] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rhoV * negDistance
+                              + this->negCell->getNeighborCell(posIdx)->getCons().rhoV * posDistance
+                              ) / ( negDistance + posDistance )
+                            - ( this->posCell->getNeighborCell(negIdx)->getCons().rhoV * negDistance
+                              + this->negCell->getNeighborCell(negIdx)->getCons().rhoV * posDistance
+                              ) / ( negDistance + posDistance )
+                            ) / ( tanDistance * prim[0] );
+
+    tangentialGradCons[3] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rhoE * negDistance
+                              + this->negCell->getNeighborCell(posIdx)->getCons().rhoE * posDistance
+                              ) / ( negDistance + posDistance )
+                            - ( this->posCell->getNeighborCell(negIdx)->getCons().rhoE * negDistance
+                              + this->negCell->getNeighborCell(negIdx)->getCons().rhoE * posDistance
+                              ) / ( negDistance + posDistance )
+                            ) / ( tanDistance * prim[0] );
+
+    //// compute the tangential distance (length of the interface)
+    //double dt = this->posCell->getDx().x * normal.y
+    //          + this->posCell->getDx().y * normal.x;
+
+    //tangentialGradCons[0] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rho
+    //                          + this->negCell->getNeighborCell(posIdx)->getCons().rho
+    //                          + this->posCell->getCons().rho 
+    //                          + this->negCell->getCons().rho 
+    //                          ) * 0.25
+    //                        - ( this->posCell->getNeighborCell(negIdx)->getCons().rho
+    //                          + this->negCell->getNeighborCell(negIdx)->getCons().rho 
+    //                          + this->posCell->getCons().rho 
+    //                          + this->negCell->getCons().rho
+    //                          ) * 0.25
+    //                        ) / ( dt * prim[0] );
+
+    //tangentialGradCons[1] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rhoU
+    //                          + this->negCell->getNeighborCell(posIdx)->getCons().rhoU
+    //                          + this->posCell->getCons().rhoU 
+    //                          + this->negCell->getCons().rhoU 
+    //                          ) * 0.25
+    //                        - ( this->posCell->getNeighborCell(negIdx)->getCons().rhoU
+    //                          + this->negCell->getNeighborCell(negIdx)->getCons().rhoU 
+    //                          + this->posCell->getCons().rhoU 
+    //                          + this->negCell->getCons().rhoU 
+    //                          ) * 0.25
+    //                        ) / ( dt * prim[0] );
+
+    //tangentialGradCons[2] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rhoV
+    //                          + this->negCell->getNeighborCell(posIdx)->getCons().rhoV
+    //                          + this->posCell->getCons().rhoV 
+    //                          + this->negCell->getCons().rhoV 
+    //                          ) * 0.25
+    //                        - ( this->posCell->getNeighborCell(negIdx)->getCons().rhoV
+    //                          + this->negCell->getNeighborCell(negIdx)->getCons().rhoV 
+    //                          + this->posCell->getCons().rhoV 
+    //                          + this->negCell->getCons().rhoV 
+    //                          ) * 0.25
+    //                        ) / ( dt * prim[0] );
+
+    //tangentialGradCons[3] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rhoE
+    //                          + this->negCell->getNeighborCell(posIdx)->getCons().rhoE
+    //                          + this->posCell->getCons().rhoE 
+    //                          + this->negCell->getCons().rhoE 
+    //                          ) * 0.25
+    //                        - ( this->posCell->getNeighborCell(negIdx)->getCons().rhoE
+    //                          + this->negCell->getNeighborCell(negIdx)->getCons().rhoE 
+    //                          + this->posCell->getCons().rhoE 
+    //                          + this->negCell->getCons().rhoE 
+    //                          ) * 0.25
+    //                        ) / ( dt * prim[0] );
+
+    int i = 0;
 }
 
 void Interface::rotate(double * vector)
