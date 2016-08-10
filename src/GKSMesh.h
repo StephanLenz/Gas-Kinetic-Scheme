@@ -74,6 +74,7 @@ public:
 
     void initMeshSineVelocity(double rho, double u, double v, double T);
 
+    void initMeshAtmospheric(double rho, double u, double v, double lambda, double g);
 
 
     void addBoundaryCondition(  int rhoType, int UType, int VType, int TType,

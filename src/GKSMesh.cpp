@@ -695,7 +695,8 @@ void GKSMesh::initMeshLinearHorizontal(double * rho, double * u, double * v, dou
         interpolatedRho    = rho[0]    + center.x*(rho[1]    - rho[0])    / this->lengthX;
         interpolatedU      = u[0]      + center.x*(u[1]      - u[0])      / this->lengthX;
         interpolatedV      = v[0]      + center.x*(v[1]      - v[0])      / this->lengthX;
-        interpolatedLambda = lambda[0] + center.x*(lambda[1] - lambda[0]) / this->lengthX;
+        //interpolatedLambda = lambda[0] + center.x*(lambda[1] - lambda[0]) / this->lengthX;
+        interpolatedLambda = ( lambda[0] ) / ( 1.0 + center.x/this->lengthX * ( lambda[0]/lambda[1] - 1.0 ) );
 
 		(*i)->setValues(interpolatedRho, interpolatedU, interpolatedV, interpolatedLambda);
 	}
@@ -749,6 +750,26 @@ void GKSMesh::initMeshSineVelocity(double rho, double u, double v, double T)
 
         (*i)->setValues(rho, uValue, v, T);
     }
+}
+
+void GKSMesh::initMeshAtmospheric(double rho, double u, double v, double lambda, double g)
+{
+	// Temprature definition
+	//    ------------
+	//    |   Z[1]   |
+	//    |          |
+	//    |   Z[0]   |
+	//    ------------
+	double interpolatedRho;
+	float2 center;
+	for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
+	{
+		center = (*i)->getCenter();
+
+        interpolatedRho = rho * exp( -2.0 * g * lambda * center.y );
+
+		(*i)->setValues(interpolatedRho, u, v, lambda);
+	}
 }
 
 void GKSMesh::addBoundaryCondition( int rhoType, int UType, int VType, int TType, 

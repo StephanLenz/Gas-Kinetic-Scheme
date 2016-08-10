@@ -218,8 +218,8 @@ int main(int argc, char* argv[])
         double Ra = 1000;
 
         double TReference = 300.0;
-        double TTop   = TReference - 100.0;
-        double TBot   = TReference + 100.0;
+        double TTop   = TReference - 0.0;
+        double TBot   = TReference + 0.0;
         double g      = 10.0;
 
         fluidParam.K = 1;
@@ -260,7 +260,8 @@ int main(int argc, char* argv[])
 
          // Initialize Values
         //mesh->initMeshConstant(1.0, 0.0, 0.0, lambda[0]);
-        mesh->initMeshLinear(rho, U, V, lambda);
+        //mesh->initMeshLinear(rho, U, V, lambda);
+        mesh->initMeshAtmospheric(fluidParam.rhoReference, 0.0, 0.0, lambdaReference, g);
 
         //*/
     
@@ -446,9 +447,9 @@ int main(int argc, char* argv[])
 
         //mesh->writeMeshAsText("out/Mesh.txt");
 
-        mesh->writeVTKFile("out/InitialState.vtk");
+        //mesh->writeVTKFile("out/InitialState.vtk");
 
-        //mesh->iterate();
+        mesh->iterate();
 
         //mesh->writeTimeSteps("out/timeSteps.dat");
 
