@@ -117,9 +117,9 @@ int main(int argc, char* argv[])
         double H = 1.0;
         double W = 1.0;
 
-        param.numberOfIterations = 1000000;
-        param.outputIntervalVTK = 10000;
-        param.outputInterval = 10000;
+        param.numberOfIterations = 100000000;
+        param.outputIntervalVTK = 100000000;
+        param.outputInterval = 100000;
 
         param.convergenceCriterium[0] = 1.0;
         param.convergenceCriterium[1] = 1.0e-10;
@@ -127,10 +127,10 @@ int main(int argc, char* argv[])
         param.convergenceCriterium[3] = 1.0;
 
         param.L = 1.0;
-        param.CFL = 0.1;
+        param.CFL = 0.7;
 
         param.verbose = false;
-        param.fluxOutput = false;
+        param.fluxOutput = true;
         param.resOutput = false;
 
         // ========================================================================
@@ -139,7 +139,7 @@ int main(int argc, char* argv[])
 
         // ========== Weidongs Parameters ==========
         int    nx = 2;
-        int    ny = 8;
+        int    ny = 64;
         double Re = 40.0;
         double u0 = 0.1;
 
@@ -165,8 +165,10 @@ int main(int argc, char* argv[])
         //    |         |
         //    |    0    |
         //    -----------
-        mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, lambda);
-        mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, lambda);
+        //mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, lambda);
+        //mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(3, 0, 0, 0,  0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(3, 0, 0, 0,  0.0, 0.0, 0.0, lambda);
 
         Interface::setInterpolationOrder(1);
 
@@ -456,13 +458,13 @@ int main(int argc, char* argv[])
         //mesh->writeTimeSteps("out/timeSteps.dat");
 
         // ========== Poiseuille Convergence Study ============================
-        //ostringstream filename;
-        //filename << "out/" << ny;
-        //mesh->writeVelocityProfile(            ( filename.str() + "/VelocityProfile.dat" )          , 0.5);
-        //mesh->writePressureGradientProfile(    ( filename.str() + "/PressureGradientProfile.dat" )  , 0.5);
-        //mesh->writeConvergenceHistory(         ( filename.str() + "/ConvergenceHistory.dat" )            );
-        //mesh->writeOverviewFile(               ( filename.str() + "/OverviewFile.dat" )                  );
-        //mesh->writeVTKFile(                    ( filename.str() + "/ResultFields.vtk" )                  );
+        ostringstream filename;
+        filename << "out/" << ny;
+        mesh->writeVelocityProfile(            ( filename.str() + "/VelocityProfile.dat" )          , 0.5);
+        mesh->writePressureGradientProfile(    ( filename.str() + "/PressureGradientProfile.dat" )  , 0.5);
+        mesh->writeConvergenceHistory(         ( filename.str() + "/ConvergenceHistory.dat" )            );
+        mesh->writeOverviewFile(               ( filename.str() + "/OverviewFile.dat" )                  );
+        mesh->writeVTKFile(                    ( filename.str() + "/ResultFields.vtk" )                  );
         // ====================================================================
 
         // ========== Thermal Couette Convergence Study =======================
@@ -482,16 +484,16 @@ int main(int argc, char* argv[])
         //mesh->writeVelocityU(     ( filename.str() + "/VelocityU.dat" )        );
         //mesh->writeVelocityV(     ( filename.str() + "/VelocityV.dat" )        );
 
-        mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
-        mesh->writeOverviewFile("out/OverviewFile.dat");
-        //mesh->writePressureGradientProfile("out/PressureGradientProfile.dat", 0.5);
-        //mesh->writeVelocityProfile("out/VelocityProfile.dat", 0.5);
-        //mesh->writeTemperatureProfile("out/TemperatureProfile.dat", 0.5);
-        mesh->writeTimeSteps("out/TimeSteps.dat");
-        //mesh->writeVelocityU("out/VelocityU.dat");
-        //mesh->writeVelocityV("out/VelocityV.dat");
-        //mesh->writeTemperature("out/Temperature.dat");
-        //mesh->writeDensity("out/Density.dat");
+        //mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
+        //mesh->writeOverviewFile("out/OverviewFile.dat");
+        ////mesh->writePressureGradientProfile("out/PressureGradientProfile.dat", 0.5);
+        ////mesh->writeVelocityProfile("out/VelocityProfile.dat", 0.5);
+        ////mesh->writeTemperatureProfile("out/TemperatureProfile.dat", 0.5);
+        //mesh->writeTimeSteps("out/TimeSteps.dat");
+        ////mesh->writeVelocityU("out/VelocityU.dat");
+        ////mesh->writeVelocityV("out/VelocityV.dat");
+        ////mesh->writeTemperature("out/Temperature.dat");
+        ////mesh->writeDensity("out/Density.dat");
 
         //system("pause");
     }

@@ -626,6 +626,179 @@ void GKSMesh::generateRectMeshPeriodicInterfaceBCs(InterfaceType type, double le
     return;
 }
 
+void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double lengthY, int nx, int ny, double gradingX, double gradingY)
+{
+
+    this->lengthX = lengthX;
+    this->lengthY = lengthY;
+
+    // make nx and ny an even number
+    nx = 2 * (nx/2);
+    ny = 2 * (ny/2);
+
+    Cell*		tmpCell;
+    Interface*  tmpInterface;
+    float2      normal;
+    float2      center;
+    
+    double dx0 = 0.5*this->lengthY * (1-gradingX)/(1-pow(gradingX, nx/2));
+    double dy0 = 0.5*this->lengthY * (1-gradingY)/(1-pow(gradingY, ny/2));
+
+    //=========================================================================
+    //=========================================================================
+    //		Computation of the coordinates and spacings
+    //=========================================================================
+    //=========================================================================
+
+    double* CellSpacingsX = new double[nx+2];
+    double* CellSpacingsY = new double[ny+2];
+
+    for(int i = 0; i < nx/2 + 1; i++){
+        if(i == nx/2)
+        {
+            // The Ghost Cells have the same size, as the 
+            CellSpacingsX[nx/2 - i]     = dx0 * pow( gradingX, i-1);
+            CellSpacingsX[nx/2 + i + 1] = dx0 * pow( gradingX, i-1);
+        }
+        else
+        {
+            CellSpacingsX[nx/2 - i]     = dx0 * pow( gradingX, i);
+            CellSpacingsX[nx/2 + i + 1] = dx0 * pow( gradingX, i);
+        }
+    }
+
+    for(int i = 0; i < ny/2 + 1; i++){
+        if(i == ny/2)
+        {
+            // The Ghost Cells have the same size, as the 
+            CellSpacingsY[ny/2 - i]     = dy0 * pow( gradingY, i-1);
+            CellSpacingsY[ny/2 + i + 1] = dy0 * pow( gradingY, i-1);
+        }
+        else
+        {
+            CellSpacingsY[ny/2 - i]     = dy0 * pow( gradingY, i);
+            CellSpacingsY[ny/2 + i + 1] = dy0 * pow( gradingY, i);
+        }
+    }
+
+    // ========================================================================
+    
+    double* CellCentersX = new double[nx+2];
+    double* CellCentersY = new double[ny+2];
+
+    double sumX = -CellSpacingsX[0];
+    for(int i = 0; i < nx + 2; i++){
+        CellCentersX[i] = sumX + 0.5*CellSpacingsX[i];
+        sumX += CellSpacingsX[i];
+    }
+
+    double sumY = -CellSpacingsY[0];
+    for(int i = 0; i < ny + 2; i++){
+        CellCentersY[i] = sumY + 0.5*CellSpacingsY[i];
+        sumY += CellSpacingsY[i];
+    }
+
+    // ========================================================================
+
+    double* InterfaceCentersX = new double[nx+1]; 
+    double* InterfaceCentersY = new double[ny+1];    
+
+    sumX = 0.0;
+    for(int i = 0; i < nx+1; i++){
+        InterfaceCentersX[i] = sumX;
+        sumX += CellSpacingsX[i+1];
+    }
+   
+    sumY = 0.0;
+    for(int i = 0; i < ny+1; i++){
+        InterfaceCentersY[i] = sumY;
+        sumY += CellSpacingsY[i+1];
+    }
+
+	//=========================================================================
+	//=========================================================================
+	//		Cell generation
+	//			including ghost cells
+	//=========================================================================
+	//=========================================================================
+    BoundaryCondition* currentBC = NULL;
+	for (int i = 0; i < ny + 2; i++)       // Y-Direction
+	{
+
+		for (int j = 0; j < nx + 2; j++)   // X-Direction
+		{
+            if (j == 0)         currentBC = BoundaryConditionList[0];
+            else if (j == nx+1) currentBC = BoundaryConditionList[2];
+            else if (i == 0)    currentBC = BoundaryConditionList[1];
+            else if (i == ny+1) currentBC = BoundaryConditionList[3];
+            else                currentBC = NULL;
+
+			//                      cell centerX         cell centerY
+			tmpCell = new Cell(type, CellCentersX[j], CellCentersY[i], CellSpacingsX[j], CellSpacingsY[i], currentBC, this->fluidParam);
+			// add interface to list
+			this->CellList.push_back(tmpCell);
+		}
+	}
+
+	//=========================================================================
+	//=========================================================================
+	//						F interface generation
+	//=========================================================================
+	//=========================================================================
+    normal.x = 1;
+    normal.y = 0;
+	for (int i = 0; i <= ny + 1; i++)       // Y-Direction
+	{
+		for (int j = 0; j < nx + 1; j++)    // X-Direction
+		{
+            center.x = InterfaceCentersX[j];
+            center.y = CellCentersY[i];
+
+            Cell* posCell = this->CellList[i*(nx + 2) + (j + 1)];
+            Cell* negCell = this->CellList[i*(nx + 2) + j];
+
+			// create a new interface with the adjacent cells
+			tmpInterface = Interface::createInterface(type,negCell, posCell, center, normal, this->fluidParam, NULL);
+			// add itnerface to list
+			this->InterfaceList.push_back(tmpInterface);
+		}
+	}
+
+	//=========================================================================
+	//=========================================================================
+	//						G interface generation
+	//=========================================================================
+	//=========================================================================
+    normal.x = 0;
+    normal.y = 1;
+	for (int i = 0; i < ny + 1; i++)        // Y-Direction
+	{
+		for (int j = 0; j <= nx + 1; j++)   // X-Direction
+		{
+            center.x = CellCentersX[j];
+            center.y = InterfaceCentersY[i];
+
+            Cell* posCell = this->CellList[(i + 1)*(nx + 2) + j];
+            Cell* negCell = this->CellList[i*(nx + 2) + j];
+
+			// create a new interface with the adjacent cells
+			tmpInterface = Interface::createInterface(type,negCell, posCell, center, normal, this->fluidParam, NULL);
+			// add itnerface to list
+			this->InterfaceList.push_back(tmpInterface);
+		}
+	}
+
+    delete [] CellCentersX;
+    delete [] CellSpacingsX;
+    delete [] InterfaceCentersX;
+
+    delete [] CellCentersY;
+    delete [] CellSpacingsY;
+    delete [] InterfaceCentersY;
+
+	return;
+}
+
 void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX, double lengthY, int nx, int ny, double grading)
 {
     double dx = lengthX / (double)nx;
@@ -652,6 +825,7 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
     for(int i = 0; i < ny/2 + 1; i++){
         if(i == ny/2)
         {
+            // The Ghost Cells have the same size, as the 
             CellSpacingsY[ny/2 - i]     = dy0 * pow( grading, i-1);
             CellSpacingsY[ny/2 + i + 1] = dy0 * pow( grading, i-1);
         }
@@ -662,22 +836,16 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
         }
     }
 
-    for(int i = 0; i < ny+2; i++)
-        cout << CellSpacingsY[i] << endl;
-
     double* CellCentersY = new double[ny+2];
     double sum = -CellSpacingsY[0];
     for(int i = 0; i < ny + 2; i++){
         CellCentersY[i] = sum + 0.5*CellSpacingsY[i];
         sum += CellSpacingsY[i];
     }
-
-    for(int i = 0; i < ny+2; i++)
-        cout << CellCentersY[i] << endl;
     
     double* InterfaceCentersY = new double[ny+1];    
     sum = 0.0;
-    for(int i = 0; i < ny-1; i++){
+    for(int i = 0; i < ny+1; i++){
         InterfaceCentersY[i] = sum;
         sum += CellSpacingsY[i+1];
     }
@@ -760,6 +928,10 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
             this->InterfaceList.push_back(tmpInterface);
         }
     }
+
+    delete [] CellCentersY;
+    delete [] CellSpacingsY;
+    delete [] InterfaceCentersY;
 
     return;
 }
