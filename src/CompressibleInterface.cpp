@@ -105,15 +105,8 @@ void CompressibleInterface::assembleFlux(double * MomentU, double * MomentV, dou
     double Flux_2[4];
     double Flux_3[4];
 
-    int u, v;
-    if( this->axis == 0 )
-    {
-        u = 1; v = 0;
-    }
-    else
-    {
-        u = 0; v = 1;
-    }
+    int u = 1;
+    int v = 0;
     
     // ========================================================================
     Flux_1[0] = MomentU[0+u] * MomentV[0+v];

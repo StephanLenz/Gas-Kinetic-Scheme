@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
 
         */
     
-        /*
+        ///*
 
         // ========================================================================
         //
@@ -118,8 +118,8 @@ int main(int argc, char* argv[])
         double W = 1.0;
 
         param.numberOfIterations = 100000000;
-        param.outputIntervalVTK = 100000000;
-        param.outputInterval = 100000;
+        param.outputIntervalVTK = 10000;
+        param.outputInterval = 10000;
 
         param.convergenceCriterium[0] = 1.0;
         param.convergenceCriterium[1] = 1.0e-10;
@@ -130,7 +130,7 @@ int main(int argc, char* argv[])
         param.CFL = 0.7;
 
         param.verbose = false;
-        param.fluxOutput = true;
+        param.fluxOutput = false;
         param.resOutput = false;
 
         // ========================================================================
@@ -139,7 +139,7 @@ int main(int argc, char* argv[])
 
         // ========== Weidongs Parameters ==========
         int    nx = 2;
-        int    ny = 128;
+        int    ny = 3;
         double Re = 40.0;
         double u0 = 0.1;
 
@@ -165,10 +165,10 @@ int main(int argc, char* argv[])
         //    |         |
         //    |    0    |
         //    -----------
-        //mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, lambda);
-        //mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, lambda);
-        mesh->addBoundaryCondition(3, 0, 0, 0,  0.0, 0.0, 0.0, lambda);
-        mesh->addBoundaryCondition(3, 0, 0, 0,  0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, lambda);
+        //mesh->addBoundaryCondition(3, 0, 0, 0,  0.0, 0.0, 0.0, lambda);
+        //mesh->addBoundaryCondition(3, 0, 0, 0,  0.0, 0.0, 0.0, lambda);
 
         Interface::setInterpolationOrder(1);
 
@@ -180,7 +180,7 @@ int main(int argc, char* argv[])
         mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
         //mesh->initMeshParabularVelocity(1.0, u0, 0.0, lambda);
 
-        */
+        //*/
     
         /*
 
@@ -268,7 +268,7 @@ int main(int argc, char* argv[])
 
         */
     
-        ///*
+        /*
 
         // ========================================================================
         //
@@ -353,7 +353,7 @@ int main(int argc, char* argv[])
         mesh->initMeshLinearHorizontal(rho, U, V, lambda);
         //mesh->initMeshParabularVelocity(1.0, u0, 0.0, lambda);
 
-        //*/
+        */
     
         /*
 
@@ -485,16 +485,16 @@ int main(int argc, char* argv[])
         //mesh->writeVelocityU(     ( filename.str() + "/VelocityU.dat" )        );
         //mesh->writeVelocityV(     ( filename.str() + "/VelocityV.dat" )        );
 
-        mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
-        mesh->writeOverviewFile("out/OverviewFile.dat");
-        //mesh->writePressureGradientProfile("out/PressureGradientProfile.dat", 0.5);
-        //mesh->writeVelocityProfile("out/VelocityProfile.dat", 0.5);
-        //mesh->writeTemperatureProfile("out/TemperatureProfile.dat", 0.5);
-        mesh->writeTimeSteps("out/TimeSteps.dat");
-        //mesh->writeVelocityU("out/VelocityU.dat");
-        //mesh->writeVelocityV("out/VelocityV.dat");
-        //mesh->writeTemperature("out/Temperature.dat");
-        //mesh->writeDensity("out/Density.dat");
+        //mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
+        //mesh->writeOverviewFile("out/OverviewFile.dat");
+        ////mesh->writePressureGradientProfile("out/PressureGradientProfile.dat", 0.5);
+        ////mesh->writeVelocityProfile("out/VelocityProfile.dat", 0.5);
+        ////mesh->writeTemperatureProfile("out/TemperatureProfile.dat", 0.5);
+        //mesh->writeTimeSteps("out/TimeSteps.dat");
+        ////mesh->writeVelocityU("out/VelocityU.dat");
+        ////mesh->writeVelocityV("out/VelocityV.dat");
+        ////mesh->writeTemperature("out/Temperature.dat");
+        ////mesh->writeDensity("out/Density.dat");
 
         //system("pause");
     }

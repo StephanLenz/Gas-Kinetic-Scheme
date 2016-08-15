@@ -61,12 +61,8 @@ public:
 protected:
 
     void interpolatePrim(double* prim);
-    void interpolatePrimThirdOrder(double* prim);
 
     void differentiateConsNormal(double* normalGradCons, double* prim);
-    void differentiateConsNormalThirdOrder(double* normalGradCons, double* prim);
-
-    void differentiateConsTangential(double* tangentialGradCons, double* prim);
 
     virtual void computeTimeDerivative(double* prim, double* MomentU, double* MomentV, double* MomentXi,
                                        double* a, double* b, double * timeGrad) = 0;
@@ -75,8 +71,9 @@ protected:
                               double* a, double* b, double* A, double* timeCoefficients,
                               double dy, double* prim, double tau) = 0;
 
-    void rotate(double* vector);
-    void cons2prim(double* prim, double*cons);
+    void transformGlobal2Local(double* vec);
+    void transformLocal2Global(double * vec);
+
     double distance(float2 point);
 
     virtual void computeMicroSlope(double* prim, double* macroSlope, double* microSlope) = 0;

@@ -21,6 +21,9 @@ private:
 	double dx;
 	double dy;
 
+    // Cell Volume
+    double volume;
+
     FluidParameter fluidParam;
 
 	// links to interfaces

@@ -22,6 +22,8 @@ Cell::Cell(InterfaceType interfaceType, double centerX, double centerY, double d
 	this->dx = dx;
 	this->dy = dy;
 
+    this->volume = this->dx * this->dy;
+
     this->BoundaryContitionPointer = BC;
 
     this->fluidParam = fluidParam;
@@ -44,25 +46,25 @@ void Cell::update(double dt)
                      + this->InterfaceList[1]->getTimeIntegratedFlux().rho
                      - this->InterfaceList[2]->getTimeIntegratedFlux().rho
                      - this->InterfaceList[3]->getTimeIntegratedFlux().rho
-                     ) / (this->dx*this->dy);
+                     ) / this->volume;
 
     this->cons[1] += ( this->InterfaceList[0]->getTimeIntegratedFlux().rhoU
                      + this->InterfaceList[1]->getTimeIntegratedFlux().rhoU
                      - this->InterfaceList[2]->getTimeIntegratedFlux().rhoU
                      - this->InterfaceList[3]->getTimeIntegratedFlux().rhoU
-                     ) / (this->dx*this->dy);
+                     ) / this->volume;
 
     this->cons[2] += ( this->InterfaceList[0]->getTimeIntegratedFlux().rhoV
                      + this->InterfaceList[1]->getTimeIntegratedFlux().rhoV
                      - this->InterfaceList[2]->getTimeIntegratedFlux().rhoV
                      - this->InterfaceList[3]->getTimeIntegratedFlux().rhoV
-                     ) / (this->dx*this->dy);
+                     ) / this->volume;
 
     this->cons[3] += ( this->InterfaceList[0]->getTimeIntegratedFlux().rhoE
                      + this->InterfaceList[1]->getTimeIntegratedFlux().rhoE
                      - this->InterfaceList[2]->getTimeIntegratedFlux().rhoE
                      - this->InterfaceList[3]->getTimeIntegratedFlux().rhoE
-                     ) / (this->dx*this->dy);
+                     ) / this->volume;
     // ========================================================================
 
     // ========================================================================
@@ -77,29 +79,8 @@ void Cell::update(double dt)
     int i = 0;
     // ========================================================================
 
-    //// ---------------------- FIX ---------------------------------------------
-    //if( fabs(this->cons[2]) < 1.0e-12  ) this->cons[2] = 0.0;
-    //// ---------------------- FIX ---------------------------------------------
-    
-    // compute density and temperature
-    //this->computePrim();
-
-    //// Apply Forcing to momentum components
-    //this->cons[1] += dt * cons_old[0] * this->fluidParam.Force.x;
-    //this->cons[2] += dt * cons_old[0] * this->fluidParam.Force.y;
-
-    //// compute new Energy with increased momentum
-    //this->cons[3] = this->prim[0] * (this->fluidParam.K + 2.0) / (4.0*this->prim[3])
-    //              + 0.5 * (this->cons[1] * this->cons[1] + this->cons[2] * this->cons[2])/this->prim[0];
-
     // compute primary Variables
     this->computePrim();
-
-    // Set the residual for zero values to zero
-    //this->residual.rho  = (fabs(cons_old[0]) > 1.0e-12) ? fabs(this->cons[0] - cons_old[0]) / fabs(cons_old[0]) : 0.0;
-    //this->residual.rhoU = (fabs(cons_old[1]) > 1.0e-12) ? fabs(this->cons[1] - cons_old[1]) / fabs(cons_old[1]) : 0.0;
-    //this->residual.rhoV = (fabs(cons_old[2]) > 1.0e-12) ? fabs(this->cons[2] - cons_old[2]) / fabs(cons_old[2]) : 0.0;
-    //this->residual.rhoE = (fabs(cons_old[3]) > 1.0e-12) ? fabs(this->cons[3] - cons_old[3]) / fabs(cons_old[3]) : 0.0;
 
     this->residual.rho  = fabs(this->cons[0] - this->cons_old[0]);
     this->residual.rhoU = fabs(this->cons[1] - this->cons_old[1]);
@@ -362,7 +343,9 @@ string Cell::toString()
 	tmp << this->centerX;
 	tmp << " , ";
 	tmp << this->centerY;
-	tmp << " )";
+	tmp << " )" << endl;
+    tmp << "dx = " << this->dx << " dy = " << this->dy << endl;
+    tmp << "volume = " << this->volume << endl;
 	return tmp.str();
 }
 
