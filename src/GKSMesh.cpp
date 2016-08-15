@@ -641,8 +641,11 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
     float2      normal;
     float2      center;
     
-    double dx0 = 0.5*this->lengthY * (1-gradingX)/(1-pow(gradingX, nx/2));
-    double dy0 = 0.5*this->lengthY * (1-gradingY)/(1-pow(gradingY, ny/2));
+    double etaX = pow( gradingX, 1.0 / (nx/2 - 1) );
+    double etaY = pow( gradingY, 1.0 / (ny/2 - 1) );
+
+    double dx0 = 0.5*this->lengthY * (1-etaX)/(1-pow(etaX, nx/2));
+    double dy0 = 0.5*this->lengthY * (1-etaY)/(1-pow(etaY, ny/2));
 
     //=========================================================================
     //=========================================================================
@@ -657,13 +660,13 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
         if(i == nx/2)
         {
             // The Ghost Cells have the same size, as the 
-            CellSpacingsX[nx/2 - i]     = dx0 * pow( gradingX, i-1);
-            CellSpacingsX[nx/2 + i + 1] = dx0 * pow( gradingX, i-1);
+            CellSpacingsX[nx/2 - i]     = dx0 * pow( etaX, i-1);
+            CellSpacingsX[nx/2 + i + 1] = dx0 * pow( etaX, i-1);
         }
         else
         {
-            CellSpacingsX[nx/2 - i]     = dx0 * pow( gradingX, i);
-            CellSpacingsX[nx/2 + i + 1] = dx0 * pow( gradingX, i);
+            CellSpacingsX[nx/2 - i]     = dx0 * pow( etaX, i);
+            CellSpacingsX[nx/2 + i + 1] = dx0 * pow( etaX, i);
         }
     }
 
@@ -671,13 +674,13 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
         if(i == ny/2)
         {
             // The Ghost Cells have the same size, as the 
-            CellSpacingsY[ny/2 - i]     = dy0 * pow( gradingY, i-1);
-            CellSpacingsY[ny/2 + i + 1] = dy0 * pow( gradingY, i-1);
+            CellSpacingsY[ny/2 - i]     = dy0 * pow( etaY, i-1);
+            CellSpacingsY[ny/2 + i + 1] = dy0 * pow( etaY, i-1);
         }
         else
         {
-            CellSpacingsY[ny/2 - i]     = dy0 * pow( gradingY, i);
-            CellSpacingsY[ny/2 + i + 1] = dy0 * pow( gradingY, i);
+            CellSpacingsY[ny/2 - i]     = dy0 * pow( etaY, i);
+            CellSpacingsY[ny/2 + i + 1] = dy0 * pow( etaY, i);
         }
     }
 
@@ -814,7 +817,8 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
     float2      normal;
     float2      center;
 
-    double dy0 = 0.5*this->lengthY * (1-grading)/(1-pow(grading, ny/2));
+    double eta = pow( grading, 1.0 / (ny/2 - 1) );
+    double dy0 = 0.5*this->lengthY * (1-eta)/(1-pow(eta, ny/2));
 
     //=========================================================================
     //=========================================================================
@@ -826,13 +830,13 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
         if(i == ny/2)
         {
             // The Ghost Cells have the same size, as the 
-            CellSpacingsY[ny/2 - i]     = dy0 * pow( grading, i-1);
-            CellSpacingsY[ny/2 + i + 1] = dy0 * pow( grading, i-1);
+            CellSpacingsY[ny/2 - i]     = dy0 * pow( eta, i-1);
+            CellSpacingsY[ny/2 + i + 1] = dy0 * pow( eta, i-1);
         }
         else
         {
-            CellSpacingsY[ny/2 - i]     = dy0 * pow( grading, i);
-            CellSpacingsY[ny/2 + i + 1] = dy0 * pow( grading, i);
+            CellSpacingsY[ny/2 - i]     = dy0 * pow( eta, i);
+            CellSpacingsY[ny/2 + i + 1] = dy0 * pow( eta, i);
         }
     }
 

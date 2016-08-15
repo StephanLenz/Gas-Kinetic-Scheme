@@ -16,10 +16,10 @@ using namespace std;
 int main(int argc, char* argv[])
 {
     double ReList[] = {40.0, 100.0, 400.0, 1000.0};
-    int    nyList[] = {8, 16, 32, 64};
+    int    nyList[] = {8, 16, 32};//, 64};
     double RaList[] = {1.0e3, 1.0e4, 1.0e5, 1.0e6, 1.0e7, 1.0e8};
     //for (int i = 0; i < 4;i++)      //ReList
-    //for (int j = 0; j < 4;j++)      // nyList
+    //for (int j = 0; j < 3;j++)      // nyList
     //for(int i = 0; i < 6; i++)      // RaList
     {
 
@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
 
         */
     
-        ///*
+        /*
 
         // ========================================================================
         //
@@ -139,7 +139,7 @@ int main(int argc, char* argv[])
 
         // ========== Weidongs Parameters ==========
         int    nx = 2;
-        int    ny = 64;
+        int    ny = 128;
         double Re = 40.0;
         double u0 = 0.1;
 
@@ -174,13 +174,13 @@ int main(int argc, char* argv[])
 
         // Generate Mesh
         //mesh->generateRectMeshPeriodic(compressible, W, H, nx, ny);
-        mesh->generateRectMeshPeriodicGraded(compressible, W, H, nx, ny, 0.9);
+        mesh->generateRectMeshPeriodicGraded(compressible, W, H, nx, ny, 0.5);
 
         // Initialize Values
         mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
         //mesh->initMeshParabularVelocity(1.0, u0, 0.0, lambda);
 
-        //*/
+        */
     
         /*
 
@@ -268,7 +268,7 @@ int main(int argc, char* argv[])
 
         */
     
-        /*
+        ///*
 
         // ========================================================================
         //
@@ -345,14 +345,15 @@ int main(int argc, char* argv[])
         
         // Generate Mesh
         //mesh->generateRectMesh(compressible, W, H, nx, ny);
-        mesh->generateRectMesh(compressible, W, H, nx, ny);
+        //mesh->generateRectMesh(compressible, W, H, nx, ny);
+        mesh->generateRectMeshGraded(compressible, W, H, nx, ny, 0.1, 0.1);
 
          // Initialize Values
         //mesh->initMeshConstant(1.0, 0.0, 0.0, 0.5*(lambda[0] + lambda[1]));
         mesh->initMeshLinearHorizontal(rho, U, V, lambda);
         //mesh->initMeshParabularVelocity(1.0, u0, 0.0, lambda);
 
-        */
+        //*/
     
         /*
 
@@ -458,13 +459,13 @@ int main(int argc, char* argv[])
         //mesh->writeTimeSteps("out/timeSteps.dat");
 
         // ========== Poiseuille Convergence Study ============================
-        ostringstream filename;
-        filename << "out/" << ny;
-        mesh->writeVelocityProfile(            ( filename.str() + "/VelocityProfile.dat" )          , 0.5);
-        mesh->writePressureGradientProfile(    ( filename.str() + "/PressureGradientProfile.dat" )  , 0.5);
-        mesh->writeConvergenceHistory(         ( filename.str() + "/ConvergenceHistory.dat" )            );
-        mesh->writeOverviewFile(               ( filename.str() + "/OverviewFile.dat" )                  );
-        mesh->writeVTKFile(                    ( filename.str() + "/ResultFields.vtk" )                  );
+        //ostringstream filename;
+        //filename << "out/" << ny;
+        //mesh->writeVelocityProfile(            ( filename.str() + "/VelocityProfile.dat" )          , 0.5);
+        //mesh->writePressureGradientProfile(    ( filename.str() + "/PressureGradientProfile.dat" )  , 0.5);
+        //mesh->writeConvergenceHistory(         ( filename.str() + "/ConvergenceHistory.dat" )            );
+        //mesh->writeOverviewFile(               ( filename.str() + "/OverviewFile.dat" )                  );
+        //mesh->writeVTKFile(                    ( filename.str() + "/ResultFields.vtk" )                  );
         // ====================================================================
 
         // ========== Thermal Couette Convergence Study =======================
@@ -484,16 +485,16 @@ int main(int argc, char* argv[])
         //mesh->writeVelocityU(     ( filename.str() + "/VelocityU.dat" )        );
         //mesh->writeVelocityV(     ( filename.str() + "/VelocityV.dat" )        );
 
-        //mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
-        //mesh->writeOverviewFile("out/OverviewFile.dat");
-        ////mesh->writePressureGradientProfile("out/PressureGradientProfile.dat", 0.5);
-        ////mesh->writeVelocityProfile("out/VelocityProfile.dat", 0.5);
-        ////mesh->writeTemperatureProfile("out/TemperatureProfile.dat", 0.5);
-        //mesh->writeTimeSteps("out/TimeSteps.dat");
-        ////mesh->writeVelocityU("out/VelocityU.dat");
-        ////mesh->writeVelocityV("out/VelocityV.dat");
-        ////mesh->writeTemperature("out/Temperature.dat");
-        ////mesh->writeDensity("out/Density.dat");
+        mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
+        mesh->writeOverviewFile("out/OverviewFile.dat");
+        //mesh->writePressureGradientProfile("out/PressureGradientProfile.dat", 0.5);
+        //mesh->writeVelocityProfile("out/VelocityProfile.dat", 0.5);
+        //mesh->writeTemperatureProfile("out/TemperatureProfile.dat", 0.5);
+        mesh->writeTimeSteps("out/TimeSteps.dat");
+        //mesh->writeVelocityU("out/VelocityU.dat");
+        //mesh->writeVelocityV("out/VelocityV.dat");
+        //mesh->writeTemperature("out/Temperature.dat");
+        //mesh->writeDensity("out/Density.dat");
 
         //system("pause");
     }
