@@ -18,6 +18,7 @@ using namespace std;
 class GKSMesh
 {
 private:
+    vector<float2*>     NodeList;
 	vector<Cell*>		CellList;
 	vector<Interface*>	InterfaceList;
 
@@ -46,23 +47,9 @@ public:
 
 	~GKSMesh();
 
-	void generateRectMesh(InterfaceType type, double lengthX, double lengthY, int nx, int ny);
-
-    void generateRectMeshPeriodic(InterfaceType type, double lengthX, double lengthY, int nx, int ny);
-
-    void generateRectMeshPeriodicVertical(InterfaceType type, double lengthX, double lengthY, int nx, int ny);
-
-    void generateRectMeshInterfaceBCs(InterfaceType type, double lengthX, double lengthY, int nx, int ny);
-
-    void generateRectMeshPeriodicInterfaceBCs(InterfaceType type, double lengthX, double lengthY, int nx, int ny);
-
     void generateRectMeshGraded(InterfaceType type, double lengthX, double lengthY, int nx, int ny, double gradingX, double gradingY);
 
     void generateRectMeshPeriodicGraded(InterfaceType type, double lengthX, double lengthY, int nx, int ny, double grading);
-
-    void generateRectMeshPeriodicTwoDirections(InterfaceType type, double lengthX, double lengthY, int nx, int ny);
-
-
 
 	void initMeshConstant(double rho, double u, double v, double T);
 
@@ -119,7 +106,6 @@ public:
 
     void writeVelocityProfile(string filename, double x);
     void writeTemperatureProfile(string filename, double x);
-    void writePressureGradientProfile(string filename, double x);
 
     void writeMeshAsText(string filename);
 

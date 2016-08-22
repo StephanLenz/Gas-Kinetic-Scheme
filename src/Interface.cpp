@@ -12,20 +12,24 @@ Interface::Interface()
 {
 }
 
-Interface::Interface(Cell* negCell, Cell* posCell, float2 center, float2 normal, FluidParameter fluidParam, InterfaceBC* BC)
+Interface::Interface(Cell* negCell, Cell* posCell, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC)
 {
 	this->negCell = negCell;
 	this->posCell = posCell;
 
-    this->center = center;
-    this->normal = normal;
+    this->nodes[0] = nodes[0];
+    this->nodes[1] = nodes[1];
+
+    this->center.x = 0.5 * (this->nodes[0]->x + this->nodes[1]->x);
+    this->center.y = 0.5 * (this->nodes[0]->y + this->nodes[1]->y);
+
+    this->area = sqrt( (this->nodes[0]->x - this->nodes[1]->x )*(this->nodes[0]->x - this->nodes[1]->x )
+                     + (this->nodes[0]->y - this->nodes[1]->y )*(this->nodes[0]->y - this->nodes[1]->y ));
+
+    this->normal.x = - ( this->nodes[1]->y - this->nodes[0]->y ) / area;
+    this->normal.y =   ( this->nodes[1]->x - this->nodes[0]->x ) / area;
 
     this->BoundaryConditionPointer = BC;
-
-    if      ( (fabs(this->normal.x - 1.0) < 1e-6) && (fabs(this->normal.y - 0.0) < 1.0e-6) )
-        this->axis = 0;
-    else if ( (fabs(this->normal.x - 0.0) < 1e-6) && (fabs(this->normal.y - 1.0) < 1.0e-6) )
-        this->axis = 1;
     
     // links to interfaces
     //    ---------------------
@@ -45,10 +49,8 @@ Interface::Interface(Cell* negCell, Cell* posCell, float2 center, float2 normal,
     //    |    1    |
     //    -----------
 
-    if(this->negCell != NULL )
-	    this->negCell->addInterface(this,axis+2);
-    if(this->posCell != NULL )
-	    this->posCell->addInterface(this,axis+0);
+	if(this->negCell != NULL) this->negCell->addInterface(this);
+	if(this->posCell != NULL) this->posCell->addInterface(this);
 
     this->fluidParam = fluidParam;
 
@@ -66,29 +68,21 @@ Interface::~Interface()
 // ============================================================================
 //                     Interface Factory
 // ============================================================================
-Interface * Interface::createInterface(InterfaceType type, Cell * negCell, Cell * posCell, float2 center, float2 normal, FluidParameter fluidParam, InterfaceBC * BC)
+Interface * Interface::createInterface(InterfaceType type, Cell * negCell, Cell * posCell, float2** nodes, FluidParameter fluidParam, BoundaryCondition * BC)
 {
     Interface* tmp = NULL;
 
     if ( type == incompressible )
-        tmp = new IncompressibleInterface(negCell, posCell, center, normal, fluidParam, BC);
+        tmp = new IncompressibleInterface(negCell, posCell, nodes, fluidParam, BC);
     else
-        tmp = new CompressibleInterface(negCell, posCell, center, normal, fluidParam, BC);
+        tmp = new CompressibleInterface(negCell, posCell, nodes, fluidParam, BC);
 
     return tmp;
 }
 
 void Interface::computeFlux(double dt)
 {
-    if ( this->isBoundaryInterface() )
-    {
-        this->computeBoundaryFlux(dt);
-    }
-    else
-    {
-        this->computeInternalFlux(dt);
-    }
-
+    this->computeInternalFlux(dt);
 }
 
 void Interface::computeInternalFlux(double dt)
@@ -106,10 +100,6 @@ void Interface::computeInternalFlux(double dt)
     double MomentU[NUMBER_OF_MOMENTS];
     double MomentV[NUMBER_OF_MOMENTS];
     double MomentXi[NUMBER_OF_MOMENTS];
-
-    // compute the length of the interface
-    double dy = this->posCell->getDx().x * normal.y
-              + this->posCell->getDx().y * normal.x;
 
     // ========================================================================
     // interpolated primary variables at the interface
@@ -154,7 +144,7 @@ void Interface::computeInternalFlux(double dt)
 
     // ========================================================================
     // compute mass and momentum fluxes
-    this->assembleFlux(MomentU, MomentV, MomentXi, a, b, A, timeCoefficients, dy, prim, tau);
+    this->assembleFlux(MomentU, MomentV, MomentXi, a, b, A, timeCoefficients, prim, tau);
     // ========================================================================
     
     transformLocal2Global(this->timeIntegratedFlux);
@@ -163,128 +153,8 @@ void Interface::computeInternalFlux(double dt)
     int i = 1;
 }
 
-void Interface::computeBoundaryFlux(double dt)
-{
-    const int NUMBER_OF_MOMENTS = 7;
-    double timeGrad[4];
-
-    double a[] = {0.0,0.0,0.0};
-    double b[] = {0.0,0.0,0.0};
-    double A[] = {0.0,0.0,0.0};
-
-    double MomentU[NUMBER_OF_MOMENTS];
-    double MomentV[NUMBER_OF_MOMENTS];
-    double MomentXi[NUMBER_OF_MOMENTS];
-
-    // ========================================================================
-    double sign = 1.0;
-    if ( posCell == NULL )
-        sign = -1.0;
-
-    // compute the length of the interface
-    double dy = this->getCellInDomain()->getDx().x * normal.y
-              + this->getCellInDomain()->getDx().y * normal.x;
-
-    double distance = this->distance(this->getCellInDomain()->getCenter());
-    // ========================================================================
-
-    // ========================================================================
-    double x1 = this->distance(this->getCellInDomain()->getCenter());
-    double x2 = this->distance(this->getCellInDomain()->getOpposingCell(this)->getCenter());
-    
-    PrimaryVariable Z1 = this->getCellInDomain()->getPrim();
-    PrimaryVariable Z2 = this->getCellInDomain()->getOpposingCell(this)->getPrim();
-    // ========================================================================
-
-    // ========================================================================
-    PrimaryVariable prim;
-    prim.rho = ( x2*x2*Z1.rho - x1*x1*Z2.rho )/( x2*x2 - x1*x1 );
-    prim.U   = 0.0;
-    prim.V   = 0.0;
-    prim.L   = ( x2*x2*Z1.L - x1*x1*Z2.L )/( x2*x2 - x1*x1 );
-
-    ConservedVariable normalGradCons;
-    normalGradCons.rho  = 0.0;
-    normalGradCons.rhoU = sign * ( x2*x2*Z1.U - x1*x1*Z2.U )/( (x2*x2 - x1*x1)*x1*x2 );
-    normalGradCons.rhoV = sign * ( x2*x2*Z1.V - x1*x1*Z2.V )/( (x2*x2 - x1*x1)*x1*x2 );
-    normalGradCons.rhoE = 0.0;
-    // ========================================================================
-
-    //// ========================================================================
-    //PrimaryVariable prim;
-    //prim.rho = this->getCellInDomain()->getPrim().rho;
-    //prim.U   = 0.0;
-    //prim.V   = 0.0;
-    //prim.L   = this->getCellInDomain()->getPrim().L;
-
-    //ConservedVariable normalGradCons;
-    //normalGradCons.rho  = 0.0;
-    //normalGradCons.rhoU = sign * this->getCellInDomain()->getCons().rhoU / (distance * prim.rho);
-    //normalGradCons.rhoV = sign * this->getCellInDomain()->getCons().rhoV / (distance * prim.rho);
-    //normalGradCons.rhoE = 0.0;
-    //// ========================================================================
-
-    // ========================================================================
-    // Formular as in the Rayleigh-Bernard-Paper (Xu, Lui, 1999)
-    double tau = 2.0 * prim.L * this->fluidParam.nu;
-    // ========================================================================
-    
-    // ========================================================================
-    // time integration Coefficients
-    double timeCoefficients[3] = { dt, -tau*dt, 0.5*dt*dt - tau*dt };
-    // ========================================================================
- 
-    // ========================================================================
-    // spacial micro slopes a = a1 + a2 u + a3 v
-    //                      b = b1 + b2 u + b3 v
-    if ( this->axis == 0 )
-    {
-        this->computeMicroSlope((double*)&prim, (double*)&normalGradCons, a);
-    }
-    else
-    {
-        this->computeMicroSlope((double*)&prim, (double*)&normalGradCons, b);
-    }
-    // ========================================================================
-    
-    // ========================================================================
-    // The Moments are computed without the density
-    // Therefore their dimensions are powers of velocity
-    this->computeMoments((double*)&prim, MomentU, MomentV, MomentXi, NUMBER_OF_MOMENTS);
-    // ========================================================================
-
-    // ========================================================================
-    // temporal micro slopes A = A1 + A2 u + A3 v
-    // The temporal macro slopes (timeGrad) also contain the density by explicit multiplication
-    this->computeTimeDerivative((double*)&prim, MomentU, MomentV, MomentXi, a, b, timeGrad);
-
-    this->computeMicroSlope((double*)&prim, timeGrad, A);
-    // ========================================================================
-
-    // ========================================================================
-    // compute mass and momentum fluxes
-    this->assembleFlux(MomentU, MomentV, MomentXi, a, b, A, timeCoefficients, dy, (double*)&prim, tau);
-    // ========================================================================
-
-    int i = 1;
-}
-
 Cell * Interface::getNeigborCell(Cell * askingCell)
 {
-    // ========================================================================
-    // ============= This is only Experimental and not really correct =========
-    // ========================================================================
-    // In the case of an Boundary Interface, the  Cell in the Domain is 
-    // virtually copied to a ghost Cell. This is wrong because this does not
-    // satisfy the correct velocity at the wall. Better would be to create a
-    // temporal GhostCell with the correct values!
-    // ========================================================================
-    if ( this->isBoundaryInterface() )
-        return askingCell;
-    // ========================================================================
-    // ========================================================================
-    // ========================================================================
-
     if (posCell == askingCell)
         return negCell;
     else
@@ -321,6 +191,12 @@ ConservedVariable Interface::getFluxDensity()
     return tmp;
 }
 
+double Interface::getFluxSign(Cell * askingCell)
+{
+    if      (askingCell == this->posCell) return  1.0;
+    else if (askingCell == this->negCell) return -1.0;
+}
+
 bool Interface::isGhostInterface()
 {
     if (this->isBoundaryInterface()) return false;
@@ -331,6 +207,32 @@ bool Interface::isGhostInterface()
 bool Interface::isBoundaryInterface()
 {
     return this->BoundaryConditionPointer != NULL;
+}
+
+void Interface::addCell(Cell * that)
+{
+    if(this->posCell == NULL)
+        this->posCell = that;
+    else if(this->negCell == NULL)
+        this->negCell = that;
+}
+
+float2 * Interface::getNode(int i)
+{
+    return this->nodes[i];
+}
+
+float2 Interface::getScaledNormal()
+{
+    if(this->posCell == NULL)
+        return float2(   this->normal.x * this->distance(negCell->getCenter()),   this->normal.y * this->distance(negCell->getCenter()) );
+    else
+        return float2( - this->normal.x * this->distance(posCell->getCenter()), - this->normal.y * this->distance(posCell->getCenter()) );
+}
+
+BoundaryCondition * Interface::getBoundaryCondition()
+{
+    return this->BoundaryConditionPointer;
 }
 
 string Interface::toString()

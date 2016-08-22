@@ -139,7 +139,7 @@ int main(int argc, char* argv[])
 
         // ========== Weidongs Parameters ==========
         int    nx = 2;
-        int    ny = 3;
+        int    ny = 16;
         double Re = 40.0;
         double u0 = 0.1;
 
@@ -174,7 +174,7 @@ int main(int argc, char* argv[])
 
         // Generate Mesh
         //mesh->generateRectMeshPeriodic(compressible, W, H, nx, ny);
-        mesh->generateRectMeshPeriodicGraded(compressible, W, H, nx, ny, 0.5);
+        mesh->generateRectMeshPeriodicGraded(compressible, W, H, nx, ny, 1.0);
 
         // Initialize Values
         mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
@@ -281,9 +281,9 @@ int main(int argc, char* argv[])
         double H = 1.0;
         double W = 1.0;
 
-        param.numberOfIterations = 10000000;
-        param.outputIntervalVTK = 10000000;
-        param.outputInterval = 10000;
+        param.numberOfIterations = 10000;
+        param.outputIntervalVTK = 1000;
+        param.outputInterval = 1000;
 
         param.convergenceCriterium[0] = 1.0e-10;
         param.convergenceCriterium[1] = 1.0e-10;
@@ -301,8 +301,8 @@ int main(int argc, char* argv[])
 
         FluidParameter fluidParam;
 
-        int    nx = 32;
-        int    ny = 32;//nyList[j];
+        int    nx = 16;
+        int    ny = 16;//nyList[j];
 
         double Ra = 1.0e5;
 
@@ -456,7 +456,7 @@ int main(int argc, char* argv[])
 
         mesh->iterate();
 
-        //mesh->writeTimeSteps("out/timeSteps.dat");
+        mesh->writeTimeSteps("out/timeSteps.dat");
 
         // ========== Poiseuille Convergence Study ============================
         //ostringstream filename;

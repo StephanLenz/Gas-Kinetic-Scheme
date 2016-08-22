@@ -12,17 +12,41 @@ Cell::Cell()
     memset(InterfaceList, NULL, 4 * sizeof(Interface*));
 }
 
-Cell::Cell(InterfaceType interfaceType, double centerX, double centerY, double dx, double dy, BoundaryCondition* BC, FluidParameter fluidParam)
+Cell::Cell(InterfaceType interfaceType, float2** nodes, BoundaryCondition* BC, FluidParameter fluidParam)
 {
     memset(InterfaceList, NULL, 4 * sizeof(Interface*));
 
-	this->centerX = centerX;
-	this->centerY = centerY;
+    this->nInterfaces = 0;
 
-	this->dx = dx;
-	this->dy = dy;
+    for(int i = 0; i < 4; i++)
+        this->nodes[i] = nodes[i];
 
-    this->volume = this->dx * this->dy;
+    volume = 0.5 * abs( this->nodes[0]->x * ( this->nodes[1]->y - this->nodes[3]->y ) 
+                      + this->nodes[1]->x * ( this->nodes[3]->y - this->nodes[0]->y ) 
+                      + this->nodes[3]->x * ( this->nodes[0]->y - this->nodes[1]->y ) )
+           + 0.5 * abs( this->nodes[2]->x * ( this->nodes[3]->y - this->nodes[1]->y ) 
+                      + this->nodes[3]->x * ( this->nodes[1]->y - this->nodes[2]->y ) 
+                      + this->nodes[1]->x * ( this->nodes[2]->y - this->nodes[3]->y ) );
+
+    this->center.x = 0.25 * (this->nodes[0]->x + this->nodes[1]->x + this->nodes[2]->x + this->nodes[3]->x);
+    this->center.y = 0.25 * (this->nodes[0]->y + this->nodes[1]->y + this->nodes[2]->y + this->nodes[3]->y);
+
+
+    // compute maximal legth of the cell
+    double xMax = -1.0e99;
+    double xMin =  1.0e99;
+    double yMax = -1.0e99;
+    double yMin =  1.0e99;
+    for (int i = 0; i < 4; i++)
+    {
+        if(this->nodes[i]->x > xMax)    xMax = this->nodes[i]->x;
+        if(this->nodes[i]->x < xMin)    xMin = this->nodes[i]->x;
+        if(this->nodes[i]->y > yMax)    yMax = this->nodes[i]->y;
+        if(this->nodes[i]->y < yMin)    yMin = this->nodes[i]->y;
+    }
+    this->dx.x = xMax - xMin;
+    this->dx.y = yMax - yMin;
+
 
     this->BoundaryContitionPointer = BC;
 
@@ -42,28 +66,28 @@ void Cell::update(double dt)
     // ========================================================================
     // negative interfaces = in flux
     // positive interfaces = out flux
-    this->cons[0] += ( this->InterfaceList[0]->getTimeIntegratedFlux().rho
-                     + this->InterfaceList[1]->getTimeIntegratedFlux().rho
-                     - this->InterfaceList[2]->getTimeIntegratedFlux().rho
-                     - this->InterfaceList[3]->getTimeIntegratedFlux().rho
+    this->cons[0] += ( this->InterfaceList[0]->getFluxSign(this) * this->InterfaceList[0]->getTimeIntegratedFlux().rho
+                     + this->InterfaceList[1]->getFluxSign(this) * this->InterfaceList[1]->getTimeIntegratedFlux().rho
+                     + this->InterfaceList[2]->getFluxSign(this) * this->InterfaceList[2]->getTimeIntegratedFlux().rho
+                     + this->InterfaceList[3]->getFluxSign(this) * this->InterfaceList[3]->getTimeIntegratedFlux().rho
                      ) / this->volume;
 
-    this->cons[1] += ( this->InterfaceList[0]->getTimeIntegratedFlux().rhoU
-                     + this->InterfaceList[1]->getTimeIntegratedFlux().rhoU
-                     - this->InterfaceList[2]->getTimeIntegratedFlux().rhoU
-                     - this->InterfaceList[3]->getTimeIntegratedFlux().rhoU
+    this->cons[1] += ( this->InterfaceList[0]->getFluxSign(this) * this->InterfaceList[0]->getTimeIntegratedFlux().rhoU
+                     + this->InterfaceList[1]->getFluxSign(this) * this->InterfaceList[1]->getTimeIntegratedFlux().rhoU
+                     + this->InterfaceList[2]->getFluxSign(this) * this->InterfaceList[2]->getTimeIntegratedFlux().rhoU
+                     + this->InterfaceList[3]->getFluxSign(this) * this->InterfaceList[3]->getTimeIntegratedFlux().rhoU
                      ) / this->volume;
 
-    this->cons[2] += ( this->InterfaceList[0]->getTimeIntegratedFlux().rhoV
-                     + this->InterfaceList[1]->getTimeIntegratedFlux().rhoV
-                     - this->InterfaceList[2]->getTimeIntegratedFlux().rhoV
-                     - this->InterfaceList[3]->getTimeIntegratedFlux().rhoV
+    this->cons[2] += ( this->InterfaceList[0]->getFluxSign(this) * this->InterfaceList[0]->getTimeIntegratedFlux().rhoV
+                     + this->InterfaceList[1]->getFluxSign(this) * this->InterfaceList[1]->getTimeIntegratedFlux().rhoV
+                     + this->InterfaceList[2]->getFluxSign(this) * this->InterfaceList[2]->getTimeIntegratedFlux().rhoV
+                     + this->InterfaceList[3]->getFluxSign(this) * this->InterfaceList[3]->getTimeIntegratedFlux().rhoV
                      ) / this->volume;
 
-    this->cons[3] += ( this->InterfaceList[0]->getTimeIntegratedFlux().rhoE
-                     + this->InterfaceList[1]->getTimeIntegratedFlux().rhoE
-                     - this->InterfaceList[2]->getTimeIntegratedFlux().rhoE
-                     - this->InterfaceList[3]->getTimeIntegratedFlux().rhoE
+    this->cons[3] += ( this->InterfaceList[0]->getFluxSign(this) * this->InterfaceList[0]->getTimeIntegratedFlux().rhoE
+                     + this->InterfaceList[1]->getFluxSign(this) * this->InterfaceList[1]->getTimeIntegratedFlux().rhoE
+                     + this->InterfaceList[2]->getFluxSign(this) * this->InterfaceList[2]->getTimeIntegratedFlux().rhoE
+                     + this->InterfaceList[3]->getFluxSign(this) * this->InterfaceList[3]->getTimeIntegratedFlux().rhoE
                      ) / this->volume;
     // ========================================================================
 
@@ -132,7 +156,7 @@ void Cell::applyBoundaryCondition()
         }
         else if ( type == 2 )
         {
-            double localValue = 4.0 * value * ( this->centerY - this->centerY*this->centerY );
+            double localValue = 4.0 * value * ( this->center.y - this->center.y*this->center.y );
             this->prim[i] = 2.0*localValue - neighborCell->prim[i];
         }
         else if ( type == 3 )
@@ -174,9 +198,9 @@ void Cell::applyForcing(double dt)
     int j = 0;
 }
 
-void Cell::addInterface(Interface* newInterface, int direction)
+void Cell::addInterface(Interface* newInterface)
 {
-	this->InterfaceList[direction] = newInterface;
+	this->InterfaceList[this->nInterfaces++] = newInterface;
 }
 
 void Cell::setValues(double rho, double u, double v, double L)
@@ -215,29 +239,6 @@ void Cell::computeCons()
 
 double Cell::getLocalTimestep()
 {
-
-    // ========================================================================
-    //                  CFL-Condition as in Weidong Li's Code
-    // ========================================================================
-    // The speed of sound is fixed as 1/sqrt(3) here
-    // The use of velocity squares is unclear
-    // The inclusion of the viscosity is not really complete (compare to code below)
-
-    //double velocitySquare = this->getPrim().U*this->getPrim().U
-    //                      + this->getPrim().V*this->getPrim().V;
-    //double localTimestep =  min(dx, dy) 
-    //                     / ( velocitySquare
-    //                       + 1.0/sqrt(3.0) 
-    //                       + 2.0*this->fluidParam.nu/min(dx, dy) );
-
-
-    // ========================================================================
-
-    //double localTimestep = min(dx, dy) / ( max( fabs(this->getPrim().U), fabs(this->getPrim().V) ) 
-    //                                     + sqrt( 5.0/(3.0*2.0*this->getPrim().L) )                  // c_s = sqrt( kappa RT ) = sqrt( 5/3 * 1/2lambda )
-    //                                     + 2.0*this->fluidParam.nu/min(dx, dy)
-    //                                     );
-
     // ========================================================================
     //                  CFL-Condition as in Guo, Liu et al. (2008)
     // ========================================================================
@@ -247,10 +248,9 @@ double Cell::getLocalTimestep()
     //double U_max = max( fabs(this->getPrim().U), fabs(this->getPrim().V) );
     double U_max = sqrt(this->getPrim().U*this->getPrim().U + this->getPrim().V*this->getPrim().V);
     double c_s   = sqrt( 1.0 / ( 2.0*this->getPrim().L ) );                      // c_s = sqrt(RT) = c_s = sqrt(1/2lambda)
-    double Re    = U_max * min(dx, dy) / this->fluidParam.nu;
 
-    //double localTimestep = min(dx, dy) / ( ( U_max + c_s ) * ( 1.0 + 2.0 / Re ) );
-    double localTimestep = min(dx, dy) / ( ( U_max + c_s + 2.0*this->fluidParam.nu / min(dx, dy) ) );
+    // TODO: The minimal distance in a cell is here computed  as if the cell where a square. This is ofcourse wrong!
+    double localTimestep = min(this->dx.x, this->dx.y) / ( ( U_max + c_s + 2.0*this->fluidParam.nu / min(this->dx.x, this->dx.y) ) );
 
     // ========================================================================
     
@@ -259,10 +259,12 @@ double Cell::getLocalTimestep()
 
 float2 Cell::getCenter()
 {
-	float2 center;
-	center.x = this->centerX;
-	center.y = this->centerY;
-	return center;
+	return this->center;
+}
+
+float2 Cell::getNode(int i)
+{
+    return *this->nodes[i];
 }
 
 PrimaryVariable Cell::getPrim()
@@ -290,14 +292,6 @@ ConservedVariable Cell::getLocalResidual()
     return this->residual;
 }
 
-float2 Cell::getDx()
-{
-    float2 tmp;
-    tmp.x = this->dx;
-    tmp.y = this->dy;
-    return tmp;
-}
-
 Cell * Cell::getNeighborCell(int i)
 {
     return this->InterfaceList[i]->getNeigborCell(this);
@@ -319,32 +313,34 @@ Cell * Cell::findNeighborInDomain()
     // find Interface to domain
     for (int i = 0; i < 4; i++)
     {
-        if ((this->InterfaceList[i] != NULL) && !this->InterfaceList[i]->getNeigborCell(this)->isGhostCell())
+        //if ((this->InterfaceList[i] != NULL) && !this->InterfaceList[i]->getNeigborCell(this)->isGhostCell())
+        if ( this->InterfaceList[i] != NULL )
             neighborCell = this->InterfaceList[i]->getNeigborCell(this);
     }
+
+    int i = 0;
     return neighborCell;
 }
 
 bool Cell::isGhostCell()
 {
-    return !(BoundaryContitionPointer== NULL);
+    return BoundaryContitionPointer != NULL;
 }
 
 double Cell::distance(float2 point)
 {
-    return sqrt( ( this->centerX - point.x )*( this->centerX - point.x )
-               + ( this->centerY - point.y )*( this->centerY - point.y ) );
+    return sqrt( ( this->center.x - point.x )*( this->center.x - point.x )
+               + ( this->center.y - point.y )*( this->center.y - point.y ) );
 }
 
 string Cell::toString()
 {
 	ostringstream tmp;
 	tmp << "Center = ( ";
-	tmp << this->centerX;
+	tmp << this->center.x;
 	tmp << " , ";
-	tmp << this->centerY;
+	tmp << this->center.y;
 	tmp << " )" << endl;
-    tmp << "dx = " << this->dx << " dy = " << this->dy << endl;
     tmp << "volume = " << this->volume << endl;
 	return tmp.str();
 }
@@ -360,16 +356,10 @@ string Cell::valuesToString()
 string Cell::writeNodes()
 {
 	ostringstream tmp;
-	tmp << this->centerX - 0.5*dx << " ";
-	tmp << this->centerY - 0.5*dy << " 0.0\n";
-
-	tmp << this->centerX + 0.5*dx << " ";
-	tmp << this->centerY - 0.5*dy << " 0.0\n";
-
-	tmp << this->centerX + 0.5*dx << " ";
-	tmp << this->centerY + 0.5*dy << " 0.0\n";
-
-	tmp << this->centerX - 0.5*dx << " ";
-	tmp << this->centerY + 0.5*dy << " 0.0\n";
+    for(int i = 0; i < 4; i++)
+    {
+	    tmp << this->nodes[i]->x << " ";
+	    tmp << this->nodes[i]->y << " 0.0\n";
+    }
 	return tmp.str();
 }

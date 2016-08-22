@@ -15,11 +15,13 @@ public:
 	Cell* negCell;
 	Cell* posCell;
 protected:
+    float2* nodes[2];
     float2 center;
     float2 normal;
-    int axis;
 
-    InterfaceBC* BoundaryConditionPointer;
+    double area;
+
+    BoundaryCondition* BoundaryConditionPointer;
 
     FluidParameter fluidParam;
 
@@ -30,25 +32,30 @@ protected:
 
 public:
 	Interface();
-	Interface(Cell* negCell, Cell* posCell, float2 center, float2 normal, FluidParameter fluidParam, InterfaceBC* BC);
+	Interface(Cell* negCell, Cell* posCell, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC);
 	~Interface();
 
-    static Interface* createInterface(InterfaceType type, Cell* negCell, Cell* posCell, float2 center, float2 normal, FluidParameter fluidParam, InterfaceBC* BC);
+    static Interface* createInterface(InterfaceType type, Cell* negCell, Cell* posCell, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC);
 
 	virtual void computeFlux(double dt);
 
     virtual void computeInternalFlux(double dt);
-
-    virtual void computeBoundaryFlux(double dt);
 
     Cell* getNeigborCell(Cell* askingCell);
     Cell* getCellInDomain();
 
     ConservedVariable getTimeIntegratedFlux();
     ConservedVariable getFluxDensity();
+    double getFluxSign(Cell* askingCell);
 
     bool isGhostInterface();
     bool isBoundaryInterface();
+
+    void addCell(Cell* that);
+
+    float2* getNode(int i);
+    float2 getScaledNormal();
+    BoundaryCondition* getBoundaryCondition();
 
 	string toString();
 
@@ -69,7 +76,7 @@ protected:
 
     virtual void assembleFlux(double* MomentU, double* MomentV, double* MomentXi, 
                               double* a, double* b, double* A, double* timeCoefficients,
-                              double dy, double* prim, double tau) = 0;
+                              double* prim, double tau) = 0;
 
     void transformGlobal2Local(double* vec);
     void transformLocal2Global(double * vec);

@@ -8,8 +8,8 @@ IncompressibleInterface::IncompressibleInterface()
 {
 }
 
-IncompressibleInterface::IncompressibleInterface(Cell* negCell, Cell* posCell, float2 center, float2 normal, FluidParameter fluidParam, InterfaceBC* BC)
-    : Interface(negCell, posCell, center, normal, fluidParam, BC)
+IncompressibleInterface::IncompressibleInterface(Cell* negCell, Cell* posCell, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC)
+    : Interface(negCell, posCell, nodes, fluidParam, BC)
 {
 }
 
@@ -50,21 +50,15 @@ void IncompressibleInterface::computeTimeDerivative(double * prim, double * Mome
     timeGrad[3] *= -1.0;
 }
 
-void IncompressibleInterface::assembleFlux(double * MomentU, double * MomentV, double * MomentXi, double * a, double * b, double * A, double * timeCoefficients, double dy, double* prim, double tau)
+void IncompressibleInterface::assembleFlux(double * MomentU, double * MomentV, double * MomentXi, double * a, double * b, double * A, double * timeCoefficients, double* prim, double tau)
 {
     double Flux_1[4];
     double Flux_2[4];
     double Flux_3[4];
 
-    int u, v;
-    if( this->axis == 0 )
-    {
-        u = 1; v = 0;
-    }
-    else
-    {
-        u = 0; v = 1;
-    }
+    int u = 1;
+    int v = 0;
+    
 
     // ========================================================================
     Flux_1[0] = MomentU[0+u] * MomentV[0+v];
@@ -117,7 +111,7 @@ void IncompressibleInterface::assembleFlux(double * MomentU, double * MomentV, d
     // ========================================================================
     for ( int i = 0; i < 4; i++ )
     {
-        this->timeIntegratedFlux[i] = ( timeCoefficients[0] * Flux_1[i] + timeCoefficients[1] * Flux_2[i] + timeCoefficients[2] * Flux_3[i] ) * dy * prim[0];
+        this->timeIntegratedFlux[i] = ( timeCoefficients[0] * Flux_1[i] + timeCoefficients[1] * Flux_2[i] + timeCoefficients[2] * Flux_3[i] ) * area * prim[0];
         // The Flux density in the Flux per unit area of the interface at one instant in time
         this->FluxDensity[i] = ( Flux_1[i] - tau*( Flux_2[i] + Flux_3[i] ) ) * prim[0];
     }

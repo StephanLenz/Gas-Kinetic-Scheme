@@ -13,7 +13,7 @@ class CompressibleInterface : public Interface
 {
 public:
 	CompressibleInterface();
-    CompressibleInterface(Cell* negCell, Cell* posCell, float2 center, float2 normal, FluidParameter fluidParam, InterfaceBC* BC);
+    CompressibleInterface(Cell* negCell, Cell* posCell, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC);
 	~CompressibleInterface();
 
 protected:
@@ -22,7 +22,7 @@ protected:
                                double* a, double* b, double * timeGrad);
 
     void assembleFlux(double* MomentU, double* MomentV, double* MomentXi, 
-                      double* a, double* b, double* A, double* timeCoefficients, double dy, double* prim, double tau);
+                      double* a, double* b, double* A, double* timeCoefficients, double* prim, double tau);
 
     void computeMicroSlope(double* prim, double* macroSlope, double* microSlope);
 

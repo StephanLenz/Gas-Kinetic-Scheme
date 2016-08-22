@@ -13,16 +13,12 @@ using namespace std;
 class Cell
 {
 private:
-	// Cell center
-	double centerX;
-	double centerY;
 
-	// Cell size
-	double dx;
-	double dy;
+    float2* nodes[4];
 
-    // Cell Volume
+	float2 center;
     double volume;
+    float2 dx;
 
     FluidParameter fluidParam;
 
@@ -32,6 +28,7 @@ private:
 	//    | 0     2 |
 	//    |    1    |
 	//    -----------
+    int nInterfaces;
 	Interface* InterfaceList[4];
 
 	// Primary Variables
@@ -50,11 +47,12 @@ private:
 
 public:
 	Cell();
-	Cell(InterfaceType interfacetype, double centerX, double centerY, double dx, double dy, BoundaryCondition* BC, FluidParameter fluidParam);
+    Cell(Interface * that);
+	Cell(InterfaceType interfacetype, float2** nodes, BoundaryCondition* BC, FluidParameter fluidParam);
 
 	~Cell();
 
-	void addInterface(Interface* newInterface, int direction);
+	void addInterface(Interface* newInterface);
 
 	void update(double dt);
 
@@ -71,14 +69,13 @@ public:
     double getLocalTimestep();
 
 	float2 getCenter();
+    float2 getNode(int i);
 
     PrimaryVariable getPrim();
 
     ConservedVariable getCons();
 
     ConservedVariable getLocalResidual();
-
-    float2 getDx();
 
     Cell* getNeighborCell(int i);
 
