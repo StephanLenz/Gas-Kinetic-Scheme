@@ -32,10 +32,10 @@ protected:
 
 public:
 	Interface();
-	Interface(Cell* negCell, Cell* posCell, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC);
+	Interface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC);
 	~Interface();
 
-    static Interface* createInterface(InterfaceType type, Cell* negCell, Cell* posCell, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC);
+    static Interface* createInterface(InterfaceType type, Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC);
 
 	virtual void computeFlux(double dt);
 

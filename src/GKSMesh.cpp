@@ -167,7 +167,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             if( j == nx ) currentBC = this->BoundaryConditionList[2];
 
 			// create a new interface with the adjacent cells
-			Interface* tmpInterface = Interface::createInterface(type,negCell, posCell, tmpNodes, this->fluidParam, currentBC);
+			Interface* tmpInterface = Interface::createInterface(type,negCell, posCell, true, true, tmpNodes, this->fluidParam, currentBC);
 			// add itnerface to list
 			this->InterfaceList.push_back(tmpInterface);
 		}
@@ -197,7 +197,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             if( i == ny ) currentBC = this->BoundaryConditionList[3];
 
 			// create a new interface with the adjacent cells
-			Interface* tmpInterface = Interface::createInterface(type,negCell, posCell, tmpNodes, this->fluidParam, currentBC);
+			Interface* tmpInterface = Interface::createInterface(type,negCell, posCell, true, true, tmpNodes, this->fluidParam, currentBC);
 			// add itnerface to list
 			this->InterfaceList.push_back(tmpInterface);
 		}
@@ -337,7 +337,7 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
 	//=========================================================================
 	//=========================================================================
 
-    double angle = 0.0;//0.25*M_PI;
+    double angle = 0.25*M_PI;
 
     for (vector<float2*>::iterator i = NodeList.begin(); i != NodeList.end(); ++i)       // Y-Direction
 	{
@@ -373,7 +373,7 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
 	//						F interface generation
 	//=========================================================================
 	//=========================================================================
-	for (int i = 0; i < ny + 1; i++)       // Y-Direction
+	for (int i = 0; i < ny; i++)       // Y-Direction
 	{
 		for (int j = 0; j < nx + 1; j++)    // X-Direction
 		{
@@ -387,11 +387,11 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
             if(j != 0  ) negCell = this->CellList[i*nx + (j  - 1)];
             else         negCell = this->CellList[i*nx + (nx - 1)];
 
-            if(j != nx ) posCell = this->CellList[i*nx + (0  - 0)];
-            else         posCell = this->CellList[i*nx + (j  - 0)];
+            if(j != nx ) posCell = this->CellList[i*nx + (j  - 0)];
+            else         posCell = this->CellList[i*nx + (0  - 0)];
             
 			// create a new interface with the adjacent cells
-			Interface* tmpInterface = Interface::createInterface(type,negCell, posCell, tmpNodes, this->fluidParam, NULL);
+			Interface* tmpInterface = Interface::createInterface(type,negCell, posCell, (j != 0), (j != nx), tmpNodes, this->fluidParam, NULL);
 			// add itnerface to list
 			this->InterfaceList.push_back(tmpInterface);
 		}
@@ -421,7 +421,7 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
             if( i == ny ) currentBC = this->BoundaryConditionList[1];
 
 			// create a new interface with the adjacent cells
-			Interface* tmpInterface = Interface::createInterface(type,negCell, posCell, tmpNodes, this->fluidParam, currentBC);
+			Interface* tmpInterface = Interface::createInterface(type,negCell, posCell, true, true, tmpNodes, this->fluidParam, currentBC);
 			// add itnerface to list
 			this->InterfaceList.push_back(tmpInterface);
 		}
@@ -1558,7 +1558,7 @@ void GKSMesh::writeInterfaceData(ofstream & file)
     //        file << 0 << endl;
     //}
 
-    file << "VECTORS normal " << this->InterfaceList.size() << " double\n";
+    file << "VECTORS normal double\n";
     for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
     {
         file << (*i)->getNormal().x << " " << (*i)->getNormal().y << " 0.0" << endl;

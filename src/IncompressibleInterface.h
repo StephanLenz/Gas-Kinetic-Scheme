@@ -13,7 +13,7 @@ class IncompressibleInterface : public Interface
 {
 public:
 	IncompressibleInterface();
-    IncompressibleInterface(Cell* negCell, Cell* posCell, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC);
+    IncompressibleInterface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC);
 	~IncompressibleInterface();
 
 protected:

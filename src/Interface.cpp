@@ -12,7 +12,7 @@ Interface::Interface()
 {
 }
 
-Interface::Interface(Cell* negCell, Cell* posCell, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC)
+Interface::Interface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC)
 {
     // ========================================================================
     //                  Copy attributes
@@ -60,8 +60,8 @@ Interface::Interface(Cell* negCell, Cell* posCell, float2** nodes, FluidParamete
     // ========================================================================
     //                  Introduce Interfaces to Cells
     // ========================================================================
-	if(this->negCell != NULL) this->negCell->addInterface(this);
-	if(this->posCell != NULL) this->posCell->addInterface(this);
+	if(this->negCell != NULL && negAdd) this->negCell->addInterface(this);
+	if(this->posCell != NULL && posAdd) this->posCell->addInterface(this);
     // ========================================================================
     
     // ========================================================================
@@ -82,14 +82,14 @@ Interface::~Interface()
 // ============================================================================
 //                     Interface Factory
 // ============================================================================
-Interface * Interface::createInterface(InterfaceType type, Cell * negCell, Cell * posCell, float2** nodes, FluidParameter fluidParam, BoundaryCondition * BC)
+Interface * Interface::createInterface(InterfaceType type, Cell * negCell, Cell * posCell, bool negAdd, bool posAdd, float2** nodes, FluidParameter fluidParam, BoundaryCondition * BC)
 {
     Interface* tmp = NULL;
 
     if ( type == incompressible )
-        tmp = new IncompressibleInterface(negCell, posCell, nodes, fluidParam, BC);
+        tmp = new IncompressibleInterface(negCell, posCell, negAdd, posAdd, nodes, fluidParam, BC);
     else
-        tmp = new CompressibleInterface(negCell, posCell, nodes, fluidParam, BC);
+        tmp = new CompressibleInterface(negCell, posCell, negAdd, posAdd, nodes, fluidParam, BC);
 
     return tmp;
 }
@@ -207,8 +207,13 @@ ConservedVariable Interface::getFluxDensity()
 
 double Interface::getFluxSign(Cell * askingCell)
 {
-    if      (askingCell == this->posCell) return  1.0;
-    else if (askingCell == this->negCell) return -1.0;
+    //if      (askingCell == this->posCell) return  1.0;
+    //else if (askingCell == this->negCell) return -1.0;
+
+    double sign = ( askingCell->getCenter().x - this->center.x ) * this->normal.x
+                + ( askingCell->getCenter().y - this->center.y ) * this->normal.y ;
+
+    return sign/fabs(sign);
 }
 
 bool Interface::isGhostInterface()

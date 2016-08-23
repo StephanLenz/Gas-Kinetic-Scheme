@@ -109,15 +109,15 @@ void Cell::update(double dt)
     // ========================================================================
     //                        Some Test
     // ========================================================================
-    ConservedVariable lefFlux = this->InterfaceList[0]->getTimeIntegratedFlux();
-    ConservedVariable botFlux = this->InterfaceList[1]->getTimeIntegratedFlux();
-    ConservedVariable rigFlux = this->InterfaceList[2]->getTimeIntegratedFlux();
-    ConservedVariable topFlux = this->InterfaceList[3]->getTimeIntegratedFlux();
+    ConservedVariable Flux0 = this->InterfaceList[0]->getTimeIntegratedFlux();
+    ConservedVariable Flux1 = this->InterfaceList[1]->getTimeIntegratedFlux();
+    ConservedVariable Flux2 = this->InterfaceList[2]->getTimeIntegratedFlux();
+    ConservedVariable Flux3 = this->InterfaceList[3]->getTimeIntegratedFlux();
 
-    double lefSign = this->InterfaceList[0]->getFluxSign(this); 
-    double botSign = this->InterfaceList[1]->getFluxSign(this); 
-    double rigSign = this->InterfaceList[2]->getFluxSign(this); 
-    double topSign = this->InterfaceList[3]->getFluxSign(this); 
+    double Sign0 = this->InterfaceList[0]->getFluxSign(this); 
+    double Sign1 = this->InterfaceList[1]->getFluxSign(this); 
+    double Sign2 = this->InterfaceList[2]->getFluxSign(this); 
+    double Sign3 = this->InterfaceList[3]->getFluxSign(this); 
 
     int i = 0;
     // ========================================================================

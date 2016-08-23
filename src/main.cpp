@@ -117,9 +117,9 @@ int main(int argc, char* argv[])
         double H = 1.0;
         double W = 1.0;
 
-        param.numberOfIterations = 10000;
-        param.outputIntervalVTK = 100;
-        param.outputInterval = 100;
+        param.numberOfIterations = 10000000;
+        param.outputIntervalVTK = 10000;
+        param.outputInterval = 10000;
 
         param.convergenceCriterium[0] = 1.0;
         param.convergenceCriterium[1] = 1.0e-10;
@@ -139,7 +139,7 @@ int main(int argc, char* argv[])
 
         // ========== Weidongs Parameters ==========
         int    nx = 1;
-        int    ny = 4;//nyList[j];
+        int    ny = 16;//nyList[j];
         double Re = 40.0;
         double u0 = 0.1;
 
@@ -451,10 +451,10 @@ int main(int argc, char* argv[])
 
         //mesh->writeMeshAsText("out/Mesh.txt");
 
-        mesh->writeVTKFile("out/InitialState.vtk");
-        mesh->writeVTKFileFlux("out/InitialStateFlux.vtk");
+        //mesh->writeVTKFile("out/InitialState.vtk");
+        //mesh->writeVTKFileFlux("out/InitialStateFlux.vtk");
 
-        //mesh->iterate();
+        mesh->iterate();
 
         //mesh->writeTimeSteps("out/timeSteps.dat");
 
