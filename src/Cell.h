@@ -18,21 +18,12 @@ private:
 
 	float2 center;
     double volume;
-    float2 dx;
+    double minDx;
 
     FluidParameter fluidParam;
 
-	// links to interfaces
-	//    -----------
-	//    |    3    |
-	//    | 0     2 |
-	//    |    1    |
-	//    -----------
     int nInterfaces;
 	Interface* InterfaceList[4];
-
-	// Primary Variables
-	double prim[4];
 
 	// Conseved Variables
 	double cons[4];
@@ -47,12 +38,13 @@ private:
 
 public:
 	Cell();
-    Cell(Interface * that);
 	Cell(InterfaceType interfacetype, float2** nodes, BoundaryCondition* BC, FluidParameter fluidParam);
 
 	~Cell();
 
 	void addInterface(Interface* newInterface);
+
+    void computeMinDx();
 
 	void update(double dt);
 
@@ -62,16 +54,14 @@ public:
 
 	void setValues(double rho, double u, double v, double T);
 
-    void computePrim();
-
-    void computeCons();
+    void computeCons(PrimitiveVariable prim);
 
     double getLocalTimestep();
 
 	float2 getCenter();
     float2 getNode(int i);
 
-    PrimaryVariable getPrim();
+    PrimitiveVariable getPrim();
 
     ConservedVariable getCons();
 

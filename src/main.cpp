@@ -117,9 +117,9 @@ int main(int argc, char* argv[])
         double H = 1.0;
         double W = 1.0;
 
-        param.numberOfIterations = 100000000;
-        param.outputIntervalVTK = 10000;
-        param.outputInterval = 10000;
+        param.numberOfIterations = 10000;
+        param.outputIntervalVTK = 100;
+        param.outputInterval = 100;
 
         param.convergenceCriterium[0] = 1.0;
         param.convergenceCriterium[1] = 1.0e-10;
@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
         param.convergenceCriterium[3] = 1.0;
 
         param.L = 1.0;
-        param.CFL = 0.7;
+        param.CFL = 0.5;
 
         param.verbose = false;
         param.fluxOutput = false;
@@ -138,21 +138,21 @@ int main(int argc, char* argv[])
         FluidParameter fluidParam;
 
         // ========== Weidongs Parameters ==========
-        int    nx = 2;
-        int    ny = 16;
+        int    nx = 1;
+        int    ny = 4;//nyList[j];
         double Re = 40.0;
         double u0 = 0.1;
 
         fluidParam.K = 1;
         fluidParam.nu = (u0*param.L)/Re;
-        fluidParam.R = 208.0;
-        fluidParam.Force.x = (u0*8.0*fluidParam.nu) / (param.L*param.L);
-        fluidParam.Force.y = 0.0;//(u0*8.0*fluidParam.nu) / (param.L*param.L);
+        fluidParam.R = 200.0;
+        fluidParam.Force.x = sqrt(0.5) * (u0*8.0*fluidParam.nu) / (param.L*param.L);
+        fluidParam.Force.y = sqrt(0.5) * (u0*8.0*fluidParam.nu) / (param.L*param.L);
         fluidParam.BoussinesqForce.x = 0.0;
         fluidParam.BoussinesqForce.y = 0.0;
         fluidParam.rhoReference = 1.0;
 
-        double T      = 293.15;
+        double T      = 300.0;
         double lambda = 1.0 / (2.0 * fluidParam.R * T);
 
         // ========================================================================
@@ -165,10 +165,10 @@ int main(int argc, char* argv[])
         //    |         |
         //    |    0    |
         //    -----------
-        mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, lambda);
-        mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, lambda);
-        //mesh->addBoundaryCondition(3, 0, 0, 0,  0.0, 0.0, 0.0, lambda);
-        //mesh->addBoundaryCondition(3, 0, 0, 0,  0.0, 0.0, 0.0, lambda);
+        //mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, lambda);
+        //mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(isothermalWall, 0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(isothermalWall, 0.0, 0.0, 0.0, lambda);
 
         Interface::setInterpolationOrder(1);
 
@@ -451,18 +451,17 @@ int main(int argc, char* argv[])
 
         //mesh->writeMeshAsText("out/Mesh.txt");
 
-        //mesh->writeVTKFile("out/InitialState.vtk");
-        //mesh->writeVTKFileFlux("out/InitialStateFlux.vtk");
+        mesh->writeVTKFile("out/InitialState.vtk");
+        mesh->writeVTKFileFlux("out/InitialStateFlux.vtk");
 
-        mesh->iterate();
+        //mesh->iterate();
 
-        mesh->writeTimeSteps("out/timeSteps.dat");
+        //mesh->writeTimeSteps("out/timeSteps.dat");
 
         // ========== Poiseuille Convergence Study ============================
         //ostringstream filename;
         //filename << "out/" << ny;
         //mesh->writeVelocityProfile(            ( filename.str() + "/VelocityProfile.dat" )          , 0.5);
-        //mesh->writePressureGradientProfile(    ( filename.str() + "/PressureGradientProfile.dat" )  , 0.5);
         //mesh->writeConvergenceHistory(         ( filename.str() + "/ConvergenceHistory.dat" )            );
         //mesh->writeOverviewFile(               ( filename.str() + "/OverviewFile.dat" )                  );
         //mesh->writeVTKFile(                    ( filename.str() + "/ResultFields.vtk" )                  );

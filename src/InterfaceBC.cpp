@@ -11,7 +11,7 @@ InterfaceBC::~InterfaceBC()
 {
 }
 
-ConservedVariable InterfaceBC::computeBoundaryInterfaceFlux(PrimaryVariable prim, double dx, double nu)
+ConservedVariable InterfaceBC::computeBoundaryInterfaceFlux(PrimitiveVariable prim, double dx, double nu)
 {
 
     ConservedVariable Flux;

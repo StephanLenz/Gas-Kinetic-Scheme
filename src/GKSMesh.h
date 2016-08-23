@@ -68,7 +68,7 @@ public:
     void initMeshAtmospheric(double rho, double u, double v, double lambda, double g);
 
 
-    void addBoundaryCondition(  int rhoType, int UType, int VType, int TType,
+    void addBoundaryCondition(  BoundaryConditionType type,
                                 double rho, double U, double V, double T);
 
     void addInterfaceBoundaryCondition(double wallVelocity);

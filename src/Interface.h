@@ -54,8 +54,11 @@ public:
     void addCell(Cell* that);
 
     float2* getNode(int i);
+    float2 getNormal();
     float2 getScaledNormal();
     BoundaryCondition* getBoundaryCondition();
+
+    double distance(float2 point);
 
 	string toString();
 
@@ -80,8 +83,6 @@ protected:
 
     void transformGlobal2Local(double* vec);
     void transformLocal2Global(double * vec);
-
-    double distance(float2 point);
 
     virtual void computeMicroSlope(double* prim, double* macroSlope, double* microSlope) = 0;
     void computeMoments(double* prim, double* MomentU, double* MomentV, double* MomentXi, int numberMoments);

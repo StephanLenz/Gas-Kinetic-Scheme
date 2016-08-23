@@ -46,13 +46,14 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
     if( fabs(etaX - 1.0) > 1.0e12 )
         dx0 = 0.5*this->lengthX * (1-etaX)/(1-pow(etaX, nx/2));
     else
-        dx0 = this->lengthX / nx;
+        dx0 = this->lengthX / double(nx);
 
     double dy0;
     if( fabs(etaY - 1.0) > 1.0e12 )
         dy0 = 0.5*this->lengthY * (1-etaY)/(1-pow(etaY, ny/2));
     else
-        dy0 = this->lengthY / ny;
+        dy0 = this->lengthY / double(ny);
+
     //=========================================================================
     //=========================================================================
     //		Computation of the coordinates and spacings
@@ -60,8 +61,6 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
     //=========================================================================
 
     double* CellSpacingsX = new double[nx+2];
-    double* CellSpacingsY = new double[ny+2];
-
     for(int i = 0; i < nx/2 + 1; i++){
         if(i == nx/2)
         {
@@ -76,6 +75,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
         }
     }
 
+    double* CellSpacingsY = new double[ny+2];
     for(int i = 0; i < ny/2 + 1; i++){
         if(i == ny/2)
         {
@@ -92,33 +92,16 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
 
     // ========================================================================
     
-    double* CellCentersX = new double[nx+2];
-    double* CellCentersY = new double[ny+2];
-
-    double sumX = -CellSpacingsX[0];
-    for(int i = 0; i < nx + 2; i++){
-        CellCentersX[i] = sumX + 0.5*CellSpacingsX[i];
-        sumX += CellSpacingsX[i];
-    }
-
-    double sumY = -CellSpacingsY[0];
-    for(int i = 0; i < ny + 2; i++){
-        CellCentersY[i] = sumY + 0.5*CellSpacingsY[i];
-        sumY += CellSpacingsY[i];
-    }
-
-    // ========================================================================
-    
     double* NodesX = new double[nx+1]; 
     double* NodesY = new double[ny+1];
 
-    sumX = 0.0;
+    double sumX = 0.0;
     for(int i = 0; i < nx+1; i++){
         NodesX[i] = sumX;
         sumX += CellSpacingsX[i+1];
     }
    
-    sumY = 0.0;
+    double sumY = 0.0;
     for(int i = 0; i < ny+1; i++){
         NodesY[i] = sumY;
         sumY += CellSpacingsY[i+1];
@@ -250,15 +233,22 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
         }
     }
 
-    delete [] CellCentersX;
+	//=========================================================================
+	//=========================================================================
+	//						Compute MinDx
+	//=========================================================================
+	//=========================================================================
+    for(vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
+    {
+        (*i)->computeMinDx();
+    }
+    
+	//=========================================================================
     delete [] CellSpacingsX;
     delete [] NodesX;
 
-    delete [] CellCentersY;
     delete [] CellSpacingsY;
     delete [] NodesY;
-
-
 
 	return;
 }
@@ -280,7 +270,7 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
     if( fabs(etaY - 1.0) > 1.0e12 )
         dy0 = 0.5*this->lengthY * (1-etaY)/(1-pow(etaY, ny/2));
     else
-        dy0 = this->lengthY / ny;
+        dy0 = this->lengthY / double(ny);
     //=========================================================================
     //=========================================================================
     //		Computation of the coordinates and spacings
@@ -291,7 +281,7 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
     double* CellSpacingsY = new double[ny+2];
 
     for(int i = 0; i < nx; i++){
-            CellSpacingsX[i]     = dx0;
+        CellSpacingsX[i] = dx0;
     }
 
     for(int i = 0; i < ny/2 + 1; i++){
@@ -310,33 +300,16 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
 
     // ========================================================================
     
-    double* CellCentersX = new double[nx+2];
-    double* CellCentersY = new double[ny+2];
-
-    double sumX = -CellSpacingsX[0];
-    for(int i = 0; i < nx + 2; i++){
-        CellCentersX[i] = sumX + 0.5*CellSpacingsX[i];
-        sumX += CellSpacingsX[i];
-    }
-
-    double sumY = -CellSpacingsY[0];
-    for(int i = 0; i < ny + 2; i++){
-        CellCentersY[i] = sumY + 0.5*CellSpacingsY[i];
-        sumY += CellSpacingsY[i];
-    }
-
-    // ========================================================================
-    
     double* NodesX = new double[nx+1]; 
     double* NodesY = new double[ny+1];
 
-    sumX = 0.0;
+    double sumX = 0.0;
     for(int i = 0; i < nx+1; i++){
         NodesX[i] = sumX;
         sumX += CellSpacingsX[i];
     }
    
-    sumY = 0.0;
+    double sumY = 0.0;
     for(int i = 0; i < ny+1; i++){
         NodesY[i] = sumY;
         sumY += CellSpacingsY[i];
@@ -355,6 +328,23 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
             float2* tmpNode = new float2(NodesX[j], NodesY[i]);
 			this->NodeList.push_back(tmpNode);
 		}
+	}
+    
+    
+	//=========================================================================
+	//=========================================================================
+	//		Node Rotation
+	//=========================================================================
+	//=========================================================================
+
+    double angle = 0.0;//0.25*M_PI;
+
+    for (vector<float2*>::iterator i = NodeList.begin(); i != NodeList.end(); ++i)       // Y-Direction
+	{
+        double x = (*i)->x;
+        double y = (*i)->y;
+        (*i)->x = cos(angle) * x - sin(angle) * y;
+        (*i)->y = sin(angle) * x + cos(angle) * y;
 	}
 
 	//=========================================================================
@@ -383,9 +373,9 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
 	//						F interface generation
 	//=========================================================================
 	//=========================================================================
-	for (int i = 0; i < ny; i++)       // Y-Direction
+	for (int i = 0; i < ny + 1; i++)       // Y-Direction
 	{
-		for (int j = 0; j < nx; j++)    // X-Direction
+		for (int j = 0; j < nx + 1; j++)    // X-Direction
 		{
             float2* tmpNodes[2];
             tmpNodes[0] = this->NodeList[(i+1)*(nx+1) + j]; // top
@@ -394,11 +384,12 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
             Cell* negCell = NULL;
             Cell* posCell = NULL;
 
-            if(j != 0 ) negCell = this->CellList[i*nx + (j  - 1)];
-            else        negCell = this->CellList[i*nx + (nx - 1)];
-            
-            posCell = this->CellList[i*nx + (j  - 0)];
+            if(j != 0  ) negCell = this->CellList[i*nx + (j  - 1)];
+            else         negCell = this->CellList[i*nx + (nx - 1)];
 
+            if(j != nx ) posCell = this->CellList[i*nx + (0  - 0)];
+            else         posCell = this->CellList[i*nx + (j  - 0)];
+            
 			// create a new interface with the adjacent cells
 			Interface* tmpInterface = Interface::createInterface(type,negCell, posCell, tmpNodes, this->fluidParam, NULL);
 			// add itnerface to list
@@ -466,13 +457,20 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
         }
     }
 
-    int i = 0;
-
-    delete [] CellCentersX;
+	//=========================================================================
+	//=========================================================================
+	//						Compute MinDx
+	//=========================================================================
+	//=========================================================================
+    for(vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
+    {
+        (*i)->computeMinDx();
+    }
+    
+	//=========================================================================
     delete [] CellSpacingsX;
     delete [] NodesX;
 
-    delete [] CellCentersY;
     delete [] CellSpacingsY;
     delete [] NodesY;
     
@@ -625,11 +623,10 @@ void GKSMesh::initMeshAtmospheric(double rho, double u, double v, double lambda,
 	}
 }
 
-void GKSMesh::addBoundaryCondition( int rhoType, int UType, int VType, int TType, 
+void GKSMesh::addBoundaryCondition( BoundaryConditionType type, 
                                     double rho, double U, double V, double T)
 {
-    BoundaryCondition* tmp = new BoundaryCondition( rhoType, UType, VType, TType,
-                                                    rho, U, V, T);
+    BoundaryCondition* tmp = new BoundaryCondition( type, rho, U, V, T);
     BoundaryConditionList.push_back(tmp);
 }
 
@@ -730,10 +727,6 @@ ConservedVariable GKSMesh::getL2GlobalResidual()
     residual.rhoV = sqrt( residualSquare.rhoV ) / sqrt( cons.rhoV );
     residual.rhoE = sqrt( residualSquare.rhoE ) / sqrt( cons.rhoE );
 
-    //// ---------------------- FIX ---------------------------------------------
-    //if(fabs( residualSquare.rhoV ) < 1.0e-12 ) residual.rhoV = 0.0;
-    //// ---------------------- FIX ---------------------------------------------
-
     return residual;
 }
 
@@ -779,7 +772,7 @@ void GKSMesh::timeStep()
 
     // ========================================================================
 
-    //if ( this->param.verbose ) cout << "  Apply Boundary Conditions ..." << endl;
+    if ( this->param.verbose ) cout << "  Apply Boundary Conditions ..." << endl;
     this->applyBoundaryCondition();
 
 }
@@ -862,8 +855,6 @@ void GKSMesh::iterate()
             }
         }
         // ========================================================================
-        //cout << this->toString();
-        //cout << this->cellValuesToString();
     }
     // ========================================================================
     // ========================================================================
@@ -1566,5 +1557,11 @@ void GKSMesh::writeInterfaceData(ofstream & file)
     //    else
     //        file << 0 << endl;
     //}
+
+    file << "VECTORS normal " << this->InterfaceList.size() << " double\n";
+    for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
+    {
+        file << (*i)->getNormal().x << " " << (*i)->getNormal().y << " 0.0" << endl;
+    }
 }
 

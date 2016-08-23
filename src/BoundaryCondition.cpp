@@ -6,18 +6,14 @@ BoundaryCondition::BoundaryCondition()
 {
 }
 
-BoundaryCondition::BoundaryCondition( int rhoType, int UType, int VType, int TType,
-                                      double rho, double U, double V, double T)
+BoundaryCondition::BoundaryCondition( BoundaryConditionType type,
+                                      double rho, double U, double V, double L)
 {
-    this->type[0] = rhoType;
-    this->type[1] = UType;
-    this->type[2] = VType;
-    this->type[3] = TType;
-
-    this->value[0] = rho;
-    this->value[1] = U;
-    this->value[2] = V;
-    this->value[3] = T;
+    this->type = type;
+    this->value.rho = rho;
+    this->value.U = U;
+    this->value.V = V;
+    this->value.L = L;
 }
 
 
@@ -25,12 +21,12 @@ BoundaryCondition::~BoundaryCondition()
 {
 }
 
-short int BoundaryCondition::getType(short int i)
+BoundaryConditionType BoundaryCondition::getType()
 {
-    return this->type[i];
+    return this->type;
 }
 
-double BoundaryCondition::getValue(short int i)
+PrimitiveVariable BoundaryCondition::getValue()
 {
-    return this->value[i];
+    return value;
 }

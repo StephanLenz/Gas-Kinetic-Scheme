@@ -2,7 +2,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-struct PrimaryVariable
+struct PrimitiveVariable
 {
 	double rho;
 	double U;
@@ -63,6 +63,12 @@ enum InterfaceType
 {
     compressible,
     incompressible
+};
+
+enum BoundaryConditionType
+{
+    wall,
+    isothermalWall
 };
 
 #endif

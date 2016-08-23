@@ -14,51 +14,65 @@ Interface::Interface()
 
 Interface::Interface(Cell* negCell, Cell* posCell, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC)
 {
+    // ========================================================================
+    //                  Copy attributes
+    // ========================================================================
 	this->negCell = negCell;
 	this->posCell = posCell;
 
     this->nodes[0] = nodes[0];
-    this->nodes[1] = nodes[1];
-
-    this->center.x = 0.5 * (this->nodes[0]->x + this->nodes[1]->x);
-    this->center.y = 0.5 * (this->nodes[0]->y + this->nodes[1]->y);
-
-    this->area = sqrt( (this->nodes[0]->x - this->nodes[1]->x )*(this->nodes[0]->x - this->nodes[1]->x )
-                     + (this->nodes[0]->y - this->nodes[1]->y )*(this->nodes[0]->y - this->nodes[1]->y ));
-
-    this->normal.x = - ( this->nodes[1]->y - this->nodes[0]->y ) / area;
-    this->normal.y =   ( this->nodes[1]->x - this->nodes[0]->x ) / area;
+    this->nodes[1] = nodes[1]; 
 
     this->BoundaryConditionPointer = BC;
-    
-    // links to interfaces
-    //    ---------------------
-    //    |    3    |    3    |
-    //    | 0     2 | 0     2 |
-    //    |    1    |    1    |
-    //    ---------------------
-    //     neg Cell   pos Cell
-    //
-    //    -----------
-    //    |    3    |
-    //    | 0     2 |   pos Cell
-    //    |    1    |
-    //    -----------
-    //    |    3    |
-    //    | 0     2 |   neg Cell
-    //    |    1    |
-    //    -----------
-
-	if(this->negCell != NULL) this->negCell->addInterface(this);
-	if(this->posCell != NULL) this->posCell->addInterface(this);
 
     this->fluidParam = fluidParam;
-
+    // ========================================================================
+    
+    // ========================================================================
+    //                  Compute Center
+    // ========================================================================
+    this->center.x = 0.5 * (this->nodes[0]->x + this->nodes[1]->x);
+    this->center.y = 0.5 * (this->nodes[0]->y + this->nodes[1]->y);
+    // ========================================================================
+    
+    // ========================================================================
+    //                  Compute interface area
+    // ========================================================================
+    this->area = sqrt( (this->nodes[0]->x - this->nodes[1]->x )*(this->nodes[0]->x - this->nodes[1]->x )
+                     + (this->nodes[0]->y - this->nodes[1]->y )*(this->nodes[0]->y - this->nodes[1]->y ));
+    // ========================================================================
+    
+    // ========================================================================
+    //                  Compute Normal
+    // ========================================================================
+    //      -----[1]-------
+    //            |             The normal is computed such that it points
+    //            |   n         to the right when the one follows the
+    //            |----->       vector  from the first to the second node.
+    //    negCell | posCell     
+    //            |             n = (N1 - N0) x (0 0 1)
+    //      -----[0]-------    
+    // ========================================================================        
+    this->normal.x = - ( this->nodes[1]->y - this->nodes[0]->y ) / area;
+    this->normal.y =   ( this->nodes[1]->x - this->nodes[0]->x ) / area;
+    // ======================================================================== 
+    
+    // ========================================================================
+    //                  Introduce Interfaces to Cells
+    // ========================================================================
+	if(this->negCell != NULL) this->negCell->addInterface(this);
+	if(this->posCell != NULL) this->posCell->addInterface(this);
+    // ========================================================================
+    
+    // ========================================================================
+    //                  Initialize Fluxes
+    // ========================================================================
     for ( int i = 0; i < 4; i++ )
     {
         this->timeIntegratedFlux[i] = 0.0;
         this->FluxDensity[i] = 0.0;
     }
+    // ========================================================================
 }
 
 Interface::~Interface()
@@ -222,6 +236,11 @@ float2 * Interface::getNode(int i)
     return this->nodes[i];
 }
 
+float2 Interface::getNormal()
+{
+    return normal;
+}
+
 float2 Interface::getScaledNormal()
 {
     if(this->posCell == NULL)
@@ -303,6 +322,8 @@ void Interface::interpolatePrim(double * prim)
     prim[3] = ( this->negCell->getPrim().L   * posDistance
               + this->posCell->getPrim().L   * negDistance)
             / ( negDistance + posDistance );
+
+    int i = 0;
 }
 
 void Interface::differentiateConsNormal(double* normalGradCons, double* prim)
@@ -337,6 +358,7 @@ void Interface::transformGlobal2Local(double * vec)
     // transformation in local coordinatesystem
     // n = (n1,n2)
     // t = (-n2,n1)
+    // vL = [n t]^T * v0
     vec[1] =   this->normal.x * u0 + this->normal.y * v0;
     vec[2] = - this->normal.y * u0 + this->normal.x * v0;
 }
@@ -350,14 +372,16 @@ void Interface::transformLocal2Global(double * vec)
     // transformation in global coordinatesystem
     // n = (n1,n2)
     // t = (-n2,n1)
+    // vL = [n t] * v0
     vec[1] = this->normal.x * un - this->normal.y * vt;
     vec[2] = this->normal.y * un + this->normal.x * vt;
 }
 
 double Interface::distance(float2 point)
 {
-    return sqrt( ( this->center.x - point.x )*( this->center.x - point.x )
-               + ( this->center.y - point.y )*( this->center.y - point.y ) );
+    // Compute the projected distance of a point on the normal of the interface
+    return fabs( ( this->center.x - point.x )*( this->normal.x )
+               + ( this->center.y - point.y )*( this->normal.y ) );
 }
 
 void Interface::computeMoments(double * prim, double * MomentU, double* MomentV, double * MomentXi, int numberMoments)
