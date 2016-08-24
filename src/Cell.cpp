@@ -361,6 +361,15 @@ Cell * Cell::findNeighborInDomain()
     return neighborCell;
 }
 
+float2 Cell::getConnectivity(int i)
+{
+    if( this->InterfaceList[i] == NULL) return float2(0.0, 0.0);
+    float2 vector;
+    vector.x = this->InterfaceList[i]->getCenter().x - this->center.x;
+    vector.y = this->InterfaceList[i]->getCenter().y - this->center.y;
+    return vector;
+}
+
 bool Cell::isGhostCell()
 {
     return BoundaryContitionPointer != NULL;

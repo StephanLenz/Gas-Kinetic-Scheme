@@ -55,8 +55,12 @@ public:
 
     float2* getNode(int i);
     float2 getNormal();
+    float2 getCenter();
     float2 getScaledNormal();
     BoundaryCondition* getBoundaryCondition();
+    float2 getPosConnectivity();
+    float2 getNegConnectivity();
+
 
     double distance(float2 point);
 

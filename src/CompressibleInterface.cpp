@@ -9,7 +9,7 @@ CompressibleInterface::CompressibleInterface()
 }
 
 CompressibleInterface::CompressibleInterface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC)
-    : Interface(negCell, posCell, posAdd, negAdd, nodes, fluidParam, BC)
+    : Interface(negCell, posCell, negAdd, posAdd, nodes, fluidParam, BC)
 {
 }
 

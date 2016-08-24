@@ -73,6 +73,8 @@ public:
 
     Cell* findNeighborInDomain();
 
+    float2 getConnectivity(int i);
+
     bool isGhostCell();
 
     double distance(float2 point);

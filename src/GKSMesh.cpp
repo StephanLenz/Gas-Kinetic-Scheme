@@ -321,11 +321,13 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
 	//=========================================================================
 	//=========================================================================
 
+    double heightDiff = 0.5;
+
     for (int i = 0; i < ny + 1; i++)       // Y-Direction
 	{
 		for (int j = 0; j < nx + 1; j++)   // X-Direction
 		{
-            float2* tmpNode = new float2(NodesX[j], NodesY[i]);
+            float2* tmpNode = new float2( NodesX[j], NodesY[i] + NodesX[j] / this->lengthX * heightDiff );
 			this->NodeList.push_back(tmpNode);
 		}
 	}
@@ -337,7 +339,7 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
 	//=========================================================================
 	//=========================================================================
 
-    double angle = 0.25*M_PI;
+    double angle = 0.0;//0.25*M_PI;
 
     for (vector<float2*>::iterator i = NodeList.begin(); i != NodeList.end(); ++i)       // Y-Direction
 	{
@@ -390,8 +392,11 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
             if(j != nx ) posCell = this->CellList[i*nx + (j  - 0)];
             else         posCell = this->CellList[i*nx + (0  - 0)];
             
+            bool posAdd = (j != nx);
+            bool negAdd = (j != 0) ;
+
 			// create a new interface with the adjacent cells
-			Interface* tmpInterface = Interface::createInterface(type,negCell, posCell, (j != 0), (j != nx), tmpNodes, this->fluidParam, NULL);
+			Interface* tmpInterface = Interface::createInterface(type,negCell, posCell, negAdd, posAdd, tmpNodes, this->fluidParam, NULL);
 			// add itnerface to list
 			this->InterfaceList.push_back(tmpInterface);
 		}
@@ -1489,6 +1494,14 @@ void GKSMesh::writeCellData(ofstream& file)
         }
     }
     // ================================================================================================================
+    for(int j = 0; j < 4; j++)
+    {
+        file << "VECTORS Connectivity" << j << " double\n";
+        for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+        {
+            file << (*i)->getConnectivity(j).x << " " << (*i)->getConnectivity(j).y << " 0.0" << endl;
+        }
+    }
 }
 
 void GKSMesh::writeInterfaceData(ofstream & file)
@@ -1562,6 +1575,18 @@ void GKSMesh::writeInterfaceData(ofstream & file)
     for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
     {
         file << (*i)->getNormal().x << " " << (*i)->getNormal().y << " 0.0" << endl;
+    }
+
+    file << "VECTORS posCell double\n";
+    for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
+    {
+        file << (*i)->getPosConnectivity().x << " " << (*i)->getPosConnectivity().y << " 0.0" << endl;
+    }
+
+    file << "VECTORS negCell double\n";
+    for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
+    {
+        file << (*i)->getNegConnectivity().x << " " << (*i)->getNegConnectivity().y << " 0.0" << endl;
     }
 }
 

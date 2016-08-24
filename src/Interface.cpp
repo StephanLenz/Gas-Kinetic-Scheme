@@ -246,6 +246,11 @@ float2 Interface::getNormal()
     return normal;
 }
 
+float2 Interface::getCenter()
+{
+    return this->center;
+}
+
 float2 Interface::getScaledNormal()
 {
     if(this->posCell == NULL)
@@ -257,6 +262,22 @@ float2 Interface::getScaledNormal()
 BoundaryCondition * Interface::getBoundaryCondition()
 {
     return this->BoundaryConditionPointer;
+}
+
+float2 Interface::getPosConnectivity()
+{
+    float2 vector;
+    vector.x = this->posCell->getCenter().x - this->center.x;
+    vector.y = this->posCell->getCenter().y - this->center.y;
+    return vector;
+}
+
+float2 Interface::getNegConnectivity()
+{
+    float2 vector;
+    vector.x = this->negCell->getCenter().x - this->center.x;
+    vector.y = this->negCell->getCenter().y - this->center.y;
+    return vector;
 }
 
 string Interface::toString()

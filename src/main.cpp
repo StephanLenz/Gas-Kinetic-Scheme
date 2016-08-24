@@ -11,6 +11,8 @@
 #include <sstream>
 #include <chrono>
 
+# define M_PI           3.14159265358979323846  /* pi */
+
 using namespace std;
 
 int main(int argc, char* argv[])
@@ -117,17 +119,16 @@ int main(int argc, char* argv[])
         double H = 1.0;
         double W = 1.0;
 
-        param.numberOfIterations = 10000000;
-        param.outputIntervalVTK = 10000;
-        param.outputInterval = 10000;
+        param.numberOfIterations = 100000000;
+        param.outputIntervalVTK = 100000;
+        param.outputInterval = 100000;
 
         param.convergenceCriterium[0] = 1.0;
         param.convergenceCriterium[1] = 1.0e-10;
         param.convergenceCriterium[2] = 1.0;
         param.convergenceCriterium[3] = 1.0;
 
-        param.L = 1.0;
-        param.CFL = 0.5;
+        param.CFL = 0.1;
 
         param.verbose = false;
         param.fluxOutput = false;
@@ -139,15 +140,17 @@ int main(int argc, char* argv[])
 
         // ========== Weidongs Parameters ==========
         int    nx = 1;
-        int    ny = 16;//nyList[j];
+        int    ny = 8;//nyList[j];
         double Re = 40.0;
         double u0 = 0.1;
+        double angle = atan(0.5);
+        param.L = 1.0*cos(angle);
 
         fluidParam.K = 1;
         fluidParam.nu = (u0*param.L)/Re;
         fluidParam.R = 200.0;
-        fluidParam.Force.x = sqrt(0.5) * (u0*8.0*fluidParam.nu) / (param.L*param.L);
-        fluidParam.Force.y = sqrt(0.5) * (u0*8.0*fluidParam.nu) / (param.L*param.L);
+        fluidParam.Force.x = cos(angle) * (u0*8.0*fluidParam.nu) / (param.L*param.L);
+        fluidParam.Force.y = sin(angle) * (u0*8.0*fluidParam.nu) / (param.L*param.L);
         fluidParam.BoussinesqForce.x = 0.0;
         fluidParam.BoussinesqForce.y = 0.0;
         fluidParam.rhoReference = 1.0;
