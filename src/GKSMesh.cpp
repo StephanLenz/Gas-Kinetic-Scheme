@@ -327,7 +327,13 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
 	{
 		for (int j = 0; j < nx + 1; j++)   // X-Direction
 		{
-            float2* tmpNode = new float2( NodesX[j], NodesY[i] + NodesX[j] / this->lengthX * heightDiff );
+            //float2* tmpNode = new float2( NodesX[j], NodesY[i] );
+            //float2* tmpNode = new float2( NodesX[j], NodesY[i] + NodesX[j] / this->lengthX * heightDiff );
+            
+            float2* tmpNode = new float2();
+            tmpNode->x = NodesX[j];
+            tmpNode->y = NodesY[i] - 0.3 * (NodesX[j] - this->lengthX)*NodesX[j] * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY );
+
 			this->NodeList.push_back(tmpNode);
 		}
 	}
@@ -480,6 +486,112 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
     delete [] NodesY;
     
     return;
+}
+
+void GKSMesh::generateMiniPatchMesh()
+{
+    this->lengthX = 1.0;
+    this->lengthY = 1.0;
+
+    int nx = 2;
+    int ny = 2;
+
+    this->NodeList.push_back( new float2( 0.0, 0.0 ) );
+    this->NodeList.push_back( new float2( 0.5, 0.0 ) );
+    this->NodeList.push_back( new float2( 1.0, 0.0 ) );
+
+    this->NodeList.push_back( new float2( 0.0, 0.45 ) );
+    this->NodeList.push_back( new float2( 0.5, 0.55 ) );
+    this->NodeList.push_back( new float2( 1.0, 0.45 ) );
+
+    this->NodeList.push_back( new float2( 0.0, 1.0 ) );
+    this->NodeList.push_back( new float2( 0.5, 1.0 ) );
+    this->NodeList.push_back( new float2( 1.0, 1.0 ) );
+
+
+
+	for (int i = 0; i < 2; i++)       // Y-Direction
+	{
+		for (int j = 0; j < 2; j++)   // X-Direction
+		{
+            float2* tmpNodes[4];
+            tmpNodes[0] = this->NodeList[(i+0)*(nx+1) + j + 0]; // bottom left
+            tmpNodes[1] = this->NodeList[(i+0)*(nx+1) + j + 1]; // bottom right
+            tmpNodes[2] = this->NodeList[(i+1)*(nx+1) + j + 1]; // top right
+            tmpNodes[3] = this->NodeList[(i+1)*(nx+1) + j + 0]; // top left
+
+			Cell* tmpCell = new Cell(compressible, tmpNodes, NULL, this->fluidParam);
+			// add interface to list
+			this->CellList.push_back(tmpCell);
+		}
+	}
+
+	for (int i = 0; i < ny; i++)       // Y-Direction
+	{
+		for (int j = 0; j < nx + 1; j++)    // X-Direction
+		{
+            float2* tmpNodes[2];
+            tmpNodes[0] = this->NodeList[(i+1)*(nx+1) + j]; // top
+            tmpNodes[1] = this->NodeList[(i+0)*(nx+1) + j]; // bottom
+
+            Cell* negCell = NULL;
+            Cell* posCell = NULL;
+
+            if(j != 0  ) negCell = this->CellList[i*nx + (j  - 1)];
+            else         negCell = this->CellList[i*nx + (nx - 1)];
+
+            if(j != nx ) posCell = this->CellList[i*nx + (j  - 0)];
+            else         posCell = this->CellList[i*nx + (0  - 0)];
+            
+            bool posAdd = (j != nx);
+            bool negAdd = (j != 0) ;
+
+			// create a new interface with the adjacent cells
+			Interface* tmpInterface = Interface::createInterface(compressible,negCell, posCell, negAdd, posAdd, tmpNodes, this->fluidParam, NULL);
+			// add itnerface to list
+			this->InterfaceList.push_back(tmpInterface);
+		}
+	}
+	//=========================================================================
+	//=========================================================================
+	//						G interface generation
+	//=========================================================================
+	//=========================================================================
+	for (int i = 0; i < ny + 1; i++)        // Y-Direction
+	{
+		for (int j = 0; j < nx; j++)   // X-Direction
+		{
+            float2* tmpNodes[2];
+            tmpNodes[0] = this->NodeList[i*(nx+1) + (j+0)]; // left
+            tmpNodes[1] = this->NodeList[i*(nx+1) + (j+1)]; // right
+
+            Cell* negCell = NULL;
+            Cell* posCell = NULL;
+
+            if(i != 0 ) negCell = this->CellList[(i  - 1)*nx + j];
+            else        negCell = this->CellList[(ny - 1)*nx + j];
+            if(i != ny) posCell = this->CellList[(i  - 0)*nx + j];
+            else        posCell = this->CellList[(0  - 0)*nx + j];
+            
+            bool posAdd = (i != ny);
+            bool negAdd = (i != 0) ;
+
+			// create a new interface with the adjacent cells
+			Interface* tmpInterface = Interface::createInterface(compressible,negCell, posCell, negAdd, posAdd, tmpNodes, this->fluidParam, NULL);
+			// add itnerface to list
+			this->InterfaceList.push_back(tmpInterface);
+		}
+	}
+
+	//=========================================================================
+	//=========================================================================
+	//						Compute MinDx
+	//=========================================================================
+	//=========================================================================
+    for(vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
+    {
+        (*i)->computeMinDx();
+    }
 }
 
 void GKSMesh::initMeshConstant(double rho, double u, double v, double T)
@@ -1117,6 +1229,37 @@ void GKSMesh::writeVelocityProfile(string filename, double x)
                 file << ( *i )->getCenter().y << " " << ( *i )->getPrim().U << " " << ( *i )->getPrim().rho << "\n";
             }
         }
+    }
+
+    file.close();
+
+    cout << "done!" << endl;
+
+}
+
+void GKSMesh::writeResultFields(string filename)
+{
+
+    cout << "Wrinting file " << filename << " ... ";
+    // open file stream
+    ofstream file;
+    file.precision(15);
+    file.open(filename.c_str());
+
+    if (!file.is_open()) {
+        cout << " File cound not be opened.\n\nERROR!\n\n\n";
+        return;
+    }
+
+    for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
+    {
+        file << ( *i )->getCenter().x << " ";
+        file << ( *i )->getCenter().y << " ";
+        file << ( *i )->getPrim().rho << " ";
+        file << ( *i )->getPrim().U << " ";
+        file << ( *i )->getPrim().V << " ";
+        file << 1.0 / ( 2.0 * ( *i )->getPrim().L * this->fluidParam.R ) << " ";
+        file << ( *i )->isGhostCell() << endl;
     }
 
     file.close();

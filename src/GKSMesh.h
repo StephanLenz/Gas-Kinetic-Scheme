@@ -51,6 +51,8 @@ public:
 
     void generateRectMeshPeriodicGraded(InterfaceType type, double lengthX, double lengthY, int nx, int ny, double grading);
 
+    void generateMiniPatchMesh();
+
 	void initMeshConstant(double rho, double u, double v, double T);
 
 	void initMeshLinearTemperature(double rho, double u, double v, double * T);
@@ -105,6 +107,7 @@ public:
     void writeTimeSteps(string filename);
 
     void writeVelocityProfile(string filename, double x);
+    void writeResultFields(string filename);
     void writeTemperatureProfile(string filename, double x);
 
     void writeMeshAsText(string filename);

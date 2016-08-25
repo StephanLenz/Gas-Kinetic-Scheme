@@ -130,6 +130,8 @@ void Cell::update(double dt)
     this->residual.rhoV = fabs(this->cons[2] - this->cons_old[2]);
     this->residual.rhoE = fabs(this->cons[3] - this->cons_old[3]);
 
+    int k = 0;
+
     // store values of this time step for residual computation in the next one
     this->cons_old[0] = this->cons[0];
     this->cons_old[1] = this->cons[1];
