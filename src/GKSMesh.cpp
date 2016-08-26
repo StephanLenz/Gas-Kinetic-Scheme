@@ -43,13 +43,13 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
     double etaY = pow( gradingY, 1.0 / (ny/2 - 1) );
 
     double dx0;
-    if( fabs(etaX - 1.0) > 1.0e12 )
+    if( fabs(etaX - 1.0) > 1.0e-12 )
         dx0 = 0.5*this->lengthX * (1-etaX)/(1-pow(etaX, nx/2));
     else
         dx0 = this->lengthX / double(nx);
 
     double dy0;
-    if( fabs(etaY - 1.0) > 1.0e12 )
+    if( fabs(etaY - 1.0) > 1.0e-12 )
         dy0 = 0.5*this->lengthY * (1-etaY)/(1-pow(etaY, ny/2));
     else
         dy0 = this->lengthY / double(ny);
@@ -60,34 +60,18 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
     //=========================================================================
     //=========================================================================
 
-    double* CellSpacingsX = new double[nx+2];
-    for(int i = 0; i < nx/2 + 1; i++){
-        if(i == nx/2)
-        {
-            // The Ghost Cells have the same size, as the 
-            CellSpacingsX[nx/2 - i]     = dx0 * pow( etaX, i-1);
-            CellSpacingsX[nx/2 + i + 1] = dx0 * pow( etaX, i-1);
-        }
-        else
-        {
-            CellSpacingsX[nx/2 - i]     = dx0 * pow( etaX, i);
-            CellSpacingsX[nx/2 + i + 1] = dx0 * pow( etaX, i);
-        }
+    double* CellSpacingsX = new double[nx];
+    for(int i = 0; i < nx/2; i++)
+    {
+        CellSpacingsX[nx/2 - i - 1] = dx0 * pow( etaX, i);
+        CellSpacingsX[nx/2 + i + 1] = dx0 * pow( etaX, i);
     }
 
-    double* CellSpacingsY = new double[ny+2];
-    for(int i = 0; i < ny/2 + 1; i++){
-        if(i == ny/2)
-        {
-            // The Ghost Cells have the same size, as the 
-            CellSpacingsY[ny/2 - i]     = dy0 * pow( etaY, i-1);
-            CellSpacingsY[ny/2 + i + 1] = dy0 * pow( etaY, i-1);
-        }
-        else
-        {
-            CellSpacingsY[ny/2 - i]     = dy0 * pow( etaY, i);
-            CellSpacingsY[ny/2 + i + 1] = dy0 * pow( etaY, i);
-        }
+    double* CellSpacingsY = new double[ny];
+    for(int i = 0; i < ny/2; i++)
+    {
+        CellSpacingsY[ny/2 - i - 1] = dy0 * pow( etaY, i);
+        CellSpacingsY[ny/2 + i    ] = dy0 * pow( etaY, i);
     }
 
     // ========================================================================
@@ -267,10 +251,11 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
     double dx0 = this->lengthX / nx;
 
     double dy0;
-    if( fabs(etaY - 1.0) > 1.0e12 )
+    if( fabs(etaY - 1.0) > 1.0e-12 )
         dy0 = 0.5*this->lengthY * (1-etaY)/(1-pow(etaY, ny/2));
     else
         dy0 = this->lengthY / double(ny);
+
     //=========================================================================
     //=========================================================================
     //		Computation of the coordinates and spacings
@@ -278,24 +263,15 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
     //=========================================================================
 
     double* CellSpacingsX = new double[nx];
-    double* CellSpacingsY = new double[ny+2];
+    double* CellSpacingsY = new double[ny];
 
     for(int i = 0; i < nx; i++){
         CellSpacingsX[i] = dx0;
     }
 
-    for(int i = 0; i < ny/2 + 1; i++){
-        if(i == ny/2)
-        {
-            // The Ghost Cells have the same size, as the 
-            CellSpacingsY[ny/2 - i]     = dy0 * pow( etaY, i-1);
-            CellSpacingsY[ny/2 + i + 1] = dy0 * pow( etaY, i-1);
-        }
-        else
-        {
-            CellSpacingsY[ny/2 - i]     = dy0 * pow( etaY, i);
-            CellSpacingsY[ny/2 + i + 1] = dy0 * pow( etaY, i);
-        }
+    for(int i = 0; i < ny/2; i++){
+        CellSpacingsY[ny/2 - i - 1] = dy0 * pow( etaY, i);
+        CellSpacingsY[ny/2 + i    ] = dy0 * pow( etaY, i);
     }
 
     // ========================================================================
@@ -327,12 +303,12 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
 	{
 		for (int j = 0; j < nx + 1; j++)   // X-Direction
 		{
-            //float2* tmpNode = new float2( NodesX[j], NodesY[i] );
+            float2* tmpNode = new float2( NodesX[j], NodesY[i] );
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] + NodesX[j] / this->lengthX * heightDiff );
             
-            float2* tmpNode = new float2();
-            tmpNode->x = NodesX[j];
-            tmpNode->y = NodesY[i] - 0.3 * (NodesX[j] - this->lengthX)*NodesX[j] * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY );
+            //float2* tmpNode = new float2();
+            //tmpNode->x = NodesX[j];
+            //tmpNode->y = NodesY[i] - 0.3 * (NodesX[j] - this->lengthX)*NodesX[j] * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY );
 
 			this->NodeList.push_back(tmpNode);
 		}
@@ -496,13 +472,15 @@ void GKSMesh::generateMiniPatchMesh()
     int nx = 2;
     int ny = 2;
 
+    double eps = 0;
+
     this->NodeList.push_back( new float2( 0.0, 0.0 ) );
     this->NodeList.push_back( new float2( 0.5, 0.0 ) );
     this->NodeList.push_back( new float2( 1.0, 0.0 ) );
 
-    this->NodeList.push_back( new float2( 0.0, 0.45 ) );
-    this->NodeList.push_back( new float2( 0.5, 0.55 ) );
-    this->NodeList.push_back( new float2( 1.0, 0.45 ) );
+    this->NodeList.push_back( new float2( 0.0, 0.5 - eps ) );
+    this->NodeList.push_back( new float2( 0.5, 0.5 + eps ) );
+    this->NodeList.push_back( new float2( 1.0, 0.5 - eps ) );
 
     this->NodeList.push_back( new float2( 0.0, 1.0 ) );
     this->NodeList.push_back( new float2( 0.5, 1.0 ) );
@@ -510,9 +488,9 @@ void GKSMesh::generateMiniPatchMesh()
 
 
 
-	for (int i = 0; i < 2; i++)       // Y-Direction
+	for (int i = 0; i < ny; i++)       // Y-Direction
 	{
-		for (int j = 0; j < 2; j++)   // X-Direction
+		for (int j = 0; j < nx; j++)   // X-Direction
 		{
             float2* tmpNodes[4];
             tmpNodes[0] = this->NodeList[(i+0)*(nx+1) + j + 0]; // bottom left
