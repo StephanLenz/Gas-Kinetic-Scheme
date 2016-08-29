@@ -21,6 +21,9 @@ protected:
 
     double area;
 
+    double posDistance;
+    double negDistance;
+
     BoundaryCondition* BoundaryConditionPointer;
 
     FluidParameter fluidParam;
@@ -32,10 +35,13 @@ protected:
 
 public:
 	Interface();
-	Interface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC);
+	Interface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd,
+              float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC, double periodicLength);
 	~Interface();
 
-    static Interface* createInterface(InterfaceType type, Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC);
+    static Interface* createInterface(InterfaceType type, Cell* negCell, Cell* posCell, bool negAdd, bool posAdd,
+                                      float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC, double periodicLength);
+
 
 	virtual void computeFlux(double dt);
 

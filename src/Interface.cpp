@@ -12,7 +12,7 @@ Interface::Interface()
 {
 }
 
-Interface::Interface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC)
+Interface::Interface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC, double periodicLength)
 {
     // ========================================================================
     //                  Copy attributes
@@ -65,6 +65,24 @@ Interface::Interface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, flo
     // ========================================================================
     
     // ========================================================================
+    //                  compute distances
+    // ========================================================================
+    // Ghostcells have the same distance as their pendants in the domain
+    if(negCell != NULL){
+        if(negAdd) this->negDistance =                  this->distance( this->negCell->getCenter() );
+        else       this->negDistance = periodicLength - this->distance( this->negCell->getCenter() );
+    }else{
+        this->negDistance = this->distance( this->posCell->getCenter() );
+    }
+    if(posCell != NULL){
+        if(posAdd) this->posDistance =                  this->distance( this->posCell->getCenter() );
+        else       this->posDistance = periodicLength - this->distance( this->posCell->getCenter() );
+    }else{
+        this->posDistance = this->distance( this->negCell->getCenter() );
+    }
+    // ========================================================================
+    
+    // ========================================================================
     //                  Initialize Fluxes
     // ========================================================================
     for ( int i = 0; i < 4; i++ )
@@ -82,14 +100,15 @@ Interface::~Interface()
 // ============================================================================
 //                     Interface Factory
 // ============================================================================
-Interface * Interface::createInterface(InterfaceType type, Cell * negCell, Cell * posCell, bool negAdd, bool posAdd, float2** nodes, FluidParameter fluidParam, BoundaryCondition * BC)
+Interface * Interface::createInterface(InterfaceType type, Cell * negCell, Cell * posCell, bool negAdd, bool posAdd, 
+                                       float2** nodes, FluidParameter fluidParam, BoundaryCondition * BC, double periodicLength)
 {
     Interface* tmp = NULL;
 
     if ( type == incompressible )
-        tmp = new IncompressibleInterface(negCell, posCell, negAdd, posAdd, nodes, fluidParam, BC);
+        tmp = new IncompressibleInterface(negCell, posCell, negAdd, posAdd, nodes, fluidParam, BC, periodicLength);
     else
-        tmp = new CompressibleInterface(negCell, posCell, negAdd, posAdd, nodes, fluidParam, BC);
+        tmp = new CompressibleInterface(negCell, posCell, negAdd, posAdd, nodes, fluidParam, BC, periodicLength);
 
     return tmp;
 }
@@ -330,8 +349,8 @@ void Interface::interpolatePrim(double * prim)
     // This method computes the Values of the primary variables at the interface
     // with linear interpolation
 
-    double negDistance = this->distance( this->negCell->getCenter() );
-    double posDistance = this->distance( this->posCell->getCenter() );
+    //double negDistance = this->distance( this->negCell->getCenter() );
+    //double posDistance = this->distance( this->posCell->getCenter() );
 
     prim[0] = ( this->negCell->getPrim().rho * posDistance
               + this->posCell->getPrim().rho * negDistance)
@@ -363,8 +382,9 @@ void Interface::differentiateConsNormal(double* normalGradCons, double* prim)
 
     // compute the distance between the adjacent cell centers
 
-    double distance = this->distance( this->negCell->getCenter() )
-                    + this->distance( this->posCell->getCenter() );
+    //double distance = this->distance( this->negCell->getCenter() )
+    //                + this->distance( this->posCell->getCenter() );
+    double distance = this->posDistance + this->negDistance;
 
     normalGradCons[0] = ( this->posCell->getCons().rho  - this->negCell->getCons().rho )  / ( distance * prim[0] );
 

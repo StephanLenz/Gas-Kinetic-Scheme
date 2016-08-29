@@ -151,7 +151,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             if( j == nx ) currentBC = this->BoundaryConditionList[2];
 
 			// create a new interface with the adjacent cells
-			Interface* tmpInterface = Interface::createInterface(type,negCell, posCell, true, true, tmpNodes, this->fluidParam, currentBC);
+			Interface* tmpInterface = Interface::createInterface(type,negCell, posCell, true, true, tmpNodes, this->fluidParam, currentBC, lengthX);
 			// add itnerface to list
 			this->InterfaceList.push_back(tmpInterface);
 		}
@@ -181,7 +181,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             if( i == ny ) currentBC = this->BoundaryConditionList[3];
 
 			// create a new interface with the adjacent cells
-			Interface* tmpInterface = Interface::createInterface(type,negCell, posCell, true, true, tmpNodes, this->fluidParam, currentBC);
+			Interface* tmpInterface = Interface::createInterface(type,negCell, posCell, true, true, tmpNodes, this->fluidParam, currentBC, lengthY);
 			// add itnerface to list
 			this->InterfaceList.push_back(tmpInterface);
 		}
@@ -303,12 +303,12 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
 	{
 		for (int j = 0; j < nx + 1; j++)   // X-Direction
 		{
-            float2* tmpNode = new float2( NodesX[j], NodesY[i] );
+            //float2* tmpNode = new float2( NodesX[j], NodesY[i] );
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] + NodesX[j] / this->lengthX * heightDiff );
             
-            //float2* tmpNode = new float2();
-            //tmpNode->x = NodesX[j];
-            //tmpNode->y = NodesY[i] - 0.3 * (NodesX[j] - this->lengthX)*NodesX[j] * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY );
+            float2* tmpNode = new float2();
+            tmpNode->x = NodesX[j];
+            tmpNode->y = NodesY[i] - 0.3 * (NodesX[j] - this->lengthX)*NodesX[j] * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY );
 
 			this->NodeList.push_back(tmpNode);
 		}
@@ -378,7 +378,7 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
             bool negAdd = (j != 0) ;
 
 			// create a new interface with the adjacent cells
-			Interface* tmpInterface = Interface::createInterface(type,negCell, posCell, negAdd, posAdd, tmpNodes, this->fluidParam, NULL);
+			Interface* tmpInterface = Interface::createInterface(type,negCell, posCell, negAdd, posAdd, tmpNodes, this->fluidParam, NULL, lengthX);
 			// add itnerface to list
 			this->InterfaceList.push_back(tmpInterface);
 		}
@@ -408,7 +408,7 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
             if( i == ny ) currentBC = this->BoundaryConditionList[1];
 
 			// create a new interface with the adjacent cells
-			Interface* tmpInterface = Interface::createInterface(type,negCell, posCell, true, true, tmpNodes, this->fluidParam, currentBC);
+			Interface* tmpInterface = Interface::createInterface(type,negCell, posCell, true, true, tmpNodes, this->fluidParam, currentBC, lengthY);
 			// add itnerface to list
 			this->InterfaceList.push_back(tmpInterface);
 		}
@@ -472,7 +472,7 @@ void GKSMesh::generateMiniPatchMesh()
     int nx = 2;
     int ny = 2;
 
-    double eps = 0;
+    double eps = 0.1;
 
     this->NodeList.push_back( new float2( 0.0, 0.0 ) );
     this->NodeList.push_back( new float2( 0.5, 0.0 ) );
@@ -525,7 +525,7 @@ void GKSMesh::generateMiniPatchMesh()
             bool negAdd = (j != 0) ;
 
 			// create a new interface with the adjacent cells
-			Interface* tmpInterface = Interface::createInterface(compressible,negCell, posCell, negAdd, posAdd, tmpNodes, this->fluidParam, NULL);
+			Interface* tmpInterface = Interface::createInterface(compressible,negCell, posCell, negAdd, posAdd, tmpNodes, this->fluidParam, NULL, lengthX);
 			// add itnerface to list
 			this->InterfaceList.push_back(tmpInterface);
 		}
@@ -555,7 +555,7 @@ void GKSMesh::generateMiniPatchMesh()
             bool negAdd = (i != 0) ;
 
 			// create a new interface with the adjacent cells
-			Interface* tmpInterface = Interface::createInterface(compressible,negCell, posCell, negAdd, posAdd, tmpNodes, this->fluidParam, NULL);
+			Interface* tmpInterface = Interface::createInterface(compressible,negCell, posCell, negAdd, posAdd, tmpNodes, this->fluidParam, NULL, lengthY);
 			// add itnerface to list
 			this->InterfaceList.push_back(tmpInterface);
 		}

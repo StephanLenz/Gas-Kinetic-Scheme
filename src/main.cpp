@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     //for(int i = 0; i < 6; i++)      // RaList
     {
     
-        /*
+        ///*
 
         // ========================================================================
         //
@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
         double H = 1.0;
         double W = 1.0;
 
-        param.numberOfIterations = 100000;
+        param.numberOfIterations = 1000000;
         param.outputIntervalVTK = 10000;
         param.outputInterval = 10000;
 
@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
         param.convergenceCriterium[2] = 1.0;
         param.convergenceCriterium[3] = 1.0;
 
-        param.CFL = 0.5;
+        param.CFL = 0.1;
 
         param.verbose = false;
         param.fluxOutput = true;
@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
         // Initialize Values
         //mesh->initMeshConstant(1.0, 1.0, 0.0, lambda);
         //mesh->initMeshParabularVelocity(1.0, u0, 0.0, lambda);
-        mesh->initMeshSineVelocity(1.0, -1.0, 0.0, lambda);
+        mesh->initMeshSineVelocity(1.0, 1.0, 0.0, lambda);
 
         //double rhoLin[] = {1.0, 1.0};
         //double uLin[] = {0.0, 1.0};
@@ -97,9 +97,7 @@ int main(int argc, char* argv[])
         //double lambdaLin[] = {lambda, lambda};
         //mesh->initMeshLinear(rhoLin, uLin, vLin, lambdaLin);
 
-
-
-        */
+        //*/
 
 
         /*
@@ -182,7 +180,7 @@ int main(int argc, char* argv[])
 
         */
     
-        ///*
+        /*
 
         // ========================================================================
         //
@@ -196,8 +194,8 @@ int main(int argc, char* argv[])
         double W = 1.0;
 
         param.numberOfIterations = 100000000;
-        param.outputIntervalVTK = 100000000;
-        param.outputInterval = 100000;
+        param.outputIntervalVTK = 10000;
+        param.outputInterval = 10000;
 
         param.convergenceCriterium[0] = 1.0;
         param.convergenceCriterium[1] = 1.0e-10;
@@ -216,11 +214,11 @@ int main(int argc, char* argv[])
 
         // ========== Weidongs Parameters ==========
         int    nx = 4;
-        int    ny = 64;//nyList[j];
-        double Re = 40.0;
+        int    ny = 4;//nyList[j];
+        double Re = 4.0;
         double u0 = 0.1;
         double angle = atan(0.0);
-        param.L = 1.0;//*cos(angle);
+        param.L = 1.0*cos(angle);
 
         fluidParam.K = 1;
         fluidParam.nu = (u0*param.L)/Re;
@@ -252,13 +250,13 @@ int main(int argc, char* argv[])
         Interface::setInterpolationOrder(1);
 
         // Generate Mesh
-        mesh->generateRectMeshPeriodicGraded(compressible, W, H, nx, ny, 7.5);
+        mesh->generateRectMeshPeriodicGraded(compressible, W, H, nx, ny, 1.0);
 
         // Initialize Values
         mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
         //mesh->initMeshParabularVelocity(1.0, u0, 0.0, lambda);
 
-        //*/
+        */
     
         /*
 
@@ -537,13 +535,13 @@ int main(int argc, char* argv[])
         //mesh->writeTimeSteps("out/timeSteps.dat");
 
         // ========== Poiseuille Convergence Study ============================
-        ostringstream filename;
-        filename << "out/" << ny;
-        mesh->writeVelocityProfile(            ( filename.str() + "/VelocityProfile.dat" )    , 0.5);
-        mesh->writeResultFields(               ( filename.str() + "/ResultFields.dat" )            );
-        mesh->writeConvergenceHistory(         ( filename.str() + "/ConvergenceHistory.dat" )      );
-        mesh->writeOverviewFile(               ( filename.str() + "/OverviewFile.dat" )            );
-        mesh->writeVTKFile(                    ( filename.str() + "/ResultFields.vtk" )            );
+        //ostringstream filename;
+        //filename << "out/" << ny;
+        //mesh->writeVelocityProfile(            ( filename.str() + "/VelocityProfile.dat" )    , 0.5);
+        //mesh->writeResultFields(               ( filename.str() + "/ResultFields.dat" )            );
+        //mesh->writeConvergenceHistory(         ( filename.str() + "/ConvergenceHistory.dat" )      );
+        //mesh->writeOverviewFile(               ( filename.str() + "/OverviewFile.dat" )            );
+        //mesh->writeVTKFile(                    ( filename.str() + "/ResultFields.vtk" )            );
         // ====================================================================
 
         // ========== Thermal Couette Convergence Study =======================
