@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     //for(int i = 0; i < 6; i++)      // RaList
     {
     
-        ///*
+        /*
 
         // ========================================================================
         //
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
         //double lambdaLin[] = {lambda, lambda};
         //mesh->initMeshLinear(rhoLin, uLin, vLin, lambdaLin);
 
-        //*/
+        */
 
 
         /*
@@ -180,7 +180,7 @@ int main(int argc, char* argv[])
 
         */
     
-        /*
+        ///*
 
         // ========================================================================
         //
@@ -193,16 +193,16 @@ int main(int argc, char* argv[])
         double H = 1.0;
         double W = 1.0;
 
-        param.numberOfIterations = 100000000;
-        param.outputIntervalVTK = 10000;
-        param.outputInterval = 10000;
+        param.numberOfIterations = 1000000000;
+        param.outputIntervalVTK = 100000;
+        param.outputInterval = 100000;
 
         param.convergenceCriterium[0] = 1.0;
         param.convergenceCriterium[1] = 1.0e-10;
         param.convergenceCriterium[2] = 1.0;
         param.convergenceCriterium[3] = 1.0;
 
-        param.CFL = 0.5;
+        param.CFL = 0.01;
 
         param.verbose = false;
         param.fluxOutput = false;
@@ -213,8 +213,8 @@ int main(int argc, char* argv[])
         FluidParameter fluidParam;
 
         // ========== Weidongs Parameters ==========
-        int    nx = 4;
-        int    ny = 4;//nyList[j];
+        int    nx = 16;
+        int    ny = 16;//nyList[j];
         double Re = 4.0;
         double u0 = 0.1;
         double angle = atan(0.0);
@@ -223,8 +223,8 @@ int main(int argc, char* argv[])
         fluidParam.K = 1;
         fluidParam.nu = (u0*param.L)/Re;
         fluidParam.R = 200.0;
-        fluidParam.Force.x = cos(angle) * (u0*8.0*fluidParam.nu) / (param.L*param.L);
-        fluidParam.Force.y = sin(angle) * (u0*8.0*fluidParam.nu) / (param.L*param.L);
+        fluidParam.Force.x = 0.0;//cos(angle) * (u0*8.0*fluidParam.nu) / (param.L*param.L);
+        fluidParam.Force.y = 0.0;//sin(angle) * (u0*8.0*fluidParam.nu) / (param.L*param.L);
         fluidParam.BoussinesqForce.x = 0.0;
         fluidParam.BoussinesqForce.y = 0.0;
         fluidParam.rhoReference = 1.0;
@@ -243,7 +243,7 @@ int main(int argc, char* argv[])
         //    |    0    |
         //    -----------
         mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, lambda);
-        mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(wall, 0.0, u0, 0.0, lambda);
         //mesh->addBoundaryCondition(isothermalWall, 0.0, 0.0, 0.0, lambda);
         //mesh->addBoundaryCondition(isothermalWall, 0.0, 0.0, 0.0, lambda);
 
@@ -256,7 +256,7 @@ int main(int argc, char* argv[])
         mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
         //mesh->initMeshParabularVelocity(1.0, u0, 0.0, lambda);
 
-        */
+        //*/
     
         /*
 
@@ -573,6 +573,7 @@ int main(int argc, char* argv[])
         ////mesh->writeVelocityV("out/VelocityV.dat");
         ////mesh->writeTemperature("out/Temperature.dat");
         ////mesh->writeDensity("out/Density.dat");
+        mesh->writeResultFields("out/ResultFields.dat");
         // ====================================================================
 
         //system("pause");

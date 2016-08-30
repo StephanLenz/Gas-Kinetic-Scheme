@@ -181,7 +181,7 @@ void Interface::computeInternalFlux(double dt)
     // ========================================================================
     
     transformLocal2Global(this->timeIntegratedFlux);
-    transformGlobal2Local(this->FluxDensity);
+    transformLocal2Global(this->FluxDensity);
 
     int i = 1;
 }

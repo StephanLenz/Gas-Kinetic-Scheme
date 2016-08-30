@@ -34,10 +34,10 @@ Cell::Cell(InterfaceType interfaceType, float2** nodes, BoundaryCondition* BC, F
     // ========================================================================
     //                  Compute Volume of the Quad
     // ========================================================================
-    volume = 0.5 * abs( this->nodes[0]->x * ( this->nodes[1]->y - this->nodes[3]->y ) 
+    volume = 0.5 * fabs( this->nodes[0]->x * ( this->nodes[1]->y - this->nodes[3]->y ) 
                       + this->nodes[1]->x * ( this->nodes[3]->y - this->nodes[0]->y ) 
                       + this->nodes[3]->x * ( this->nodes[0]->y - this->nodes[1]->y ) )
-           + 0.5 * abs( this->nodes[2]->x * ( this->nodes[3]->y - this->nodes[1]->y ) 
+           + 0.5 * fabs( this->nodes[2]->x * ( this->nodes[3]->y - this->nodes[1]->y ) 
                       + this->nodes[3]->x * ( this->nodes[1]->y - this->nodes[2]->y ) 
                       + this->nodes[1]->x * ( this->nodes[2]->y - this->nodes[3]->y ) );
     // ========================================================================
@@ -147,7 +147,7 @@ void Cell::applyBoundaryCondition()
 {
 
     PrimitiveVariable primNeighbor = this->findNeighborInDomain()->getPrim();
-    PrimitiveVariable prim         = this->getPrim();
+    PrimitiveVariable prim;
 
     switch ( this->BoundaryContitionPointer->getType() )
     {
@@ -167,9 +167,6 @@ void Cell::applyBoundaryCondition()
         case isothermalWall:
         {
             PrimitiveVariable boundaryValue = this->BoundaryContitionPointer->getValue();
-
-            double lambda_0 = primNeighbor.L;
-            double lambda_1 = prim.L;
 
             prim.rho = primNeighbor.rho * ( 2.0*boundaryValue.L - primNeighbor.L ) / primNeighbor.L;
             prim.U   = 2.0*boundaryValue.U - primNeighbor.U;

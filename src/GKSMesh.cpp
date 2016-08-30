@@ -308,7 +308,8 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
             
             float2* tmpNode = new float2();
             tmpNode->x = NodesX[j];
-            tmpNode->y = NodesY[i] - 0.3 * (NodesX[j] - this->lengthX)*NodesX[j] * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY );
+            //tmpNode->y = NodesY[i] - 0.25 * (NodesX[j] - this->lengthX)*NodesX[j] * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY );
+            tmpNode->y = NodesY[i] - 0.05 * sin( NodesX[j] * 2.0 * M_PI/this->lengthX ) * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY );
 
 			this->NodeList.push_back(tmpNode);
 		}
