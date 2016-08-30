@@ -260,6 +260,11 @@ void Cell::setValues(double rho, double u, double v, double L)
 	prim.L   = L;
 
     this->computeCons(prim);
+
+    this->cons_old[0] = this->cons[0];
+    this->cons_old[1] = this->cons[1];
+    this->cons_old[2] = this->cons[2];
+    this->cons_old[3] = this->cons[3];
 }
 
 void Cell::computeCons(PrimitiveVariable prim)

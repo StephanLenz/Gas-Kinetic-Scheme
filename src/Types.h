@@ -68,7 +68,8 @@ enum InterfaceType
 enum BoundaryConditionType
 {
     wall,
-    isothermalWall
+    isothermalWall,
+    periodic
 };
 
 #endif

@@ -193,9 +193,9 @@ int main(int argc, char* argv[])
         double H = 1.0;
         double W = 1.0;
 
-        param.numberOfIterations = 1000000000;
-        param.outputIntervalVTK = 100000;
-        param.outputInterval = 100000;
+        param.numberOfIterations = 100;
+        param.outputIntervalVTK = 1;
+        param.outputInterval = 1;
 
         param.convergenceCriterium[0] = 1.0;
         param.convergenceCriterium[1] = 1.0e-10;
@@ -213,8 +213,8 @@ int main(int argc, char* argv[])
         FluidParameter fluidParam;
 
         // ========== Weidongs Parameters ==========
-        int    nx = 16;
-        int    ny = 16;//nyList[j];
+        int    nx = 2;
+        int    ny = 2;//nyList[j];
         double Re = 4.0;
         double u0 = 0.1;
         double angle = atan(0.0);
@@ -238,19 +238,20 @@ int main(int argc, char* argv[])
 
         // Define Boundary Conditions
         //    -----------
+        //    |    3    |
+        //    | 0     2 |
         //    |    1    |
-        //    |         |
-        //    |    0    |
         //    -----------
-        mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, lambda);
-        mesh->addBoundaryCondition(wall, 0.0, u0, 0.0, lambda);
-        //mesh->addBoundaryCondition(isothermalWall, 0.0, 0.0, 0.0, lambda);
-        //mesh->addBoundaryCondition(isothermalWall, 0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(wall    , 0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(wall    , 0.0, u0 , 0.0, lambda);
 
         Interface::setInterpolationOrder(1);
 
         // Generate Mesh
-        mesh->generateRectMeshPeriodicGraded(compressible, W, H, nx, ny, 1.0);
+        mesh->generateRectMeshGraded(compressible, W, H, nx, ny, 1.0, 1.0);
+        //mesh->generateRectMeshPeriodicGraded(compressible, W, H, nx, ny, 1.0);
 
         // Initialize Values
         mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);

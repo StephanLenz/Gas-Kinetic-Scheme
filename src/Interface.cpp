@@ -160,7 +160,7 @@ void Interface::computeInternalFlux(double dt)
     // ========================================================================
     
     // ========================================================================
-    // spacial micro slopes a = a1 + a2 u + a3 v + 0.4 a4 (u^2 + v^2 + xi^2)
+    // spacial micro slopes a = a1 + a2 u + a3 v + 0.5 a4 (u^2 + v^2 + xi^2)
     this->computeMicroSlope(prim, normalGradCons, a);
     // ========================================================================
 
@@ -169,7 +169,7 @@ void Interface::computeInternalFlux(double dt)
     // ========================================================================
 
     // ========================================================================
-    // temporal micro slopes A = A1 + A2 u + A3 v + 0.4 A4 (u^2 + v^2 + xi^2)
+    // temporal micro slopes A = A1 + A2 u + A3 v + 0.5 A4 (u^2 + v^2 + xi^2)
     this->computeTimeDerivative(prim, MomentU, MomentV, MomentXi, a, b, timeGrad);
 
     this->computeMicroSlope(prim, timeGrad, A);
