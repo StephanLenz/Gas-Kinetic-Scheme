@@ -103,16 +103,27 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
 	{
 		for (int j = 0; j < nx + 1; j++)   // X-Direction
 		{
+            // ===== No Distortion =====================
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] );
+
+            // ===== Parallelogram =====================
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] + NodesX[j] / this->lengthX * heightDiff );
 
-            float2* tmpNode = new float2( NodesX[j], NodesY[i] - 1.0 * (NodesX[j] - this->lengthX)*NodesX[j]*(NodesY[i] - this->lengthY)*NodesY[i] );
+            // ===== internal x-Distortion =============
+            //float2* tmpNode = new float2( NodesX[j] - 1.0 * (NodesY[i] - this->lengthY)*NodesY[i]*(NodesX[j] - this->lengthX)*NodesX[j], NodesY[i] );
 
-            //float2* tmpNode = new float2();
-            //tmpNode->x = NodesX[j];
-            ////tmpNode->y = NodesY[i] - 0.25 * (NodesX[j] - this->lengthX)*NodesX[j] * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY );
-            //tmpNode->y = NodesY[i] - 0.05 * sin( NodesX[j] * 2.0 * M_PI/this->lengthX ) * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY );
+            // ===== internal y-Distortion =============
+            //float2* tmpNode = new float2( NodesX[j], NodesY[i] - 1.0 * (NodesX[j] - this->lengthX)*NodesX[j]*(NodesY[i] - this->lengthY)*NodesY[i] );
 
+            // ===== internal y-Distortion (symmetric) =
+            float2* tmpNode = new float2( NodesX[j], NodesY[i] + 0.01 * cos( NodesX[j] * 2.0 * M_PI / this->lengthX ) * sin( NodesY[i] * M_PI/this->lengthY ) );
+
+            // ===== internal parabular Distortion =====
+            //float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.25 * (NodesX[j] - this->lengthX)*NodesX[j] * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY ) );
+
+            // ===== internal sine Distortion ==========
+            //float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.05 * sin( NodesX[j] * 2.0 * M_PI/this->lengthX ) * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY ) );
+            
 			this->NodeList.push_back(tmpNode);
 		}
 	}
@@ -289,234 +300,6 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
     delete [] NodesY;
 
 	return;
-}
-
-void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX, double lengthY, int nx, int ny, double grading)
-{
-
-    this->lengthX = lengthX;
-    this->lengthY = lengthY;
-
-    // make ny an even number
-    ny = 2 * (ny/2);
-    
-    double etaY = pow( grading, 1.0 / (ny/2 - 1) );
-
-    double dx0 = this->lengthX / nx;
-
-    double dy0;
-    if( fabs(etaY - 1.0) > 1.0e-12 )
-        dy0 = 0.5*this->lengthY * (1-etaY)/(1-pow(etaY, ny/2));
-    else
-        dy0 = this->lengthY / double(ny);
-
-    //=========================================================================
-    //=========================================================================
-    //		Computation of the coordinates and spacings
-    //=========================================================================
-    //=========================================================================
-
-    double* CellSpacingsX = new double[nx];
-    double* CellSpacingsY = new double[ny];
-
-    for(int i = 0; i < nx; i++){
-        CellSpacingsX[i] = dx0;
-    }
-
-    for(int i = 0; i < ny/2; i++){
-        CellSpacingsY[ny/2 - i - 1] = dy0 * pow( etaY, i);
-        CellSpacingsY[ny/2 + i    ] = dy0 * pow( etaY, i);
-    }
-
-    // ========================================================================
-    
-    double* NodesX = new double[nx+1]; 
-    double* NodesY = new double[ny+1];
-
-    double sumX = 0.0;
-    for(int i = 0; i < nx+1; i++){
-        NodesX[i] = sumX;
-        sumX += CellSpacingsX[i];
-    }
-   
-    double sumY = 0.0;
-    for(int i = 0; i < ny+1; i++){
-        NodesY[i] = sumY;
-        sumY += CellSpacingsY[i];
-    }
-    
-	//=========================================================================
-	//=========================================================================
-	//		Node generation
-	//=========================================================================
-	//=========================================================================
-
-    double heightDiff = 0.5;
-
-    for (int i = 0; i < ny + 1; i++)       // Y-Direction
-	{
-		for (int j = 0; j < nx + 1; j++)   // X-Direction
-		{
-            //float2* tmpNode = new float2( NodesX[j], NodesY[i] );
-            //float2* tmpNode = new float2( NodesX[j], NodesY[i] + NodesX[j] / this->lengthX * heightDiff );
-            
-            float2* tmpNode = new float2();
-            tmpNode->x = NodesX[j];
-            //tmpNode->y = NodesY[i] - 0.25 * (NodesX[j] - this->lengthX)*NodesX[j] * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY );
-            tmpNode->y = NodesY[i] - 0.05 * sin( NodesX[j] * 2.0 * M_PI/this->lengthX ) * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY );
-
-			this->NodeList.push_back(tmpNode);
-		}
-	}
-    
-    
-	//=========================================================================
-	//=========================================================================
-	//		Node Rotation
-	//=========================================================================
-	//=========================================================================
-
-    double angle = 0.0;//0.25*M_PI;
-
-    for (vector<float2*>::iterator i = NodeList.begin(); i != NodeList.end(); ++i)       // Y-Direction
-	{
-        double x = (*i)->x;
-        double y = (*i)->y;
-        (*i)->x = cos(angle) * x - sin(angle) * y;
-        (*i)->y = sin(angle) * x + cos(angle) * y;
-	}
-
-	//=========================================================================
-	//=========================================================================
-	//		Cell generation
-	//=========================================================================
-	//=========================================================================
-	for (int i = 0; i < ny; i++)       // Y-Direction
-	{
-		for (int j = 0; j < nx; j++)   // X-Direction
-		{
-            float2* tmpNodes[4];
-            tmpNodes[0] = this->NodeList[(i+0)*(nx+1) + j + 0]; // bottom left
-            tmpNodes[1] = this->NodeList[(i+0)*(nx+1) + j + 1]; // bottom right
-            tmpNodes[2] = this->NodeList[(i+1)*(nx+1) + j + 1]; // top right
-            tmpNodes[3] = this->NodeList[(i+1)*(nx+1) + j + 0]; // top left
-
-			Cell* tmpCell = new Cell(type, tmpNodes, NULL, this->fluidParam);
-			// add interface to list
-			this->CellList.push_back(tmpCell);
-		}
-	}
-
-	//=========================================================================
-	//=========================================================================
-	//						F interface generation
-	//=========================================================================
-	//=========================================================================
-	for (int i = 0; i < ny; i++)       // Y-Direction
-	{
-		for (int j = 0; j < nx + 1; j++)    // X-Direction
-		{
-            float2* tmpNodes[2];
-            tmpNodes[0] = this->NodeList[(i+1)*(nx+1) + j]; // top
-            tmpNodes[1] = this->NodeList[(i+0)*(nx+1) + j]; // bottom
-
-            Cell* negCell = NULL;
-            Cell* posCell = NULL;
-
-            if( j != 0  ) negCell = this->CellList[i*nx + (j  - 1)];
-            else          negCell = this->CellList[i*nx + (nx - 1)];
-
-            if( j != nx ) posCell = this->CellList[i*nx + (j  - 0)];
-            else          posCell = this->CellList[i*nx + (0  - 0)];
-            
-            bool posAdd = (j != nx);
-            bool negAdd = (j != 0) ;
-
-			// create a new interface with the adjacent cells
-			Interface* tmpInterface = Interface::createInterface(type,negCell, posCell, negAdd, posAdd, tmpNodes, this->fluidParam, NULL, lengthX);
-			// add itnerface to list
-			this->InterfaceList.push_back(tmpInterface);
-		}
-	}
-
-	//=========================================================================
-	//=========================================================================
-	//						G interface generation
-	//=========================================================================
-	//=========================================================================
-	for (int i = 0; i < ny + 1; i++)        // Y-Direction
-	{
-		for (int j = 0; j < nx; j++)   // X-Direction
-		{
-            float2* tmpNodes[2];
-            tmpNodes[0] = this->NodeList[i*(nx+1) + (j+0)]; // left
-            tmpNodes[1] = this->NodeList[i*(nx+1) + (j+1)]; // right
-
-            Cell* negCell = NULL;
-            Cell* posCell = NULL;
-
-            if(i != 0 ) negCell = this->CellList[(i-1)*nx + j];
-            if(i != ny) posCell = this->CellList[(i-0)*nx + j];
-
-            BoundaryCondition* currentBC = NULL;
-            if( i == 0  ) currentBC = this->BoundaryConditionList[0];
-            if( i == ny ) currentBC = this->BoundaryConditionList[1];
-
-			// create a new interface with the adjacent cells
-			Interface* tmpInterface = Interface::createInterface(type,negCell, posCell, true, true, tmpNodes, this->fluidParam, currentBC, lengthY);
-			// add itnerface to list
-			this->InterfaceList.push_back(tmpInterface);
-		}
-	}
-
-	//=========================================================================
-	//=========================================================================
-	//						create Ghostcells
-	//=========================================================================
-	//=========================================================================
-    for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
-    {
-        if( (*i)->isBoundaryInterface() )
-        {
-            float2* tmpNodes[4];
-            float2  normal = (*i)->getScaledNormal();
-            
-            tmpNodes[1] = (*i)->getNode(0);
-            tmpNodes[2] = (*i)->getNode(1);
-
-            tmpNodes[0] = new float2( tmpNodes[1]->x + 2.0*normal.x, tmpNodes[1]->y + 2.0*normal.y );
-            tmpNodes[3] = new float2( tmpNodes[2]->x + 2.0*normal.x, tmpNodes[2]->y + 2.0*normal.y );
-
-            this->NodeList.push_back(tmpNodes[0]);
-            this->NodeList.push_back(tmpNodes[3]);
-
-            Cell* tmpCell = new Cell(type, tmpNodes, (*i)->getBoundaryCondition(), this->fluidParam);
-
-            tmpCell->addInterface(*i);
-            (*i)->addCell(tmpCell);
-
-            this->CellList.push_back(tmpCell);
-        }
-    }
-
-	//=========================================================================
-	//=========================================================================
-	//						Compute MinDx
-	//=========================================================================
-	//=========================================================================
-    for(vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
-    {
-        (*i)->computeMinDx();
-    }
-    
-	//=========================================================================
-    delete [] CellSpacingsX;
-    delete [] NodesX;
-
-    delete [] CellSpacingsY;
-    delete [] NodesY;
-    
-    return;
 }
 
 void GKSMesh::generateMiniPatchMesh()
@@ -900,7 +683,7 @@ void GKSMesh::timeStep()
 
     if (this->param.verbose) cout << "  Compute Fluxes ..." << endl;
 
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for ( int i = 0; i < InterfaceList.size(); i++ )
     {
         if ( !InterfaceList[i]->isGhostInterface() )
@@ -909,7 +692,7 @@ void GKSMesh::timeStep()
 
     if (this->param.verbose) cout << "  Update Cells ..." << endl;
 
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for ( int i = 0; i < CellList.size(); i++ )
     {
         if ( !CellList[i]->isGhostCell() )

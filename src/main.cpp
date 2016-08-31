@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
         param.convergenceCriterium[2] = 1.0;
         param.convergenceCriterium[3] = 1.0;
 
-        param.CFL = 0.1;
+        param.CFL = 0.5;
 
         param.verbose = false;
         param.fluxOutput = true;
@@ -58,8 +58,8 @@ int main(int argc, char* argv[])
         FluidParameter fluidParam;
 
         // ========== Weidongs Parameters ==========
-        int    nx = 6;
-        int    ny = 6;//nyList[j];
+        int    nx = 2;
+        int    ny = 2;//nyList[j];
         double Re = 40.0;
         double u0 = 0.1;
         double angle = atan(0.0);
@@ -81,10 +81,21 @@ int main(int argc, char* argv[])
 
         GKSMesh* mesh = new GKSMesh(param, fluidParam);
 
+        // Define Boundary Conditions
+        //    -----------
+        //    |    3    |
+        //    | 0     2 |
+        //    |    1    |
+        //    -----------
+        mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
+
         Interface::setInterpolationOrder(1);
 
         // Generate Mesh
-        mesh->generateMiniPatchMesh();
+        mesh->generateRectMeshGraded(compressible, W, H, nx, ny, 1.0, 1.0);
 
         // Initialize Values
         //mesh->initMeshConstant(1.0, 1.0, 0.0, lambda);
@@ -202,7 +213,7 @@ int main(int argc, char* argv[])
         param.convergenceCriterium[2] = 1.0;
         param.convergenceCriterium[3] = 1.0;
 
-        param.CFL = 0.01;
+        param.CFL = 0.5;
 
         param.verbose = false;
         param.fluxOutput = false;
@@ -245,16 +256,15 @@ int main(int argc, char* argv[])
         mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
         mesh->addBoundaryCondition(wall    , 0.0, 0.0, 0.0, lambda);
         mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
-        mesh->addBoundaryCondition(wall    , 0.0, u0 , 0.0, lambda);
+        mesh->addBoundaryCondition(wall    , 0.0, 0.0, 0.0, lambda);
 
         Interface::setInterpolationOrder(1);
 
         // Generate Mesh
         mesh->generateRectMeshGraded(compressible, W, H, nx, ny, 1.0, 1.0);
-        //mesh->generateRectMeshPeriodicGraded(compressible, W, H, nx, ny, 1.0);
 
         // Initialize Values
-        mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
+        mesh->initMeshConstant(1.0, u0 , 0.0, lambda);
         //mesh->initMeshParabularVelocity(1.0, u0, 0.0, lambda);
 
         //*/
@@ -574,7 +584,7 @@ int main(int argc, char* argv[])
         ////mesh->writeVelocityV("out/VelocityV.dat");
         ////mesh->writeTemperature("out/Temperature.dat");
         ////mesh->writeDensity("out/Density.dat");
-        mesh->writeResultFields("out/ResultFields.dat");
+        //mesh->writeResultFields("out/ResultFields.dat");
         // ====================================================================
 
         //system("pause");
