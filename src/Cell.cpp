@@ -261,9 +261,9 @@ void Cell::computeMinDx()
     // ========================================================================
     if(! this->isGhostCell() )
     {
-        for(int i = 0; i < 4; i++)
+        for(int i = 0; i < 4; i++)          // loop over interfaces
         {
-            for( int j = 0; j < 4; j++)
+            for( int j = 0; j < 4; j++)     // loop over nodes not on the interface
             {
                 if(  this->nodes[j] != this->InterfaceList[i]->getNode(0) 
                   && this->nodes[j] != this->InterfaceList[i]->getNode(1) )
@@ -312,7 +312,6 @@ double Cell::getLocalTimestep()
     double U_max = sqrt(prim.U*prim.U + prim.V*prim.V);
     double c_s   = sqrt( 1.0 / ( 2.0*prim.L ) );                      // c_s = sqrt(RT) = c_s = sqrt(1/2lambda)
 
-    // TODO: The minimal distance in a cell is as the minimum of the maximal length is the coordinate directions
     double localTimestep = minDx / ( U_max + c_s + 2.0*this->fluidParam.nu / minDx );
 
     // ========================================================================

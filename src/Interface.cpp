@@ -124,6 +124,7 @@ void Interface::computeInternalFlux(double dt)
 
     double prim[4];
     double normalGradCons[4];
+    double normalGradConsTest[4];
     double timeGrad[4];
 
     double a[4];
@@ -141,7 +142,15 @@ void Interface::computeInternalFlux(double dt)
     // spacial gradients of the conservative varibles
     this->differentiateConsNormal(normalGradCons, prim);
     // ========================================================================
-
+    
+    // ========================================================================
+    //          Some Tests
+    // ========================================================================
+    PrimitiveVariable posPrim = this->posCell->getPrim();
+    PrimitiveVariable negPrim = this->negCell->getPrim();
+    this->transformGlobal2Local( (double*)&posPrim );
+    this->transformGlobal2Local( (double*)&negPrim );
+    // ========================================================================
     
     // ========================================================================
     // Transformation in local coordinate system
