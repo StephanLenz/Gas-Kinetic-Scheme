@@ -204,7 +204,7 @@ int main(int argc, char* argv[])
         double H = 1.0;
         double W = 1.0;
 
-        param.numberOfIterations = 100000000;
+        param.numberOfIterations = 100000;
         param.outputIntervalVTK = 100000;
         param.outputInterval = 100000;
 
@@ -213,7 +213,7 @@ int main(int argc, char* argv[])
         param.convergenceCriterium[2] = 1.0;
         param.convergenceCriterium[3] = 1.0;
 
-        param.CFL = 0.01;
+        param.CFL = 0.7;
 
         param.verbose = false;
         param.fluxOutput = false;
@@ -242,6 +242,7 @@ int main(int argc, char* argv[])
 
         double T      = 300.0;
         double lambda = 1.0 / (2.0 * fluidParam.R * T);
+        //double lambda = 1.5;
 
         // ========================================================================
 
@@ -255,10 +256,10 @@ int main(int argc, char* argv[])
         //    -----------
         mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
         //mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
-        mesh->addBoundaryCondition(wall    , 0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, lambda);
         mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
         //mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
-        mesh->addBoundaryCondition(wall    , 0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, lambda);
 
         Interface::setInterpolationOrder(1);
 
@@ -577,8 +578,9 @@ int main(int argc, char* argv[])
         // ====================================================================
         
         // ====================================================================
+        mesh->writeResultFields("out/ResultFields.dat");
+        mesh->writeOverviewFile("out/OverviewFile.dat");
         //mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
-        //mesh->writeOverviewFile("out/OverviewFile.dat");
         ////mesh->writePressureGradientProfile("out/PressureGradientProfile.dat", 0.5);
         ////mesh->writeVelocityProfile("out/VelocityProfile.dat", 0.5);
         ////mesh->writeTemperatureProfile("out/TemperatureProfile.dat", 0.5);
@@ -587,7 +589,6 @@ int main(int argc, char* argv[])
         ////mesh->writeVelocityV("out/VelocityV.dat");
         ////mesh->writeTemperature("out/Temperature.dat");
         ////mesh->writeDensity("out/Density.dat");
-        mesh->writeResultFields("out/ResultFields.dat");
         // ====================================================================
 
         //system("pause");

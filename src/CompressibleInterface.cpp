@@ -286,7 +286,7 @@ void CompressibleInterface::assembleFlux(double * MomentU, double * MomentV, dou
     // ========================================================================
     for ( int i = 0; i < 4; i++ )
     {
-        this->timeIntegratedFlux[i] = ( timeCoefficients[0] * Flux_1[i] + timeCoefficients[1] * Flux_2[i] + timeCoefficients[2] * Flux_3[i] ) * area * prim[0];
+        this->timeIntegratedFlux[i] = ( timeCoefficients[0] * Flux_1[i] + timeCoefficients[1] * Flux_2[i] + timeCoefficients[2] * Flux_3[i] ) * this->area * prim[0];
         // The Flux density in the Flux per unit area of the interface at one instant in time
         this->FluxDensity[i] = ( Flux_1[i] - tau*( Flux_2[i] + Flux_3[i] ) ) * prim[0];
     }

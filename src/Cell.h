@@ -28,6 +28,7 @@ private:
 	// Conseved Variables
 	double cons[4];
     double cons_old[4];
+    ConservedVariable updateVal;
 
     ConservedVariable residual;
 
@@ -66,6 +67,8 @@ public:
     ConservedVariable getCons();
 
     ConservedVariable getLocalResidual();
+
+    ConservedVariable getUpdate();
 
     Cell* getNeighborCell(int i);
 

@@ -157,16 +157,6 @@ void Interface::computeInternalFlux(double dt)
     transformGlobal2Local(prim);
     transformGlobal2Local(normalGradCons);
     // ========================================================================
-
-    // ========================================================================
-    // Formular as in the Rayleigh-Bernard-Paper (Xu, Lui, 1999)
-    double tau = 2.0*prim[3] * this->fluidParam.nu;
-    // ========================================================================
-    
-    // ========================================================================
-    // time integration Coefficients
-    double timeCoefficients[3] = { dt, -tau*dt, 0.5*dt*dt - tau*dt };
-    // ========================================================================
     
     // ========================================================================
     // spacial micro slopes a = a1 + a2 u + a3 v + 0.5 a4 (u^2 + v^2 + xi^2)
@@ -182,6 +172,16 @@ void Interface::computeInternalFlux(double dt)
     this->computeTimeDerivative(prim, MomentU, MomentV, MomentXi, a, b, timeGrad);
 
     this->computeMicroSlope(prim, timeGrad, A);
+    // ========================================================================
+
+    // ========================================================================
+    // Formular as in the Rayleigh-Bernard-Paper (Xu, Lui, 1999)
+    double tau = 2.0*prim[3] * this->fluidParam.nu;
+    // ========================================================================
+    
+    // ========================================================================
+    // time integration Coefficients
+    double timeCoefficients[3] = { dt, -tau*dt, 0.5*dt*dt - tau*dt };
     // ========================================================================
 
     // ========================================================================

@@ -35,11 +35,11 @@ Cell::Cell(InterfaceType interfaceType, float2** nodes, BoundaryCondition* BC, F
     //                  Compute Volume of the Quad
     // ========================================================================
     volume = 0.5 * fabs( this->nodes[0]->x * ( this->nodes[1]->y - this->nodes[3]->y ) 
-                      + this->nodes[1]->x * ( this->nodes[3]->y - this->nodes[0]->y ) 
-                      + this->nodes[3]->x * ( this->nodes[0]->y - this->nodes[1]->y ) )
+                       + this->nodes[1]->x * ( this->nodes[3]->y - this->nodes[0]->y ) 
+                       + this->nodes[3]->x * ( this->nodes[0]->y - this->nodes[1]->y ) )
            + 0.5 * fabs( this->nodes[2]->x * ( this->nodes[3]->y - this->nodes[1]->y ) 
-                      + this->nodes[3]->x * ( this->nodes[1]->y - this->nodes[2]->y ) 
-                      + this->nodes[1]->x * ( this->nodes[2]->y - this->nodes[3]->y ) );
+                       + this->nodes[3]->x * ( this->nodes[1]->y - this->nodes[2]->y ) 
+                       + this->nodes[1]->x * ( this->nodes[2]->y - this->nodes[3]->y ) );
     // ========================================================================
     
     // ========================================================================
@@ -127,7 +127,7 @@ void Cell::update(double dt)
                      + this->InterfaceList[3]->getFluxSign(this) * this->InterfaceList[3]->getTimeIntegratedFlux().rho
                      ) / this->volume;
 
-   update.rhoU     = ( this->InterfaceList[0]->getFluxSign(this) * this->InterfaceList[0]->getTimeIntegratedFlux().rhoU
+    update.rhoU    = ( this->InterfaceList[0]->getFluxSign(this) * this->InterfaceList[0]->getTimeIntegratedFlux().rhoU
                      + this->InterfaceList[1]->getFluxSign(this) * this->InterfaceList[1]->getTimeIntegratedFlux().rhoU
                      + this->InterfaceList[2]->getFluxSign(this) * this->InterfaceList[2]->getTimeIntegratedFlux().rhoU
                      + this->InterfaceList[3]->getFluxSign(this) * this->InterfaceList[3]->getTimeIntegratedFlux().rhoU
@@ -144,6 +144,11 @@ void Cell::update(double dt)
                      + this->InterfaceList[2]->getFluxSign(this) * this->InterfaceList[2]->getTimeIntegratedFlux().rhoE
                      + this->InterfaceList[3]->getFluxSign(this) * this->InterfaceList[3]->getTimeIntegratedFlux().rhoE
                      ) / this->volume;
+
+    this->updateVal.rho  = update.rho;
+    this->updateVal.rhoU = update.rhoU;
+    this->updateVal.rhoV = update.rhoV;
+    this->updateVal.rhoE = update.rhoE;
 
     int i = 0;
     // ========================================================================
@@ -359,6 +364,11 @@ ConservedVariable Cell::getCons()
 ConservedVariable Cell::getLocalResidual()
 {
     return this->residual;
+}
+
+ConservedVariable Cell::getUpdate()
+{
+    return this->updateVal;
 }
 
 Cell * Cell::getNeighborCell(int i)

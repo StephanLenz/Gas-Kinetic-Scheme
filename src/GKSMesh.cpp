@@ -104,7 +104,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
 		for (int j = 0; j < nx + 1; j++)   // X-Direction
 		{
             // ===== No Distortion =====================
-            //float2* tmpNode = new float2( NodesX[j], NodesY[i] );
+            float2* tmpNode = new float2( NodesX[j], NodesY[i] );
 
             // ===== Parallelogram =====================
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] + NodesX[j] / this->lengthX * heightDiff );
@@ -116,7 +116,10 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] - 2.0 * (NodesX[j] - this->lengthX)*NodesX[j]*(NodesY[i] - this->lengthY)*NodesY[i] );
 
             // ===== internal y-Distortion (symmetric) =
-            float2* tmpNode = new float2( NodesX[j], NodesY[i] + 0.05 * cos( NodesX[j] * 2.0 * M_PI / this->lengthX ) * sin( NodesY[i] * M_PI/this->lengthY ) );
+            //float2* tmpNode = new float2( NodesX[j], NodesY[i] + 0.05 * cos( NodesX[j] * 2.0 * M_PI / this->lengthX ) * sin( NodesY[i] * M_PI/this->lengthY ) );
+
+            // ===== y-Distortion (parallel) ===========
+            //float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.4 * this->lengthY * sin( NodesY[i] / this->lengthY * M_PI ) );
 
             // ===== internal parabular Distortion =====
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.25 * (NodesX[j] - this->lengthX)*NodesX[j] * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY ) );
@@ -575,7 +578,7 @@ void GKSMesh::timeStep()
 
     if (this->param.verbose) cout << "  Compute Fluxes ..." << endl;
 
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for ( int i = 0; i < InterfaceList.size(); i++ )
     {
         if ( !InterfaceList[i]->isGhostInterface() )
@@ -584,7 +587,7 @@ void GKSMesh::timeStep()
 
     if (this->param.verbose) cout << "  Update Cells ..." << endl;
 
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for ( int i = 0; i < CellList.size(); i++ )
     {
         if ( !CellList[i]->isGhostCell() )
@@ -1237,7 +1240,7 @@ void GKSMesh::writeInterfaceGeometry(ofstream& file)
 
 void GKSMesh::writeCellData(ofstream& file)
 {
-    int numberOfFields = 10;
+    int numberOfFields = 14;
     if ( this->param.resOutput )
         numberOfFields += 4;
     
@@ -1345,6 +1348,30 @@ void GKSMesh::writeCellData(ofstream& file)
         }
     }
     // ================================================================================================================
+    file << "update_rho 1 " << this->CellList.size() << " double\n";
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+    {
+        file << ( *i )->getUpdate().rho << endl;
+    }
+
+    file << "update_rhoU 1 " << this->CellList.size() << " double\n";
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+    {
+        file << ( *i )->getUpdate().rhoU << endl;
+    }
+
+    file << "update_rhoV 1 " << this->CellList.size() << " double\n";
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+    {
+        file << ( *i )->getUpdate().rhoV << endl;
+    }
+
+    file << "update_rhoE 1 " << this->CellList.size() << " double\n";
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+    {
+        file << ( *i )->getUpdate().rhoE << endl;
+    }
+    // ================================================================================================================
     for(int j = 0; j < 4; j++)
     {
         file << "VECTORS Connectivity" << j << " double\n";
@@ -1353,6 +1380,7 @@ void GKSMesh::writeCellData(ofstream& file)
             file << (*i)->getConnectivity(j).x << " " << (*i)->getConnectivity(j).y << " 0.0" << endl;
         }
     }
+    // ================================================================================================================
 }
 
 void GKSMesh::writeInterfaceData(ofstream & file)
