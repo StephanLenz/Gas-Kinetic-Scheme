@@ -1,0 +1,486 @@
+\documentclass[
+	pdftex,             % Ausgabe des Latex-Dokuments als PDF
+	12pt,				% Schriftgroesse 12pt
+	a4paper,		   	% Seiten Layout
+	english,				% Sprache, global
+	oneside,			% Einseitiger Druck
+]{article}
+
+% Seitenränder
+\usepackage{geometry}
+\geometry{a4paper, top=30mm, left=15mm, right=15mm, bottom=25mm,
+headsep=15mm}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+
+% Erweiterte Mathematikbibliotheken
+\usepackage[fleqn]{amsmath}
+\usepackage{amssymb}
+
+% Zum einbinden von Grafiken  
+\usepackage{graphicx}
+\usepackage{epstopdf}
+\usepackage{wrapfig}
+
+% Benutzerdefinierte Kopf- und Fußzeile
+\usepackage{scrpage2}
+\pagestyle{scrheadings}
+\setheadsepline{1pt} % Linie unter dem Header
+\ihead{Gas-Kinetic-Scheme \\ Documentation}
+\ohead{Stephan Lenz \\ IRMB -- TU Braunschweig}
+\ofoot{\pagemark}
+
+% Einr�cken nach Absatz verhinder
+\setlength{\parindent}{0pt}
+
+% =====================================================
+
+\newcommand{\mom}[1]{\langle #1 \rangle}
+\newcommand{\uu}[1]{\underline{#1}}
+\newcommand{\uuu}[1]{\underline{\underline{#1}}}
+\newcommand{\vv}[1]{\vec{#1}}
+\DeclareMathOperator{\sign}{sign}
+
+% =====================================================
+
+\begin{document}
+
+\section{Unstructured 2D GKS Solver}
+
+This document explains the GKS-Solver for smooth compressible 2D Flows. It contains almost all formulas used in the Implementation.
+
+\subsection{Finite Volume Aspects}
+
+The Gas-Kinetic-Scheme is a Finite-Volume method. Several implementation details are independent of the GKS. These will be described in this section. 
+
+The data structure for this Implementation consists basically of Cells (which store the conservative Variables) and Interfaces (which are used to compute the fluxes). The cells are quadrilaterals with four nodes and four interfaces. The cell center is computed as the arithmetic average of the nodal coordinates:
+
+\begin{equation}
+\vv{r}_{CellCenter} = \vv{r}_{CC} = \frac{1}{4} \sum \limits_{i=1}^4 \vv{r}_{Node,i}
+\textnormal{~~~~,~~~~~~~~}
+\vv{r}_{InterfaceCenter} = \vv{r}_{IC} = \frac{1}{2} \sum \limits_{i=1}^2 \vv{r}_{Node,i}
+\end{equation}
+
+The interface center is computed in the same manner, as the average of the two nodes building the interface. The main part of the computation takes place at the interfaces. There the primitive Variables and the normal gradient of the conserved variables are needed. These values can be interpolated from the values in the adjacent cell. Therefore the distances $d^+$ (for the positive neighbour) and $d^-$ (for the negative neighbour) between the interface and the cell centres are required. They are computed by the projection on the normal vector of the interface.
+
+\begin{equation}
+d^+ = \left| \left( \vv{r}_{IC} - \vv{r}_{CC}^{~+} \right) \cdot \vv{n} \right|
+\textnormal{~~~~,~~~~~~~~}
+d^- = \left| \left( \vv{r}_{IC} - \vv{r}_{CC}^{~-} \right) \cdot \vv{n} \right|
+\end{equation}
+
+The values on the Interface can then be computed by linear interpolation and finite difference.
+
+\begin{equation}
+\uu{Z} = \dfrac{\uu{Z}^+ d^- + \uu{Z}^- d^+}{d^+ + d^-}
+\textnormal{~~~~,~~~~~~~~with~~~~}
+\uu{Z} = (\rho, U, V, \lambda)^T
+\end{equation}
+
+\begin{equation}
+\dfrac{\partial}{\partial n} \uu{W} = \dfrac{\uu{W}^+ -\uu{W}^- }{d^+ + d^-}
+\textnormal{~~~~,~~~~~~~~with~~~~}
+\uu{W} = (\rho, \rho U, \rho V, \rho E)^T
+\end{equation}
+
+After this step the momentum and velocity components in $\uu{Z}$ and $\uu{W}$ are defined in the global coordinate system. For the flux computation the must be defined as normal and tangential component on the Interface. The transformation can be done by projecting the components on the normal and tagential vector:
+
+\begin{equation}
+\begin{pmatrix} U_n \\ V_t \end{pmatrix}
+=
+\begin{pmatrix} n_x & n_y \\ t_x & t_y \end{pmatrix}
+\begin{pmatrix} U \\ V \end{pmatrix}
+\textnormal{~~~~,~~~~with~~~~}
+\vv{n} = (n_x, n_y)^T
+\textnormal{~~~~and~~~~}
+\vv{t} = (t_x, t_y)^T = (-n_y, n_x)^T
+\end{equation}
+
+\begin{equation}
+\dfrac{\partial}{\partial n}
+\begin{pmatrix} \rho U_n \\ \rho V_t \end{pmatrix}
+=
+\begin{pmatrix} n_x & n_y \\ t_x & t_y \end{pmatrix}
+\dfrac{\partial}{\partial n}
+\begin{pmatrix} \rho U \\ \rho V \end{pmatrix}
+\end{equation}
+
+The transformation is a linear operation. Therefore transformation of the derivative is equivalent with the derivation of the transformed quantities. Moreover the transformation is a rotation only. Therefore the transformation matrix is orthogonal and the inverse is equal to the transposed. This is needed, when the fluxes are computed in the local coordinate system and the momentum flux components need to be transformed back into the global coordinate system:
+
+\begin{equation}
+\begin{pmatrix} F_{\rho U} \\ F_{\rho V} \end{pmatrix}
+=
+\begin{pmatrix} n_x & n_y \\ t_x & t_y \end{pmatrix}^T
+\begin{pmatrix} F_{\rho U_n} \\ F_{\rho V_t} \end{pmatrix}
+\end{equation}
+
+The conserved variables in the cells are updated with the fluxes.
+
+\begin{equation}
+\uu{W}^{n+1} = \uu{W}^{n+\frac{1}{2}} + \dfrac{1}{V}\sum \limits_{i=1}^4 s_i A_i \left( \int \limits_{t_n}^{t_{n+1}} \uu{F} dt  \right)_i
+\textnormal{~~~~,~~~~where~~~~}
+s_i = \sign \left( \left( \vv{r}_{CC} - \vv{r}_{IC, i} \right) \cdot \vv{n}_i \right)
+\end{equation}
+
+Here $V$ is the volume of the Cell and $A_i$ is the Area of the interfaces. The computation of the time integrated Flux will be shown in the second part of this report.
+
+For the computation of timestep the following CFL condition is used:
+
+\begin{equation}
+\Delta t_{local} = \dfrac{\Delta x_{min}}{U_{max} + c_s + \frac{2 \nu}{\Delta x_{min}}}
+\textnormal{~~~~,~~~~where~~~~}
+c_s = \sqrt{\frac{1}{2 \lambda}}
+\textnormal{~~~~and~~~~}
+U_{max} = \sqrt{U^2 + V^2}
+\end{equation}
+
+The minimal dimension of the cell $\Delta x_{min}$ is computed as the minimal distance between a node of the cell and an interface, that does not include this node. The global time step is computed as:
+
+\begin{equation}
+\Delta t = \textnormal{CFL} \min \limits_{\textnormal{Cells}}(\Delta t_{local})
+\textnormal{~~~~,~~~~with~~~~}
+\textnormal{CFL} \in (0, 1)
+\end{equation}
+
+The Forcing in every time step is applied before the flux computation. The Forcing leads to an increase in momentum:
+\begin{equation}
+\uu{W}^{n+\frac{1}{2}}
+=
+\uu{W}^{n} + 
+\Delta t ~ (0, G_x, G_y, 0)^T
+\textnormal{~~~~,~~~~where~~~~}
+\vv{G} = (G_x, G_y)^T \textnormal{: Volumeforce}
+\end{equation}
+
+The Temperature before and after the forcing must be equal. The total Energy on the other hand increases. The new total energy is therefore computed from the new values for velocities, but the old value for temperature:
+
+\begin{equation}
+\rho E^{n+\frac{1}{2}} = f(\rho^n, U^{n+\frac{1}{2}}, V^{n+\frac{1}{2}}, \lambda^n)
+\end{equation}
+
+The boundary conditions are implemented as a layer of ghost cells. The conserved variables in the ghost cells are computed after the Forcing and before the flux computation and the cell update. For a wall boundary (no-slip, insulated) the ghost cells are set to:
+
+\begin{equation}
+\begin{array}{lcl}
+\rho_{-1} &=& \rho_{1} \\
+U_{-1} &=& 2 U_{0} - U_{1} \\
+V_{-1} &=& 2 V_{0} - V_{1} \\
+\lambda_{-1} &=& \lambda_{1}
+\end{array}
+\textnormal{~~~~,~~~~where~~~~}
+\begin{array}{lcl}
+(\cdot)_{-1} &\widehat{=}& \textnormal{ghost cell} \\
+(\cdot)_0 &\widehat{=}& \textnormal{boundary} \\
+(\cdot)_1 &\widehat{=}& \textnormal{first cell in domain}
+\end{array}
+\end{equation}
+
+\subsection{Flux computation}
+
+The main part of the Gas-Kinetic-Scheme Implementation, is the Flux Computation. Only the final formulas implemented in the code will be shown here:
+
+\subsubsection{Computation of Expansion Coefficients}
+
+The expansion coeeficients of the equilibrium distribution depend sole on the interpolated primitive Variables, the gradients of the conserved variables and the material Parameter $K$, which denotes the number of internal degrees of freedom (mostly $K=1$ for motion in z-direction). 
+
+\begin{equation}
+\arraycolsep=1.4pt\def\arraystretch{2.2}
+\begin{array}{lclll}
+A &=& 2 \left( \dfrac{1}{\rho}\dfrac{\partial (\rho E)}{\partial n} \right)
+  - \overbrace{ \left( U^2 + V^2 + \dfrac{K+2}{2\lambda} \right) }^{2E}
+  \left( \dfrac{1}{\rho}\dfrac{\partial\rho}{\partial n} \right)
+    &\left( = 2 \dfrac{\partial E}{\partial n} \right)
+    & \hspace{0.5cm} = \left[\dfrac{m}{s^2} \right]
+\\
+B &=& \left( \dfrac{1}{\rho}\dfrac{\partial (\rho U)}{\partial n} \right)
+   - U\left(\dfrac{1}{\rho}\dfrac{\partial \rho}{\partial n} \right)
+	&\left( = \dfrac{\partial U}{\partial n} \right)
+    & \hspace{0.5cm} = \left[\dfrac{1}{s} \right]
+\\
+C &=& \left( \dfrac{1}{\rho}\dfrac{\partial (\rho V)}{\partial n} \right)
+   - V\left( \dfrac{1}{\rho}\dfrac{\partial \rho}{\partial n} \right)
+	&\left( = \dfrac{\partial V}{\partial n} \right)
+    & \hspace{0.5cm} = \left[\dfrac{1}{s} \right]
+\end{array}
+\end{equation}
+
+\begin{equation}
+\arraycolsep=1.4pt\def\arraystretch{2.2}
+\begin{array}{lcll}
+a_4 &=& \dfrac{4 \lambda^2}{K+2} ( A - 2 U B - 2 V C )
+    & \hspace{0.5cm} = \left[\dfrac{s^2}{m^3} \right]
+\\
+a_3 &=& 2 \lambda C - V a_4
+    & \hspace{0.5cm} = \left[\dfrac{s}{m^2} \right]
+\\
+a_2 &=& 2 \lambda B - U a_4
+    & \hspace{0.5cm} = \left[\dfrac{s}{m^2} \right]
+\\
+a_1 &=& \left( \dfrac{1}{\rho} \dfrac{\partial \rho}{\partial n} \right)
+     - U a_2 - V a_3 - \dfrac{1}{2} \left( U^2 + V^2 + \dfrac{K+2}{2\lambda} \right) a_4
+    & \hspace{0.5cm} = \left[\dfrac{1}{m} \right]
+\end{array}
+\end{equation}
+
+The above formulas hold not only for the spacial expansion coeffients $a_1, \cdots, a_4$, but also for temporal ones $A_1, \cdots, A_4$. Note that in the above formula $A$ denotes also an proxy variable. This ambiguity originates from Xu's publications and was not erased in order to remain consistent with his nomenclature.
+
+\subsubsection{Moments of equilibrium Distribution}
+
+The moments of the equilibrium distribution can be calculated analytically:
+
+\begin{equation}
+\arraycolsep=1.4pt\def\arraystretch{2.2}
+\begin{array}{lllll}
+    \begin{array}{lcl}
+        \mom{\xi^0} &=& 1 \\
+        \mom{\xi^2} &=& \dfrac{K}{2 \lambda} \\
+        \mom{\xi^4} &=& \dfrac{2K + K^2}{4\lambda^2} \\
+        \mom{\xi^6} &=& \dfrac{K+4}{2 \lambda} \mom{\xi^4} \\
+        ~&\vdots&~
+    \end{array}
+    &\hspace{1cm}&
+    \begin{array}{lcl}
+        \mom{u^0} &=& 1 \\
+        \mom{u^1} &=& U \\
+        \mom{u^n} &=& U \mom{u^{n-1}} + \dfrac{n+1}{2 \lambda} \mom{u^{n-2}} \\
+        ~&\vdots&~ \\
+        ~&~&~
+    \end{array}
+    &\hspace{1cm}&
+    \begin{array}{lcl}
+        \mom{v^0} &=& 1 \\
+        \mom{v^1} &=& V \\
+        \mom{v^n} &=& V \mom{v^{n-1}} + \dfrac{n+1}{2 \lambda} \mom{v^{n-2}} \\
+        ~&\vdots&~ \\
+        ~&~&~
+    \end{array}
+\end{array}
+\end{equation}
+
+\subsubsection{Time derivatives}
+
+The time dependence of the conserved variables is computed from the compatibility condition:
+
+\begin{equation}
+\arraycolsep=1.4pt\def\arraystretch{2.2}
+\dfrac{1}{\rho}\dfrac{\partial \uu{W}}{\partial t} = 
+\left(
+\begin{array}{l}
+    \left[
+        a_1 \mom{u} + a_2 \mom{u^2} + a_3 \mom{u}\mom{v}
+    +   a_4 \frac{1}{2} \Big( \mom{u^3} + \mom{u}\mom{v^2} + \mom{u}\mom{\xi^2}
+    \right] \\
+    \left[
+        a_1 \mom{u^2} + a_2 \mom{u^3} + a_3 \mom{u^2}\mom{v}
+    +   a_4 \frac{1}{2} \Big( \mom{u^4} + \mom{u^2}\mom{v^2} + \mom{u^2}\mom{\xi^2}\mom{\xi^2} \Big)
+    \right] \\
+    \left[
+        a_1 \mom{u}\mom{v} + a_2 \mom{u^2}\mom{v} + a_3 \mom{u}\mom{v^2}
+    +   a_4 \frac{1}{2} \Big( \mom{u^3}\mom{v} + \mom{u}\mom{v^3} + \mom{u}\mom{v}\mom{\xi^2} \Big)
+    \right] \\
+    \left[
+        \begin{array}{lcl}
+             &a_1& \frac{1}{2}~ \Big(~ \mom{u^3} + \mom{u}\mom{v^2} + \mom{u}\mom{\xi^2} ~\Big) \\
+            +&a_2& \frac{1}{2}~ \Big(~ \mom{u^4} + \mom{u^2}\mom{v^2} + \mom{u^2}\mom{\xi^2} ~\Big) \\
+            +&a_3& \frac{1}{2}~ \Big(~ \mom{u^3}\mom{v} + \mom{u}\mom{v^3} + \mom{u}\mom{v}\mom{\xi^2} ~\Big) \\
+            +&a_4& \frac{1}{2}~ \Bigg(~ \frac{1}{2}~
+					\Big(~ \mom{u^5} + \mom{u}\mom{v^4} + \mom{u}\mom{\xi^4} \Big)
+						 + \mom{u^3}\mom{v^2} + \mom{u^3}\mom{\xi^2} + \mom{u}\mom{v^2}\mom{\xi^2}
+					~\Bigg)
+        \end{array}
+    \right]
+\end{array}
+\right)
+\end{equation}
+
+\subsubsection{Fluxes}
+
+The Flux over the interface is computed from the distribution function on the interface. 
+
+\begin{equation}
+\uu{F} = 
+\int \limits_{-\infty}^{\infty}
+u~
+\begin{pmatrix}
+	1 \\ u \\ v \\ \frac{1}{2} (u^2 + v^2 + \xi^2)
+\end{pmatrix}
+\Big(
+	1 - \tau~a~u + (t-\tau)A
+\Big)
+~g~ du dv d\xi
+\textnormal{~~~~,~~~~where~~~~}
+\tau = 2 \lambda \nu
+\end{equation}
+
+The Flux is split into three parts for the analytical time integration over one time step. 
+
+\begin{equation}
+\uu{F} = \uu{F}^1 - \tau \uu{F}^2 + (t - \tau) \uu{F}^3
+\hspace{1cm} \Rightarrow \hspace{1cm}
+\int \limits_{t_n}^{t_{n+1}} \uu{F} dt 
+= \Delta t\uu{F}^1 
+- \tau \Delta t \uu{F}^2 
++ \left( \dfrac{\Delta t^2}{2} - \tau \Delta t \right) \uu{F}^3
+\end{equation}
+
+The above equation is an explicit formula for the flux. All terms are know. The three parts of flux are computed from the moments and the expansion coefficients of the equilibrium distribution.
+
+\begin{equation}
+\uu{F}^1 =
+\rho
+\begin{pmatrix}
+\mom{u} \\ 
+\mom{u^2} \\ 
+\mom{u}\mom{v} \\ 
+\frac{1}{2} \Big(\mom{u^3} + \mom{u}\mom{v^2} + \mom{u}\mom{\xi^2} \Big)
+\end{pmatrix}
+\end{equation}
+
+%======================================================================================
+
+\begin{equation}
+\arraycolsep=1.4pt\def\arraystretch{2.2}
+\begin{array}{l}
+\uu{F}^2 
+=
+\\
+\rho
+\left(
+\begin{array}{l}
+    a_1 \mom{u^2} + 
+    a_2 \mom{u^3} +
+    a_3 \mom{u^2}\mom{v} +
+    a_4 ~\tfrac{1}{2}~\Big( \mom{u^4} + \mom{u^2}\mom{v^2} + \mom{u^2}\mom{\xi^2} \Big)
+\\
+    a_1 \mom{u^3} +
+    a_2 \mom{u^4} +
+    a_3 \mom{u^3}\mom{v} +
+    a_4 ~\tfrac{1}{2}~\Big( \mom{u^5} + \mom{u^3}\mom{v^2} + \mom{u^3}\mom{\xi^2} \Big)
+\\
+    a_1 \mom{u^2}\mom{v} +
+    a_2 \mom{u^3}\mom{v} +
+    a_3 \mom{u^2}\mom{v^2} +
+    a_4 ~\tfrac{1}{2}~\Big( \mom{u^4}\mom{v} + \mom{u^2}\mom{v^3} + \mom{u^2}\mom{v}\mom{\xi^2} \Big)
+\\
+\left[
+\begin{array}{ll}
+\frac{1}{2} ~ \Bigg( 
+   & a_1~ \Big( \mom{u^4} + \mom{u^2}\mom{v^2} + \mom{u^2}\mom{\xi^2} \Big) \\
+ + & a_2~ \Big( \mom{u^5} + \mom{u^3}\mom{v^2} + \mom{u^3}\mom{\xi^2} \Big) \\
+ + & a_3~ \Big( \mom{u^4}\mom{v} + \mom{u^2}\mom{v^3} + \mom{u^2}\mom{v}\mom{\xi^2} \Big) \\
+ + & a_4~ \Big(~ \tfrac{1}{2} \big( \mom{u^6} + \mom{u^2}\mom{v^4} + \mom{u^2}\mom{\xi^4} \Big)
+ 				+ \mom{u^4}\mom{v^2} + \mom{u^4}\mom{\xi^2} + \mom{u^2}\mom{v^2}\mom{\xi^2} ~\Big)
+\Bigg)
+\end{array}
+\right]
+\end{array}
+\right)
+\end{array}
+\end{equation}
+
+%======================================================================================
+
+\begin{equation}
+\arraycolsep=1.4pt\def\arraystretch{2.2}
+\uu{F}^3
+=
+\rho
+\left(
+\begin{array}{l}
+    A_1 \mom{u} + 
+    A_2 \mom{u^2} + 
+    A_3 \mom{u}\mom{v}+ 
+    A_4 ~\tfrac{1}{2} \Big( \mom{u^3} + \mom{u}\mom{v^2} + \mom{u}\mom{\xi^2} \Big)
+\\
+    A_1 \mom{u^2} + 
+    A_2 \mom{u^3} + 
+    A_3 \mom{u^2}\mom{v}+ 
+    A_4 ~\tfrac{1}{2} \Big( \mom{u^4} + \mom{u^2}\mom{v^2} + \mom{u^2}\mom{\xi^2} \Big)
+\\
+    A_1 \mom{u}\mom{v} + 
+    A_2 \mom{u^2}\mom{v} + 
+    A_3 \mom{u}\mom{v^2}+ 
+    A_4 ~\tfrac{1}{2} \Big( \mom{u^3}\mom{v} + \mom{u}\mom{v^3} + \mom{u}\mom{v}\mom{\xi^2} \Big)
+\\
+\left[
+\begin{array}{ll}
+  &	A_1 ~\tfrac{1}{2} \Big( \mom{u^3} + \mom{u}\mom{v^2} + \mom{u}\mom{\xi^2} \Big) \\
++ &	A_2 ~\tfrac{1}{2} \Big( \mom{u^4} + \mom{u^2}\mom{v^2} + \mom{u^2}\mom{\xi^2} \Big) \\
++ & A_3 ~\tfrac{1}{2} \Big( \mom{u^3}\mom{v} + \mom{u}\mom{v^3} + \mom{u}\mom{v}\mom{\xi^2} \Big) \\
++ & A_4 ~\tfrac{1}{2} \Bigg( \tfrac{1}{2} \Big( \mom{u^5} + \mom{u}\mom{v^4} + \mom{u}\mom{\xi^4} \Big)
+						  + \mom{u^3}\mom{v^2} + \mom{u^3}\mom{\xi^2} + \mom{u}\mom{v^2}\mom{\xi^2} \Bigg)
+\end{array}
+\right]
+\end{array}
+\right)
+\end{equation}
+
+\clearpage
+\section{Some Formulas}
+
+The ideal gas law:
+
+\begin{equation}
+p = \rho RT = \dfrac{\rho}{2 \lambda}
+\textnormal{~~~~,~~~~where~~~~}
+\lambda = \frac{1}{2RT} = \left[ \dfrac{s^2}{m^2} \right]
+\end{equation}
+
+The relaxation time:
+
+\begin{equation}
+\tau = \frac{\mu}{p} = \frac{\nu}{RT} = 2\lambda\nu
+\end{equation}
+
+Connection between temperature and total energy:
+
+\begin{equation}
+\rho E = \dfrac{(K+2)\rho}{4\lambda} + \dfrac{1}{2} \dfrac{(\rho U)^2 + (\rho V)^2}{\rho}
+\end{equation}
+
+\begin{equation}
+\lambda =\frac{(K+2)\rho}
+{4\left( \rho E - \dfrac{1}{2} \dfrac{(\rho U)^2 + (\rho V)^2}{\rho}  \right)}
+\end{equation}
+
+\clearpage
+\section{Problems with Poiseuille Flow on unstructured grids}
+
+The above described Algorithm is currently tested for Poiseuille Flow on unstructured grids consisting of quadrilaterals. An earlier version of the code with a limitation on rectangular cells showed second order of convergence for force driven Poiseuille flow and thermal Couette flow. Moreover it was tested for compressible thermal convection in a square cavity with differently heated walls and in the Rayleigh-Bernard test case. Both cases showed reasonable results.
+
+The unstructured code remains its convergence order when applied to rectangular cells for force driven Poiseuille flow. Problems arise, when the same code is applied to non rectangular cells. At this point it is unclear, whether these problems are related to bugs in the code (most probably) or an feature of the chosen method (including the Finite-Volume aspects like interpolation and transformation and the smooth GKS Flux computation).
+
+To visualize the problem, force driven Poiseuille flow was simulated on a structured grid of $16 \times 16$ cells of non rectangular shape. The grid was generated by distoring the nodes in y-direction according to the following formula starting from a rectangular mesh. The domain size is $1 \times 1$. A sine distortion is chosen at this point, to get smooth cells.
+
+\begin{equation}
+\delta y = -0.05 ~ \sin \big(2 \pi x \big) ~ \sin \big(2 \pi (x-1/2) \big)
+\end{equation}
+
+The results of the simulation are shown in Figures \ref{fig:Poseieuille16x16} and  \ref{fig:Poseieuille16x16_Profiles}. Two problems are obvious: (1) A look on the velocity Profiles in Figure \ref{fig:Poseieuille16x16_Profiles} shows, that the stream wise velocities in the middle of the channel are too low (by a non negligible amount). (2) The right graphic in Figure \ref{fig:Poseieuille16x16} shows vertical velocities that are again not negligible. Non of these effects appears on rectangular grids.
+
+\begin{figure}[ht!]
+\includegraphics[width=0.5\textwidth]{PoiseuilleSineDistroted_U.png}
+\includegraphics[width=0.5\textwidth]{PoiseuilleSineDistroted_V.png}
+\caption{Force driven Poiseuille flow on non rectangular grid; stream wise (left) and cross stream (right) velocity fields}
+\label{fig:Poseieuille16x16}
+\end{figure}
+
+\begin{figure}[ht!]
+\center
+\includegraphics[width=0.8\textwidth]{PoiseuilleSineDistroted_U_Profiles.png}
+\caption{Force driven Poiseuille flow on non rectangular grid; stream wise velocity profiles}
+\label{fig:Poseieuille16x16_Profiles}
+\end{figure}
+
+For a detailed investigation the problem is brought down to four test cases of the same problem with only four cells (see Figure \ref{fig:Poseieuille2x2_Mesh}). Test case 1 is a reference with rectangular cells. In test case 2 the internal nodes a shifted down resulting in two still rectangular cells with different volumes. the test cases 3 and 4 have non rectangular shapes of the same and different volumes respectively. 
+
+\begin{figure}[ht!]
+\center
+\includegraphics[width=\textwidth]{2x2_TestCases.pdf}
+\caption{Minimal test cases for Poiseuille flow on non rectangular grids}
+\label{fig:Poseieuille2x2_Mesh}
+\end{figure}
+
+\end{document}
