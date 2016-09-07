@@ -104,13 +104,16 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
 		for (int j = 0; j < nx + 1; j++)   // X-Direction
 		{
             // ===== No Distortion =====================
-            float2* tmpNode = new float2( NodesX[j], NodesY[i] );
+            //float2* tmpNode = new float2( NodesX[j], NodesY[i] );
 
             // ===== Parallelogram =====================
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] + NodesX[j] / this->lengthX * heightDiff );
 
             // ===== internal x-Distortion =============
             //float2* tmpNode = new float2( NodesX[j] - 2.0 * (NodesY[i] - this->lengthY)*NodesY[i]*(NodesX[j] - this->lengthX)*NodesX[j], NodesY[i] );
+
+            // ===== x-Distortion (parallel) ===========
+            //float2* tmpNode = new float2( NodesX[j] - 0.4 * this->lengthX * sin( NodesX[j] / this->lengthX * M_PI ), NodesY[i] );
 
             // ===== internal y-Distortion =============
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] - 2.0 * (NodesX[j] - this->lengthX)*NodesX[j]*(NodesY[i] - this->lengthY)*NodesY[i] );
@@ -119,7 +122,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] + 0.05 * cos( NodesX[j] * 2.0 * M_PI / this->lengthX ) * sin( NodesY[i] * M_PI/this->lengthY ) );
 
             // ===== y-Distortion (parallel) ===========
-            //float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.4 * this->lengthY * sin( NodesY[i] / this->lengthY * M_PI ) );
+            float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.4 * this->lengthY * sin( NodesY[i] / this->lengthY * M_PI ) );
 
             // ===== internal parabular Distortion =====
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.25 * (NodesX[j] - this->lengthX)*NodesX[j] * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY ) );

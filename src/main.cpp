@@ -204,9 +204,9 @@ int main(int argc, char* argv[])
         double H = 1.0;
         double W = 1.0;
 
-        param.numberOfIterations = 100000;
-        param.outputIntervalVTK = 100000;
-        param.outputInterval = 100000;
+        param.numberOfIterations = 10000000;
+        param.outputIntervalVTK = 1000;
+        param.outputInterval = 1000;
 
         param.convergenceCriterium[0] = 1.0;
         param.convergenceCriterium[1] = 1.0e-10;
@@ -228,8 +228,8 @@ int main(int argc, char* argv[])
         int    ny = 2;//nyList[j];
         double Re = 4.0;
         double u0 = 0.1;
-        double angle = atan(0.0);
-        param.L = 1.0*cos(angle);
+        double angle = 0.0*M_PI;//atan(0.0);
+        param.L = 1.0;//*cos(angle);
 
         fluidParam.K = 1;
         fluidParam.nu = (u0*param.L)/Re;
@@ -241,8 +241,8 @@ int main(int argc, char* argv[])
         fluidParam.rhoReference = 1.0;
 
         double T      = 300.0;
-        double lambda = 1.0 / (2.0 * fluidParam.R * T);
-        //double lambda = 1.5;
+        //double lambda = 1.0 / (2.0 * fluidParam.R * T);
+        double lambda = 1.5;
 
         // ========================================================================
 
@@ -255,16 +255,15 @@ int main(int argc, char* argv[])
         //    |    1    |
         //    -----------
         mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
-        //mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
         mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, lambda);
         mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
-        //mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
         mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, lambda);
+        //mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
 
         Interface::setInterpolationOrder(1);
 
         // Generate Mesh
-        mesh->generateRectMeshGraded(compressible, W, H, nx, ny, 1.0, 1.0);
+        mesh->generateRectMeshGraded(incompressible, W, H, nx, ny, 1.0, 1.0);
 
         // Initialize Values
         mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
@@ -542,8 +541,8 @@ int main(int argc, char* argv[])
 
         //mesh->writeMeshAsText("out/Mesh.txt");
 
-        //mesh->writeVTKFile("out/InitialState.vtk");
-        //mesh->writeVTKFileFlux("out/InitialStateFlux.vtk");
+        mesh->writeVTKFile("out/InitialState.vtk");
+        mesh->writeVTKFileFlux("out/InitialStateFlux.vtk");
 
         mesh->iterate();
 

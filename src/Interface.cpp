@@ -358,23 +358,20 @@ void Interface::interpolatePrim(double * prim)
     // This method computes the Values of the primary variables at the interface
     // with linear interpolation
 
-    //double negDistance = this->distance( this->negCell->getCenter() );
-    //double posDistance = this->distance( this->posCell->getCenter() );
-
-    prim[0] = ( this->negCell->getPrim().rho * posDistance
-              + this->posCell->getPrim().rho * negDistance)
+    prim[0] = ( this->negCell->getPrim().rho * this->posDistance
+              + this->posCell->getPrim().rho * this->negDistance)
             / ( negDistance + posDistance );
 
-    prim[1] = ( this->negCell->getPrim().U   * posDistance
-              + this->posCell->getPrim().U   * negDistance)
+    prim[1] = ( this->negCell->getPrim().U   * this->posDistance
+              + this->posCell->getPrim().U   * this->negDistance)
             / ( negDistance + posDistance );
 
-    prim[2] = ( this->negCell->getPrim().V   * posDistance
-              + this->posCell->getPrim().V   * negDistance)
+    prim[2] = ( this->negCell->getPrim().V   * this->posDistance
+              + this->posCell->getPrim().V   * this->negDistance)
             / ( negDistance + posDistance );
 
-    prim[3] = ( this->negCell->getPrim().L   * posDistance
-              + this->posCell->getPrim().L   * negDistance)
+    prim[3] = ( this->negCell->getPrim().L   * this->posDistance
+              + this->posCell->getPrim().L   * this->negDistance)
             / ( negDistance + posDistance );
 
     int i = 0;
