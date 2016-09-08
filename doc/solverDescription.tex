@@ -35,6 +35,8 @@ headsep=15mm}
 % Einr�cken nach Absatz verhinder
 \setlength{\parindent}{0pt}
 
+\usepackage{color}
+
 % =====================================================
 
 \newcommand{\mom}[1]{\langle #1 \rangle}
@@ -85,7 +87,7 @@ The values on the Interface can then be computed by linear interpolation and fin
 \uu{W} = (\rho, \rho U, \rho V, \rho E)^T
 \end{equation}
 
-After this step the momentum and velocity components in $\uu{Z}$ and $\uu{W}$ are defined in the global coordinate system. For the flux computation the must be defined as normal and tangential component on the Interface. The transformation can be done by projecting the components on the normal and tagential vector:
+After this step the momentum and velocity components in $\uu{Z}$ and $\uu{W}$ are still defined in the global coordinate system. For the flux computation they must be defined as normal and tangential components on the Interface. The transformation can be done by projecting the components on the normal and tangential vector:
 
 \begin{equation}
 \begin{pmatrix} U_n \\ V_t \end{pmatrix}
@@ -116,7 +118,7 @@ The transformation is a linear operation. Therefore transformation of the deriva
 \begin{pmatrix} F_{\rho U_n} \\ F_{\rho V_t} \end{pmatrix}
 \end{equation}
 
-The conserved variables in the cells are updated with the fluxes.
+The conserved variables in the cells are updated with the time integrated fluxes.
 
 \begin{equation}
 \uu{W}^{n+1} = \uu{W}^{n+\frac{1}{2}} + \dfrac{1}{V}\sum \limits_{i=1}^4 s_i A_i \left( \int \limits_{t_n}^{t_{n+1}} \uu{F} dt  \right)_i
@@ -124,7 +126,7 @@ The conserved variables in the cells are updated with the fluxes.
 s_i = \sign \left( \left( \vv{r}_{CC} - \vv{r}_{IC, i} \right) \cdot \vv{n}_i \right)
 \end{equation}
 
-Here $V$ is the volume of the Cell and $A_i$ is the Area of the interfaces. The computation of the time integrated Flux will be shown in the second part of this report.
+Here $\uu{W}^{n+\frac{1}{2}}$ denotes the conserved variables after forcing, $V$ is the volume of the Cell and $A_i$ is the Area of the interfaces. The computation of the time integrated Flux will be shown in the second part of this report.
 
 For the computation of timestep the following CFL condition is used:
 
@@ -154,13 +156,13 @@ The Forcing in every time step is applied before the flux computation. The Forci
 \vv{G} = (G_x, G_y)^T \textnormal{: Volumeforce}
 \end{equation}
 
-The Temperature before and after the forcing must be equal. The total Energy on the other hand increases. The new total energy is therefore computed from the new values for velocities, but the old value for temperature:
+The Temperature before and after the forcing must be equal. The total Energy on the other hand increases. The new total energy is therefore computed from the new values for velocities, but the old value for temperature. The density is constant during the forcing.
 
 \begin{equation}
 \rho E^{n+\frac{1}{2}} = f(\rho^n, U^{n+\frac{1}{2}}, V^{n+\frac{1}{2}}, \lambda^n)
 \end{equation}
 
-The boundary conditions are implemented as a layer of ghost cells. The conserved variables in the ghost cells are computed after the Forcing and before the flux computation and the cell update. For a wall boundary (no-slip, insulated) the ghost cells are set to:
+The boundary conditions are implemented as a layer of ghost cells. The ghost cells are constructed in such way, that the center of the ghost cell has the same distance to the interface as the adjacent cell in the domain. The conserved variables in the ghost cells are computed after forcing and before flux computation and cell updates. For a wall boundary (no-slip, insulated) the ghost cells are set to:
 
 \begin{equation}
 \begin{array}{lcl}
@@ -183,7 +185,7 @@ The main part of the Gas-Kinetic-Scheme Implementation, is the Flux Computation.
 
 \subsubsection{Computation of Expansion Coefficients}
 
-The expansion coeeficients of the equilibrium distribution depend sole on the interpolated primitive Variables, the gradients of the conserved variables and the material Parameter $K$, which denotes the number of internal degrees of freedom (mostly $K=1$ for motion in z-direction). 
+The expansion coefficients of the equilibrium distribution depend sole on the interpolated primitive Variables, the gradients of the conserved variables and the material Parameter $K$, which denotes the number of internal degrees of freedom (mostly $K=1$ for motion in z-direction). 
 
 \begin{equation}
 \arraycolsep=1.4pt\def\arraystretch{2.2}
@@ -224,7 +226,7 @@ a_1 &=& \left( \dfrac{1}{\rho} \dfrac{\partial \rho}{\partial n} \right)
 \end{array}
 \end{equation}
 
-The above formulas hold not only for the spacial expansion coeffients $a_1, \cdots, a_4$, but also for temporal ones $A_1, \cdots, A_4$. Note that in the above formula $A$ denotes also an proxy variable. This ambiguity originates from Xu's publications and was not erased in order to remain consistent with his nomenclature.
+The above formulas hold not only for the spacial expansion coeffients $a_1, \cdots, a_4$, but also for temporal ones $A_1, \cdots, A_4$. Note that in the above formula $A$ also denotes an proxy variable. This ambiguity originates from Xu's publications and was not erased in order to remain consistent with his nomenclature.
 
 \subsubsection{Moments of equilibrium Distribution}
 
@@ -264,22 +266,19 @@ The moments of the equilibrium distribution can be calculated analytically:
 The time dependence of the conserved variables is computed from the compatibility condition:
 
 \begin{equation}
-\arraycolsep=1.4pt\def\arraystretch{2.2}
+\arraycolsep=1.4pt\def\arraystretch{1.5}
 \dfrac{1}{\rho}\dfrac{\partial \uu{W}}{\partial t} = 
 \left(
 \begin{array}{l}
-    \left[
         a_1 \mom{u} + a_2 \mom{u^2} + a_3 \mom{u}\mom{v}
     +   a_4 \frac{1}{2} \Big( \mom{u^3} + \mom{u}\mom{v^2} + \mom{u}\mom{\xi^2}
-    \right] \\
-    \left[
+    \\
         a_1 \mom{u^2} + a_2 \mom{u^3} + a_3 \mom{u^2}\mom{v}
-    +   a_4 \frac{1}{2} \Big( \mom{u^4} + \mom{u^2}\mom{v^2} + \mom{u^2}\mom{\xi^2}\mom{\xi^2} \Big)
-    \right] \\
-    \left[
+    +   a_4 \frac{1}{2} \Big( \mom{u^4} + \mom{u^2}\mom{v^2} + \mom{u^2}\mom{\xi^2} \Big)
+    \\
         a_1 \mom{u}\mom{v} + a_2 \mom{u^2}\mom{v} + a_3 \mom{u}\mom{v^2}
     +   a_4 \frac{1}{2} \Big( \mom{u^3}\mom{v} + \mom{u}\mom{v^3} + \mom{u}\mom{v}\mom{\xi^2} \Big)
-    \right] \\
+    \\
     \left[
         \begin{array}{lcl}
              &a_1& \frac{1}{2}~ \Big(~ \mom{u^3} + \mom{u}\mom{v^2} + \mom{u}\mom{\xi^2} ~\Big) \\
@@ -300,8 +299,9 @@ The time dependence of the conserved variables is computed from the compatibilit
 The Flux over the interface is computed from the distribution function on the interface. 
 
 \begin{equation}
+\begin{array}{l}
 \uu{F} = 
-\int \limits_{-\infty}^{\infty}
+\displaystyle \int \limits_{-\infty}^{\infty}
 u~
 \begin{pmatrix}
 	1 \\ u \\ v \\ \frac{1}{2} (u^2 + v^2 + \xi^2)
@@ -312,6 +312,14 @@ u~
 ~g~ du dv d\xi
 \textnormal{~~~~,~~~~where~~~~}
 \tau = 2 \lambda \nu
+\\
+\arraycolsep=1.4pt\def\arraystretch{1.5}
+\begin{array}{lclclclcl}
+a &=& a_1 &+& u~a_2 &+& v~a_3 &+& \tfrac{1}{2} (u^2 + v^2 + \xi^2)~a_4
+\\
+A &=& A_1 &+& u~A_2 &+& v~A_3 &+& \tfrac{1}{2} (u^2 + v^2 + \xi^2)~A_4
+\end{array}
+\end{array}
 \end{equation}
 
 The Flux is split into three parts for the analytical time integration over one time step. 
@@ -325,7 +333,7 @@ The Flux is split into three parts for the analytical time integration over one 
 + \left( \dfrac{\Delta t^2}{2} - \tau \Delta t \right) \uu{F}^3
 \end{equation}
 
-The above equation is an explicit formula for the flux. All terms are know. The three parts of flux are computed from the moments and the expansion coefficients of the equilibrium distribution.
+The above equation is an explicit formula for the flux. All terms are know. The three parts of the flux are computed from the moments and the expansion coefficients of the equilibrium distribution.
 
 \begin{equation}
 \uu{F}^1 =
@@ -341,7 +349,7 @@ The above equation is an explicit formula for the flux. All terms are know. The 
 %======================================================================================
 
 \begin{equation}
-\arraycolsep=1.4pt\def\arraystretch{2.2}
+\arraycolsep=1.4pt\def\arraystretch{1.5}
 \begin{array}{l}
 \uu{F}^2 
 =
@@ -370,7 +378,7 @@ The above equation is an explicit formula for the flux. All terms are know. The 
    & a_1~ \Big( \mom{u^4} + \mom{u^2}\mom{v^2} + \mom{u^2}\mom{\xi^2} \Big) \\
  + & a_2~ \Big( \mom{u^5} + \mom{u^3}\mom{v^2} + \mom{u^3}\mom{\xi^2} \Big) \\
  + & a_3~ \Big( \mom{u^4}\mom{v} + \mom{u^2}\mom{v^3} + \mom{u^2}\mom{v}\mom{\xi^2} \Big) \\
- + & a_4~ \Big(~ \tfrac{1}{2} \big( \mom{u^6} + \mom{u^2}\mom{v^4} + \mom{u^2}\mom{\xi^4} \Big)
+ + & a_4~ \Big(~ \tfrac{1}{2} \big( \mom{u^6} + \mom{u^2}\mom{v^4} + \mom{u^2}\mom{\xi^4} \big)
  				+ \mom{u^4}\mom{v^2} + \mom{u^4}\mom{\xi^2} + \mom{u^2}\mom{v^2}\mom{\xi^2} ~\Big)
 \Bigg)
 \end{array}
@@ -383,7 +391,7 @@ The above equation is an explicit formula for the flux. All terms are know. The 
 %======================================================================================
 
 \begin{equation}
-\arraycolsep=1.4pt\def\arraystretch{2.2}
+\arraycolsep=1.4pt\def\arraystretch{1.5}
 \uu{F}^3
 =
 \rho
@@ -418,7 +426,7 @@ The above equation is an explicit formula for the flux. All terms are know. The 
 \end{equation}
 
 \clearpage
-\section{Some Formulas}
+\subsection{Some Formulas}
 
 The ideal gas law:
 
@@ -448,39 +456,100 @@ Connection between temperature and total energy:
 \clearpage
 \section{Problems with Poiseuille Flow on unstructured grids}
 
-The above described Algorithm is currently tested for Poiseuille Flow on unstructured grids consisting of quadrilaterals. An earlier version of the code with a limitation on rectangular cells showed second order of convergence for force driven Poiseuille flow and thermal Couette flow. Moreover it was tested for compressible thermal convection in a square cavity with differently heated walls and in the Rayleigh-Bernard test case. Both cases showed reasonable results.
+The above described Algorithm is currently tested for Poiseuille Flow on unstructured grids consisting of quadrilaterals. An earlier version of the code with a limitation on uniform rectangular cells showed second order of convergence for force driven Poiseuille flow and thermal Couette flow. Moreover it was tested for compressible thermal convection in a square cavity with differently heated walls and in the Rayleigh-Bernard test case. Both cases showed reasonable results.
 
 The unstructured code remains its convergence order when applied to rectangular cells for force driven Poiseuille flow. Problems arise, when the same code is applied to non rectangular cells. At this point it is unclear, whether these problems are related to bugs in the code (most probably) or an feature of the chosen method (including the Finite-Volume aspects like interpolation and transformation and the smooth GKS Flux computation).
 
-To visualize the problem, force driven Poiseuille flow was simulated on a structured grid of $16 \times 16$ cells of non rectangular shape. The grid was generated by distoring the nodes in y-direction according to the following formula starting from a rectangular mesh. The domain size is $1 \times 1$. A sine distortion is chosen at this point, to get smooth cells.
-
-\begin{equation}
-\delta y = -0.05 ~ \sin \big(2 \pi x \big) ~ \sin \big(2 \pi (x-1/2) \big)
-\end{equation}
-
-The results of the simulation are shown in Figures \ref{fig:Poseieuille16x16} and  \ref{fig:Poseieuille16x16_Profiles}. Two problems are obvious: (1) A look on the velocity Profiles in Figure \ref{fig:Poseieuille16x16_Profiles} shows, that the stream wise velocities in the middle of the channel are too low (by a non negligible amount). (2) The right graphic in Figure \ref{fig:Poseieuille16x16} shows vertical velocities that are again not negligible. Non of these effects appears on rectangular grids.
-
-\begin{figure}[ht!]
-\includegraphics[width=0.5\textwidth]{PoiseuilleSineDistroted_U.png}
-\includegraphics[width=0.5\textwidth]{PoiseuilleSineDistroted_V.png}
-\caption{Force driven Poiseuille flow on non rectangular grid; stream wise (left) and cross stream (right) velocity fields}
+\begin{figure}[h!]
+\center
+\includegraphics[width=0.4\textwidth]{PoiseuilleSineDistroted_U.png}
+\includegraphics[width=0.4\textwidth]{PoiseuilleSineDistroted_V.png}
+\caption{Force driven Poiseuille flow on non rectangular grid; stream wise (left) and cross stream (right) velocity fields. The shown mesh includes the ghost cells at top and bottom.}
 \label{fig:Poseieuille16x16}
 \end{figure}
 
-\begin{figure}[ht!]
+To visualize the problem, force driven Poiseuille flow was simulated on a structured grid of $16 \times 16$ cells of non rectangular shape. The grid was generated by distorting the nodes in y-direction according to the following formula starting from a rectangular mesh. The domain size is $1m \times 1m$. A sine distortion is chosen at this point, to get smooth cells.
+
+\begin{equation}
+\delta y = -0.05 ~ \sin \big(2 \pi x \big) ~ \sin \big(2 \pi (y-1/2) \big)
+\end{equation}
+
+The parameters for this simulation are a Reynolds-Number of $Re = 4.0$ with a maximal velocity of $u_0 = 0.1 m/s$ and a viscosity of $\nu = 0.025 m^2/s$.
+Initial density and temperature are $\rho = 1.0 kg/m^3$ and $T = 300 K$, respectively.
+The material parameters of the fluid are a specific gas constant of $R = 200 m^2/s^2K$ and the number of internal degrees of freedom $K = 1$, accounting for the motion in the third spacial dimension.
+The volume force needed to obtain a Poiseuille flow with $u_0 = 0.1 m/s$ is $G_x = 0.02 N/m^3$.
+Boundary conditions are the above mentioned wall for the upper and lower boundary and periodic boundaries on the inflow (left) and outflow (right).
+
+The results of the simulation are shown in Figures \ref{fig:Poseieuille16x16} and  \ref{fig:Poseieuille16x16_Profiles}.
+Two problems are obvious:
+(1) A look on the velocity Profiles in Figure \ref{fig:Poseieuille16x16_Profiles} shows, that the stream wise velocities in the middle of the channel are too low (by a non negligible amount).
+(2) The right graphic in Figure \ref{fig:Poseieuille16x16} shows cross stream velocities that are again not negligible.
+None of these effects appear on uniform rectangular grids.
+A third problem cannot be seen in the figures.
+To obtain stable results on this mesh the time step had to reduced drastically by using a CFL-number of $0.01$.
+
+\begin{figure}[h!]
 \center
 \includegraphics[width=0.8\textwidth]{PoiseuilleSineDistroted_U_Profiles.png}
 \caption{Force driven Poiseuille flow on non rectangular grid; stream wise velocity profiles}
 \label{fig:Poseieuille16x16_Profiles}
 \end{figure}
 
-For a detailed investigation the problem is brought down to four test cases of the same problem with only four cells (see Figure \ref{fig:Poseieuille2x2_Mesh}). Test case 1 is a reference with rectangular cells. In test case 2 the internal nodes a shifted down resulting in two still rectangular cells with different volumes. the test cases 3 and 4 have non rectangular shapes of the same and different volumes respectively. 
+For a detailed investigation the problem is brought down to four test cases of the same problem with only four cells (see Figure \ref{fig:Poseieuille2x2_Mesh}).
+Test case 1 is a reference with rectangular cells.
+In test case 2 the internal nodes are shifted down resulting in two still rectangular cells with different volumes.
+The test cases 3 and 4 have non rectangular cells of the same and different volumes respectively. The parameters in these test cases are the same as mentioned above, only that a CFL-number of $0.7$ was sufficient to yield stable results.
 
-\begin{figure}[ht!]
+\begin{figure}[h!]
 \center
 \includegraphics[width=\textwidth]{2x2_TestCases.pdf}
 \caption{Minimal test cases for Poiseuille flow on non rectangular grids}
 \label{fig:Poseieuille2x2_Mesh}
 \end{figure}
+
+The results of the minimal test cases are shown in Table \ref{tab:resultsMinimal}.
+The color code for the table is: green -- good values, yellow -- acceptable values and red -- wrong values.
+In addition to the compressible kernel shown above also an incompressible kernel with a constant temperature $\lambda = 1.5$ is used to simulate these test cases.
+This incompressible code was also tested for Poiseuille flow on rectangular cells and showed second order of convergence.
+
+\begin{table}
+\centering
+\def\arraystretch{1.5}
+\setlength\tabcolsep{5mm}
+\begin{tabular}{|c|p{4cm}|p{4cm}|}
+    \hline
+    test case & compressible & incompressible \\ \hline
+    1 & \colorbox{green}{$u_{max} = 0.09997$} \newline
+        \colorbox{green}{$v_{max} = 0$} 
+      & \colorbox{yellow}{$u_{max} = 0.09089$} \newline
+        \colorbox{green}{$v_{max} = 0$}  
+      \\ \hline
+    2 & \colorbox{green}{$u_{top} = 0.179994$} \newline
+        \colorbox{green}{$u_{bot} = 0.019994$} \newline
+        \colorbox{red}{$v_{max} = 8.925 \cdot 10^{-6}$} 
+      & \colorbox{yellow}{$u_{top} = 0.178723$} \newline
+        \colorbox{yellow}{$u_{bot} = 0.018723$} \newline
+        \colorbox{green}{$v_{max} = 0$} 
+      \\ \hline
+    3 & \colorbox{green}{$u_{max} = 0.09997$} \newline
+        \colorbox{green}{$v_{max} = 5.684 \cdot 10^{-14}$}
+      & \colorbox{yellow}{$u_{max} = 0.09211$} \newline
+        \colorbox{green}{$v_{max} = 1.110 \cdot 10^{-16}$}
+      \\ \hline
+    4 & \colorbox{yellow}{$u_{max} = 0.09855$} \newline
+        \colorbox{red}{$v_{max} = 1.615 \cdot 10^{-5}$} 
+      & \colorbox{yellow}{$u_{max} = 0.1028$} \newline
+        \colorbox{red}{$v_{max} = 8.507 \cdot 10^{-4}$} 
+      \\ \hline
+\end{tabular}
+\caption{Results of the minimal test cases for force driven Poiseuille flow; All velocities in $m/s$}
+\label{tab:resultsMinimal}
+\end{table}
+
+The first test case shows good results as expected.
+Also the third test case, where the cells are not rectangular, but of the same shape (mirrored), preserve zero cross stream velocity.
+Therefore the distances between the interface and the cell centers on the positive and the negative side of the interface are equal.
+The cross stream velocities occur, when the two cell centres have different distances to the interface.
+This is the case in the second and fourth simulation.
 
 \end{document}

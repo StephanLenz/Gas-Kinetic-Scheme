@@ -205,8 +205,8 @@ int main(int argc, char* argv[])
         double W = 1.0;
 
         param.numberOfIterations = 10000000;
-        param.outputIntervalVTK = 1000;
-        param.outputInterval = 1000;
+        param.outputIntervalVTK = 10000;
+        param.outputInterval = 10000;
 
         param.convergenceCriterium[0] = 1.0;
         param.convergenceCriterium[1] = 1.0e-10;
@@ -241,8 +241,8 @@ int main(int argc, char* argv[])
         fluidParam.rhoReference = 1.0;
 
         double T      = 300.0;
-        //double lambda = 1.0 / (2.0 * fluidParam.R * T);
-        double lambda = 1.5;
+        double lambda = 1.0 / (2.0 * fluidParam.R * T);
+        //double lambda = 1.5;
 
         // ========================================================================
 
