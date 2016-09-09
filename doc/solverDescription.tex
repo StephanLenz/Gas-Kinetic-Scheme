@@ -296,7 +296,7 @@ The time dependence of the conserved variables is computed from the compatibilit
 
 \subsubsection{Fluxes}
 
-The Flux over the interface is computed from the distribution function on the interface. 
+The Flux over the interface is computed from the distribution function on the interface. Since tangential gradients are not trivial to compute on arbitrary quad elements, the distribution functions are only expanded in the normal direction. Therefore the flux has only the contribution $\tau~a~u$ and no $\tau~b~v$, as the structured GKS usually has.
 
 \begin{equation}
 \begin{array}{l}
