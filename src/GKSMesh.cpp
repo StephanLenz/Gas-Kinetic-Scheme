@@ -565,21 +565,19 @@ void GKSMesh::timeStep()
 {
     this->iter++;
 
-    if (this->param.verbose) cout << "Iterration: " << this->iter << endl;
+    // ========================================================================
 
-    if(this->param.verbose) cout << "  Compute Timestep ..." << endl;
     this->computeGlobalTimestep();
-    if (this->param.verbose) cout << "    dt = " << this->dt << endl;
 
     // ========================================================================
 
     this->applyForcing();
 
+    // ========================================================================
+
     this->applyBoundaryCondition();
 
     // ========================================================================
-
-    if (this->param.verbose) cout << "  Compute Fluxes ..." << endl;
 
     //#pragma omp parallel for
     for ( int i = 0; i < InterfaceList.size(); i++ )
@@ -588,7 +586,7 @@ void GKSMesh::timeStep()
             InterfaceList[i]->computeFlux(this->dt);
     }
 
-    if (this->param.verbose) cout << "  Update Cells ..." << endl;
+    // ========================================================================
 
     //#pragma omp parallel for
     for ( int i = 0; i < CellList.size(); i++ )
@@ -599,12 +597,9 @@ void GKSMesh::timeStep()
 
     // ========================================================================
 
-    //this->applyForcing();
+    this->applyBoundaryCondition();
 
     // ========================================================================
-
-    if ( this->param.verbose ) cout << "  Apply Boundary Conditions ..." << endl;
-    this->applyBoundaryCondition();
 
 }
 
@@ -624,7 +619,6 @@ void GKSMesh::iterate()
         writeVTKFileFlux(filenameFlux.str(), true, false);
     }
 
-
     chrono::high_resolution_clock::time_point startTime = chrono::high_resolution_clock::now();
 
     // ========================================================================
@@ -632,8 +626,13 @@ void GKSMesh::iterate()
     // ========================================================================
     while (this->iter < this->param.numberOfIterations)
     {
+        // ====================================================================
+
         this->timeStep();
+
         this->time += this->dt;
+        
+        // ====================================================================
 
         if ( this->iter % this->param.outputInterval == 0 )
         {

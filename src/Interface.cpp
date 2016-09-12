@@ -124,7 +124,6 @@ void Interface::computeInternalFlux(double dt)
 
     double prim[4];
     double normalGradCons[4];
-    double normalGradConsTest[4];
     double timeGrad[4];
 
     double a[4];
@@ -235,9 +234,6 @@ ConservedVariable Interface::getFluxDensity()
 
 double Interface::getFluxSign(Cell * askingCell)
 {
-    //if      (askingCell == this->posCell) return  1.0;
-    //else if (askingCell == this->negCell) return -1.0;
-
     double sign = ( askingCell->getCenter().x - this->center.x ) * this->normal.x
                 + ( askingCell->getCenter().y - this->center.y ) * this->normal.y ;
 
@@ -358,21 +354,23 @@ void Interface::interpolatePrim(double * prim)
     // This method computes the Values of the primary variables at the interface
     // with linear interpolation
 
+    double distance = this->posDistance + this->negDistance;
+
     prim[0] = ( this->negCell->getPrim().rho * this->posDistance
-              + this->posCell->getPrim().rho * this->negDistance)
-            / ( negDistance + posDistance );
+              + this->posCell->getPrim().rho * this->negDistance )
+            / ( distance );
 
     prim[1] = ( this->negCell->getPrim().U   * this->posDistance
-              + this->posCell->getPrim().U   * this->negDistance)
-            / ( negDistance + posDistance );
+              + this->posCell->getPrim().U   * this->negDistance )
+            / ( distance );
 
     prim[2] = ( this->negCell->getPrim().V   * this->posDistance
-              + this->posCell->getPrim().V   * this->negDistance)
-            / ( negDistance + posDistance );
+              + this->posCell->getPrim().V   * this->negDistance )
+            / ( distance );
 
     prim[3] = ( this->negCell->getPrim().L   * this->posDistance
-              + this->posCell->getPrim().L   * this->negDistance)
-            / ( negDistance + posDistance );
+              + this->posCell->getPrim().L   * this->negDistance )
+            / ( distance );
 
     int i = 0;
 }
@@ -387,9 +385,6 @@ void Interface::differentiateConsNormal(double* normalGradCons, double* prim)
     // ========================================================================
 
     // compute the distance between the adjacent cell centers
-
-    //double distance = this->distance( this->negCell->getCenter() )
-    //                + this->distance( this->posCell->getCenter() );
     double distance = this->posDistance + this->negDistance;
 
     normalGradCons[0] = ( this->posCell->getCons().rho  - this->negCell->getCons().rho )  / ( distance * prim[0] );

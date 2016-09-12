@@ -48,26 +48,8 @@ Cell::Cell(InterfaceType interfaceType, float2** nodes, BoundaryCondition* BC, F
     this->center.x = 0.25 * (this->nodes[0]->x + this->nodes[1]->x + this->nodes[2]->x + this->nodes[3]->x);
     this->center.y = 0.25 * (this->nodes[0]->y + this->nodes[1]->y + this->nodes[2]->y + this->nodes[3]->y);
     // ========================================================================
-
-
-    //// ========================================================================
-    ////                  Compute maximal length of the Quad
-    //// ========================================================================
-    //double xMax = -1.0e99;
-    //double xMin =  1.0e99;
-    //double yMax = -1.0e99;
-    //double yMin =  1.0e99;
-    //for (int i = 0; i < 4; i++)
-    //{
-    //    if(this->nodes[i]->x > xMax)    xMax = this->nodes[i]->x;
-    //    if(this->nodes[i]->x < xMin)    xMin = this->nodes[i]->x;
-    //    if(this->nodes[i]->y > yMax)    yMax = this->nodes[i]->y;
-    //    if(this->nodes[i]->y < yMin)    yMin = this->nodes[i]->y;
-    //}
-    //this->dx.x = xMax - xMin;
-    //this->dx.y = yMax - yMin;
-    //// ========================================================================
     
+    // minDx must be computed in annother step, when the interfaces are created and connected
     this->minDx = 1.0e99;
 }
 
