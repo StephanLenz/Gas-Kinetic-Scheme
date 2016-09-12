@@ -139,20 +139,20 @@ int main(int argc, char* argv[])
 
         // ========== Weidongs Parameters ==========
         int    nx = 2;
-        int    ny = 3;
-        double Re = 40.0;
+        int    ny = 2;
+        double Re = 4.0;
         double u0 = 0.1;
 
         fluidParam.K = 1;
         fluidParam.nu = (u0*param.L)/Re;
-        fluidParam.R = 208.0;
+        fluidParam.R = 200.0;
         fluidParam.Force.x = (u0*8.0*fluidParam.nu) / (param.L*param.L);
         fluidParam.Force.y = 0.0;//(u0*8.0*fluidParam.nu) / (param.L*param.L);
         fluidParam.BoussinesqForce.x = 0.0;
         fluidParam.BoussinesqForce.y = 0.0;
         fluidParam.rhoReference = 1.0;
 
-        double T      = 293.15;
+        double T      = 300.0;
         double lambda = 1.0 / (2.0 * fluidParam.R * T);
 
         // ========================================================================
@@ -174,7 +174,7 @@ int main(int argc, char* argv[])
 
         // Generate Mesh
         //mesh->generateRectMeshPeriodic(compressible, W, H, nx, ny);
-        mesh->generateRectMeshPeriodicGraded(compressible, W, H, nx, ny, 0.5);
+        mesh->generateRectMeshPeriodicGradedOneSided(compressible, W, H, nx, ny, 0.1/0.9);
 
         // Initialize Values
         mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);

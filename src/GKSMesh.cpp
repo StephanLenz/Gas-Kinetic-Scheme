@@ -940,6 +940,144 @@ void GKSMesh::generateRectMeshPeriodicGraded(InterfaceType type, double lengthX,
     return;
 }
 
+void GKSMesh::generateRectMeshPeriodicGradedOneSided(InterfaceType type, double lengthX, double lengthY, int nx, int ny, double grading)
+{
+    double dx = lengthX / (double)nx;
+
+    this->lengthX = lengthX;
+    this->lengthY = lengthY;
+
+    Cell*		tmpCell;
+    Interface*  tmpInterface;
+    float2      normal;
+    float2      center;
+
+    double eta = pow( grading, 1.0 / (ny - 1) );
+    double dy0 = this->lengthY * (1-eta)/(1-pow(eta, ny));
+
+    //=========================================================================
+    //=========================================================================
+    //		Computation of the coordinates and spacings
+    //=========================================================================
+    //=========================================================================
+    double* CellSpacingsY = new double[ny+2];
+    for(int i = 0; i < ny + 2; i++){
+        if( i == 0)
+        {
+            // The Ghost Cells have the same size, as the 
+            CellSpacingsY[ny + 1 - i]     = dy0 * pow( eta, i);
+        }
+        else if(i == ny+1)
+        {
+            // The Ghost Cells have the same size, as the 
+            CellSpacingsY[ny + 1 - i]     = dy0 * pow( eta, i-2);
+        }
+        else
+        {
+            CellSpacingsY[ny + 1 - i]     = dy0 * pow( eta, i-1);
+        }
+    }
+
+    double* CellCentersY = new double[ny+2];
+    double sum = -CellSpacingsY[0];
+    for(int i = 0; i < ny + 2; i++){
+        CellCentersY[i] = sum + 0.5*CellSpacingsY[i];
+        sum += CellSpacingsY[i];
+    }
+    
+    double* InterfaceCentersY = new double[ny+1];    
+    sum = 0.0;
+    for(int i = 0; i < ny+1; i++){
+        InterfaceCentersY[i] = sum;
+        sum += CellSpacingsY[i+1];
+    }
+    //=========================================================================
+    //=========================================================================
+    //		Cell generation
+    //			including ghost cells in y-direction
+    //=========================================================================
+    //=========================================================================
+    BoundaryCondition* currentBC = NULL;
+    for (int i = -1; i < ny + 1; i++)       // Y-Direction
+    {
+        for (int j = 0; j < nx; j++)   // X-Direction
+        {
+            if (i == -1)         currentBC = BoundaryConditionList[0];
+            else if (i == ny)    currentBC = BoundaryConditionList[1];
+            else                 currentBC = NULL;
+
+            //                      cell centerX         cell centerY
+            tmpCell = new Cell(type, ((double)j + 0.5)*dx, CellCentersY[i+1], dx, CellSpacingsY[i+1], currentBC, this->fluidParam);
+            // add interface to list
+            this->CellList.push_back(tmpCell);
+        }
+    }
+
+    //=========================================================================
+    //=========================================================================
+    //						F interface generation
+    //=========================================================================
+    //=========================================================================
+    normal.x = 1;
+    normal.y = 0;
+    for (int i = 0; i <= ny + 1; i++)       // Y-Direction
+    {
+        for (int j = 0; j < nx; j++)    // X-Direction
+        {
+            center.x = (double)j * dx;
+            center.y = CellCentersY[i];
+
+            Cell* negCell;
+            Cell* posCell;
+
+            if (j == 0)
+                negCell = CellList[i*(nx) + (nx-1)];
+            else
+                negCell = CellList[i*(nx) + (j-1)];
+
+            if (j == nx)
+                posCell = CellList[i*(nx)];
+            else
+                posCell = CellList[i*(nx) + j];
+
+            // create a new interface with the adjacent cells
+            tmpInterface = Interface::createInterface(type,negCell, posCell, center, normal, this->fluidParam, NULL);
+            // add itnerface to list
+            this->InterfaceList.push_back(tmpInterface);
+        }
+    }
+
+    //=========================================================================
+    //=========================================================================
+    //						G interface generation
+    //=========================================================================
+    //=========================================================================
+    normal.x = 0;
+    normal.y = 1;
+    for (int i = 0; i < ny + 1; i++)        // Y-Direction
+    {
+        for (int j = 0; j < nx; j++)        // X-Direction
+        {
+            center.x = ( (double)j + 0.5 ) * dx;
+            center.y = InterfaceCentersY[i];
+
+            Cell* posCell = CellList[( i + 1 )*(nx)+j];
+            Cell* negCell = CellList[i*(nx)+j];
+
+            // create a new interface with the adjacent cells
+            tmpInterface = Interface::createInterface(type,negCell, posCell, center, normal, this->fluidParam, NULL);
+            // add itnerface to list
+            this->InterfaceList.push_back(tmpInterface);
+        }
+    }
+
+    delete [] CellCentersY;
+    delete [] CellSpacingsY;
+    delete [] InterfaceCentersY;
+
+    return;
+}
+
 void GKSMesh::initMeshConstant(double rho, double u, double v, double T)
 {
 	for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)

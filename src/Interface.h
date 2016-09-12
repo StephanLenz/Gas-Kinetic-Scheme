@@ -64,6 +64,8 @@ protected:
 
     void differentiateConsNormal(double* normalGradCons, double* prim);
 
+    void differentiateConsTangential(double * tangentialGradCons, double * prim);
+
     virtual void computeTimeDerivative(double* prim, double* MomentU, double* MomentV, double* MomentXi,
                                        double* a, double* b, double * timeGrad) = 0;
 

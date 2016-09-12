@@ -60,6 +60,8 @@ public:
 
     void generateRectMeshPeriodicGraded(InterfaceType type, double lengthX, double lengthY, int nx, int ny, double grading);
 
+    void generateRectMeshPeriodicGradedOneSided(InterfaceType type, double lengthX, double lengthY, int nx, int ny, double grading);
+
     void generateRectMeshPeriodicTwoDirections(InterfaceType type, double lengthX, double lengthY, int nx, int ny);
 
 

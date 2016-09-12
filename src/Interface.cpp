@@ -97,10 +97,11 @@ void Interface::computeInternalFlux(double dt)
 
     double prim[4];
     double normalGradCons[4];
+    double tangentialGradCons[4];
     double timeGrad[4];
 
     double a[4];
-    double b[] = {0.0, 0.0, 0.0, 0.0};
+    double b[4];
     double A[4];
 
     double MomentU[NUMBER_OF_MOMENTS];
@@ -117,6 +118,8 @@ void Interface::computeInternalFlux(double dt)
 
     // spacial gradients of the conservative varibles
     this->differentiateConsNormal(normalGradCons, prim);
+
+    this->differentiateConsTangential(tangentialGradCons, prim);
     // ========================================================================
 
     
@@ -124,6 +127,7 @@ void Interface::computeInternalFlux(double dt)
     // Transformation in local coordinate system
     transformGlobal2Local(prim);
     transformGlobal2Local(normalGradCons);
+    transformGlobal2Local(tangentialGradCons);
     // ========================================================================
 
     // ========================================================================
@@ -139,6 +143,7 @@ void Interface::computeInternalFlux(double dt)
     // ========================================================================
     // spacial micro slopes a = a1 + a2 u + a3 v + 0.4 a4 (u^2 + v^2 + xi^2)
     this->computeMicroSlope(prim, normalGradCons, a);
+    this->computeMicroSlope(prim, tangentialGradCons, b);
     // ========================================================================
 
     // ========================================================================
@@ -424,6 +429,90 @@ void Interface::differentiateConsNormal(double* normalGradCons, double* prim)
     normalGradCons[2] = ( this->posCell->getCons().rhoV - this->negCell->getCons().rhoV ) / ( distance * prim[0] );
 
     normalGradCons[3] = ( this->posCell->getCons().rhoE - this->negCell->getCons().rhoE ) / ( distance * prim[0] );
+}
+
+void Interface::differentiateConsTangential(double* tangentialGradCons, double* prim)
+{
+    // ========================================================================
+    // tangential direction
+    // ========================================================================
+
+    // The tangential derivative is computed by finite difference between the
+    // values at the edge of the interface (A, B in fig).
+    // These are computed by interpolation.
+    //
+    //  A = 0.5 (pos + pos pos + neg + neg pos)
+    //
+    //  ---------------------------------
+    //  |               |               |
+    //  |    neg pos    A    pos pos    |
+    //  |               |               |
+    //  ----------------|---------------
+    //  |               |               |
+    //  |               |               |
+    //  |      neg      |      pos      |
+    //  |               |               |
+    //  |               |               |
+    //  ----------------|----------------
+    //  |               |               |
+    //  |    neg neg    B    pos neg    |
+    //  |               |               |
+    //  ---------------------------------
+
+    // get the indieces of the perpendicular interfaces for tangential derivative
+    int posIdx;
+    int negIdx;
+    if (this->axis == 0) { posIdx = 3; negIdx = 1; }
+    else                 { posIdx = 2; negIdx = 0; }
+
+    // compute distance to positive and negative cell center
+    double negDistance = this->distance( this->negCell->getCenter() );
+    double posDistance = this->distance( this->posCell->getCenter() );
+
+    double tanDistance = this->negCell->distance( this->negCell->getNeighborCell(posIdx)->getCenter() )
+                       + this->negCell->distance( this->negCell->getNeighborCell(negIdx)->getCenter() );
+
+    // ========== some tests ==================================================
+    double negposDistance = this->negCell->distance( this->negCell->getNeighborCell(posIdx)->getCenter() );
+    double negnegDistance = this->negCell->distance( this->negCell->getNeighborCell(negIdx)->getCenter() );
+
+    Cell* negposCell = this->negCell->getNeighborCell(posIdx);
+    Cell* negnegCell = this->negCell->getNeighborCell(negIdx);
+    // ========================================================================
+
+
+    tangentialGradCons[0] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rho * negDistance
+                              + this->negCell->getNeighborCell(posIdx)->getCons().rho * posDistance
+                              ) / ( negDistance + posDistance )
+                            - ( this->posCell->getNeighborCell(negIdx)->getCons().rho * negDistance
+                              + this->negCell->getNeighborCell(negIdx)->getCons().rho * posDistance
+                              ) / ( negDistance + posDistance )
+                            ) / ( tanDistance * prim[0] );
+
+    tangentialGradCons[1] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rhoU * negDistance
+                              + this->negCell->getNeighborCell(posIdx)->getCons().rhoU * posDistance
+                              ) / ( negDistance + posDistance )
+                            - ( this->posCell->getNeighborCell(negIdx)->getCons().rhoU * negDistance
+                              + this->negCell->getNeighborCell(negIdx)->getCons().rhoU * posDistance
+                              ) / ( negDistance + posDistance )
+                            ) / ( tanDistance * prim[0] );
+
+    tangentialGradCons[2] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rhoV * negDistance
+                              + this->negCell->getNeighborCell(posIdx)->getCons().rhoV * posDistance
+                              ) / ( negDistance + posDistance )
+                            - ( this->posCell->getNeighborCell(negIdx)->getCons().rhoV * negDistance
+                              + this->negCell->getNeighborCell(negIdx)->getCons().rhoV * posDistance
+                              ) / ( negDistance + posDistance )
+                            ) / ( tanDistance * prim[0] );
+
+    tangentialGradCons[3] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rhoE * negDistance
+                              + this->negCell->getNeighborCell(posIdx)->getCons().rhoE * posDistance
+                              ) / ( negDistance + posDistance )
+                            - ( this->posCell->getNeighborCell(negIdx)->getCons().rhoE * negDistance
+                              + this->negCell->getNeighborCell(negIdx)->getCons().rhoE * posDistance
+                              ) / ( negDistance + posDistance )
+                            ) / ( tanDistance * prim[0] );
+    int i = 0;
 }
 
 void Interface::transformGlobal2Local(double * vec)
