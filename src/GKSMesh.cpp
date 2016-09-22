@@ -104,7 +104,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
 		for (int j = 0; j < nx + 1; j++)   // X-Direction
 		{
             // ===== No Distortion =====================
-            //float2* tmpNode = new float2( NodesX[j], NodesY[i] );
+            float2* tmpNode = new float2( NodesX[j], NodesY[i] );
 
             // ===== Parallelogram =====================
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] + NodesX[j] / this->lengthX * heightDiff );
@@ -122,7 +122,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] + 0.05 * cos( NodesX[j] * 2.0 * M_PI / this->lengthX ) * sin( NodesY[i] * M_PI/this->lengthY ) );
 
             // ===== y-Distortion (parallel) ===========
-            float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.4 * this->lengthY * sin( NodesY[i] / this->lengthY * M_PI ) );
+            //float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.4 * this->lengthY * sin( NodesY[i] / this->lengthY * M_PI ) );
 
             // ===== internal parabular Distortion =====
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.25 * (NodesX[j] - this->lengthX)*NodesX[j] * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY ) );
@@ -496,6 +496,7 @@ void GKSMesh::computeGlobalTimestep()
         {
             this->dt = min( (*i)->getLocalTimestep(), this->dt );
         }
+        int j = 0;
     }
     this->dt *= this->param.CFL;
 }
@@ -579,7 +580,7 @@ void GKSMesh::timeStep()
 
     // ========================================================================
 
-    //#pragma omp parallel for
+    #pragma omp parallel for
     for ( int i = 0; i < InterfaceList.size(); i++ )
     {
         if ( !InterfaceList[i]->isGhostInterface() )
@@ -588,7 +589,7 @@ void GKSMesh::timeStep()
 
     // ========================================================================
 
-    //#pragma omp parallel for
+    #pragma omp parallel for
     for ( int i = 0; i < CellList.size(); i++ )
     {
         if ( !CellList[i]->isGhostCell() )

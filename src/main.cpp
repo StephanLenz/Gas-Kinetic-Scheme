@@ -224,8 +224,8 @@ int main(int argc, char* argv[])
         FluidParameter fluidParam;
 
         // ========== Weidongs Parameters ==========
-        int    nx = 2;
-        int    ny = 2;//nyList[j];
+        int    nx = 4;
+        int    ny = 4;//nyList[j];
         double Re = 4.0;
         double u0 = 0.1;
         double angle = 0.0*M_PI;//atan(0.0);
@@ -263,7 +263,7 @@ int main(int argc, char* argv[])
         Interface::setInterpolationOrder(1);
 
         // Generate Mesh
-        mesh->generateRectMeshGraded(incompressible, W, H, nx, ny, 1.0, 1.0);
+        mesh->generateRectMeshGraded(compressible, W, H, nx, ny, 0.5, 0.5);
 
         // Initialize Values
         mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
@@ -371,9 +371,9 @@ int main(int argc, char* argv[])
         double H = 1.0;
         double W = 1.0;
 
-        param.numberOfIterations = 10000;
-        param.outputIntervalVTK = 1000;
-        param.outputInterval = 1000;
+        param.numberOfIterations = 100000000;
+        param.outputIntervalVTK = 1000000;
+        param.outputInterval = 100000;
 
         param.convergenceCriterium[0] = 1.0e-10;
         param.convergenceCriterium[1] = 1.0e-10;
@@ -381,7 +381,7 @@ int main(int argc, char* argv[])
         param.convergenceCriterium[3] = 1.0e-10;
 
         param.L = 1.0;
-        param.CFL = 0.3;
+        param.CFL = 0.05;
 
         param.verbose = false;
         param.fluxOutput = false;
@@ -391,8 +391,8 @@ int main(int argc, char* argv[])
 
         FluidParameter fluidParam;
 
-        int    nx = 16;
-        int    ny = 16;//nyList[j];
+        int    nx = 32;
+        int    ny = 32;//nyList[j];
 
         double Ra = 1.0e5;
 
@@ -405,9 +405,9 @@ int main(int argc, char* argv[])
         fluidParam.nu = sqrt( (g * H)/Ra * (TBot - TTop)/TReference );
         fluidParam.R = 200.0;
         fluidParam.Force.x = 0.0;
-        fluidParam.Force.y = -g;
+        fluidParam.Force.y = 0.0;
         fluidParam.BoussinesqForce.x = 0.0;
-        fluidParam.BoussinesqForce.y = 0.0;
+        fluidParam.BoussinesqForce.y = -g;
         fluidParam.rhoReference = 1.0;
 
         double lambdaReference = 1.0 / (2.0 * fluidParam.R * TReference);
@@ -426,22 +426,20 @@ int main(int argc, char* argv[])
         //    | 0     2 |
         //    |    1    |
         //    -----------
-        mesh->addBoundaryCondition(3, 0, 0, 0,  0.0, 0.0, 0.0, lambda[0]);
-        mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0   );
-        mesh->addBoundaryCondition(3, 0, 0, 0,  0.0, 0.0, 0.0, lambda[1]);
-        mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0   );
+        mesh->addBoundaryCondition(isothermalWall,  0.0, 0.0, 0.0, lambda[0]);
+        mesh->addBoundaryCondition(wall          ,  0.0, 0.0, 0.0, 0.0   );
+        mesh->addBoundaryCondition(isothermalWall,  0.0, 0.0, 0.0, lambda[1]);
+        mesh->addBoundaryCondition(wall          ,  0.0, 0.0, 0.0, 0.0   );
 
         Interface::setInterpolationOrder(1);
         
         // Generate Mesh
         //mesh->generateRectMesh(compressible, W, H, nx, ny);
         //mesh->generateRectMesh(compressible, W, H, nx, ny);
-        mesh->generateRectMeshGraded(compressible, W, H, nx, ny, 0.1, 0.1);
+        mesh->generateRectMeshGraded(compressible, W, H, nx, ny, 1.0, 1.0);
 
          // Initialize Values
-        //mesh->initMeshConstant(1.0, 0.0, 0.0, 0.5*(lambda[0] + lambda[1]));
         mesh->initMeshLinearHorizontal(rho, U, V, lambda);
-        //mesh->initMeshParabularVelocity(1.0, u0, 0.0, lambda);
 
         */
     

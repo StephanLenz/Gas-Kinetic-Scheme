@@ -30,23 +30,30 @@ Cell::Cell(InterfaceType interfaceType, float2** nodes, BoundaryCondition* BC, F
 
     this->interfaceType = interfaceType;
     // ========================================================================
-
-    // ========================================================================
-    //                  Compute Volume of the Quad
-    // ========================================================================
-    volume = 0.5 * fabs( this->nodes[0]->x * ( this->nodes[1]->y - this->nodes[3]->y ) 
-                       + this->nodes[1]->x * ( this->nodes[3]->y - this->nodes[0]->y ) 
-                       + this->nodes[3]->x * ( this->nodes[0]->y - this->nodes[1]->y ) )
-           + 0.5 * fabs( this->nodes[2]->x * ( this->nodes[3]->y - this->nodes[1]->y ) 
-                       + this->nodes[3]->x * ( this->nodes[1]->y - this->nodes[2]->y ) 
-                       + this->nodes[1]->x * ( this->nodes[2]->y - this->nodes[3]->y ) );
-    // ========================================================================
     
     // ========================================================================
-    //                  Compute geometric Center of the Quad
+    //                  Compute Centroid and Volume of the Quad
     // ========================================================================
-    this->center.x = 0.25 * (this->nodes[0]->x + this->nodes[1]->x + this->nodes[2]->x + this->nodes[3]->x);
-    this->center.y = 0.25 * (this->nodes[0]->y + this->nodes[1]->y + this->nodes[2]->y + this->nodes[3]->y);
+
+    // compute centers of triangles
+    float2 triCenter[2];
+    triCenter[0].x =  (this->nodes[0]->x + this->nodes[1]->x +                     this->nodes[3]->x) / 3.0;
+    triCenter[0].y =  (this->nodes[0]->y + this->nodes[1]->y +                     this->nodes[3]->y) / 3.0;
+    triCenter[1].x =  (                    this->nodes[1]->x + this->nodes[2]->x + this->nodes[3]->x) / 3.0;
+    triCenter[1].y =  (                    this->nodes[1]->y + this->nodes[2]->y + this->nodes[3]->y) / 3.0;
+
+    double triVolume[2];
+    triVolume[0] = 0.5 * fabs( this->nodes[0]->x * ( this->nodes[1]->y - this->nodes[3]->y ) 
+                             + this->nodes[1]->x * ( this->nodes[3]->y - this->nodes[0]->y ) 
+                             + this->nodes[3]->x * ( this->nodes[0]->y - this->nodes[1]->y ) );
+    triVolume[1] = 0.5 * fabs( this->nodes[2]->x * ( this->nodes[3]->y - this->nodes[1]->y ) 
+                             + this->nodes[3]->x * ( this->nodes[1]->y - this->nodes[2]->y ) 
+                             + this->nodes[1]->x * ( this->nodes[2]->y - this->nodes[3]->y ) );
+
+    this->volume = triVolume[0] + triVolume[1];
+    this->center.x = ( triCenter[0].x * triVolume[0] + triCenter[1].x * triVolume[1] ) / this->volume;
+    this->center.y = ( triCenter[0].y * triVolume[0] + triCenter[1].y * triVolume[1] ) / this->volume;
+
     // ========================================================================
     
     // minDx must be computed in annother step, when the interfaces are created and connected
@@ -294,7 +301,7 @@ void Cell::computeCons(PrimitiveVariable prim)
 
 double Cell::getLocalTimestep()
 {
-    PrimitiveVariable prim = getPrim();
+    PrimitiveVariable prim = this->getPrim();
 
     double U_max = sqrt(prim.U*prim.U + prim.V*prim.V);
     double c_s   = sqrt( 1.0 / ( 2.0*prim.L ) );                      // c_s = sqrt(RT) = c_s = sqrt(1/2lambda)
