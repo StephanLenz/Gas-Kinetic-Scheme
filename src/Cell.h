@@ -59,6 +59,8 @@ public:
 
     double getLocalTimestep();
 
+    void addFlux(double* Flux, double sign, Interface* origin);
+
 	float2 getCenter();
     float2 getNode(int i);
 

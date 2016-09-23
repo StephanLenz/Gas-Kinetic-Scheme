@@ -204,7 +204,7 @@ int main(int argc, char* argv[])
         double H = 1.0;
         double W = 1.0;
 
-        param.numberOfIterations = 10000000;
+        param.numberOfIterations = 100000000;
         param.outputIntervalVTK = 10000;
         param.outputInterval = 10000;
 
@@ -224,8 +224,8 @@ int main(int argc, char* argv[])
         FluidParameter fluidParam;
 
         // ========== Weidongs Parameters ==========
-        int    nx = 4;
-        int    ny = 4;//nyList[j];
+        int    nx = 2;
+        int    ny = 2;//nyList[j];
         double Re = 4.0;
         double u0 = 0.1;
         double angle = 0.0*M_PI;//atan(0.0);
@@ -234,8 +234,8 @@ int main(int argc, char* argv[])
         fluidParam.K = 1;
         fluidParam.nu = (u0*param.L)/Re;
         fluidParam.R = 200.0;
-        fluidParam.Force.x = cos(angle) * (u0*8.0*fluidParam.nu) / (param.L*param.L);
-        fluidParam.Force.y = sin(angle) * (u0*8.0*fluidParam.nu) / (param.L*param.L);
+        fluidParam.Force.x = 0.0;//cos(angle) * (u0*8.0*fluidParam.nu) / (param.L*param.L);
+        fluidParam.Force.y = 0.0;//sin(angle) * (u0*8.0*fluidParam.nu) / (param.L*param.L);
         fluidParam.BoussinesqForce.x = 0.0;
         fluidParam.BoussinesqForce.y = 0.0;
         fluidParam.rhoReference = 1.0;
@@ -263,7 +263,7 @@ int main(int argc, char* argv[])
         Interface::setInterpolationOrder(1);
 
         // Generate Mesh
-        mesh->generateRectMeshGraded(compressible, W, H, nx, ny, 0.5, 0.5);
+        mesh->generateRectMeshGraded(compressible, W, H, nx, ny, 1.0, 1.0);
 
         // Initialize Values
         mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);

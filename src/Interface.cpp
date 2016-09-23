@@ -153,12 +153,14 @@ void Interface::computeInternalFlux(double dt)
     
     // ========================================================================
     // Transformation in local coordinate system
+    // ========================================================================
     transformGlobal2Local(prim);
     transformGlobal2Local(normalGradCons);
     // ========================================================================
     
     // ========================================================================
     // spacial micro slopes a = a1 + a2 u + a3 v + 0.5 a4 (u^2 + v^2 + xi^2)
+    // ========================================================================
     this->computeMicroSlope(prim, normalGradCons, a);
     // ========================================================================
 
@@ -168,6 +170,7 @@ void Interface::computeInternalFlux(double dt)
 
     // ========================================================================
     // temporal micro slopes A = A1 + A2 u + A3 v + 0.5 A4 (u^2 + v^2 + xi^2)
+    // ========================================================================
     this->computeTimeDerivative(prim, MomentU, MomentV, MomentXi, a, b, timeGrad);
 
     this->computeMicroSlope(prim, timeGrad, A);
@@ -175,21 +178,34 @@ void Interface::computeInternalFlux(double dt)
 
     // ========================================================================
     // Formular as in the Rayleigh-Bernard-Paper (Xu, Lui, 1999)
+    // ========================================================================
     double tau = 2.0*prim[3] * this->fluidParam.nu;
     // ========================================================================
     
     // ========================================================================
     // time integration Coefficients
+    // ========================================================================
     double timeCoefficients[3] = { dt, -tau*dt, 0.5*dt*dt - tau*dt };
     // ========================================================================
 
     // ========================================================================
     // compute mass and momentum fluxes
+    // ========================================================================
     this->assembleFlux(MomentU, MomentV, MomentXi, a, b, A, timeCoefficients, prim, tau);
     // ========================================================================
     
     transformLocal2Global(this->timeIntegratedFlux);
+    transformLocal2Global(this->timeIntegratedFlux_1);
+    transformLocal2Global(this->timeIntegratedFlux_2);
+    transformLocal2Global(this->timeIntegratedFlux_3);
     transformLocal2Global(this->FluxDensity);
+    
+    // ========================================================================
+    // add Flux values to cell updates
+    // ========================================================================
+    //this->posCell->addFlux(this->timeIntegratedFlux,  1.0, this);
+    //this->negCell->addFlux(this->timeIntegratedFlux, -1.0, this);
+    // ========================================================================
 
     int i = 1;
 }
@@ -219,6 +235,36 @@ ConservedVariable Interface::getTimeIntegratedFlux()
     tmp.rhoU = this->timeIntegratedFlux[1];
     tmp.rhoV = this->timeIntegratedFlux[2];
     tmp.rhoE = this->timeIntegratedFlux[3];
+    return tmp;
+}
+
+ConservedVariable Interface::getTimeIntegratedFlux_1()
+{
+    ConservedVariable tmp;
+    tmp.rho  = this->timeIntegratedFlux_1[0];
+    tmp.rhoU = this->timeIntegratedFlux_1[1];
+    tmp.rhoV = this->timeIntegratedFlux_1[2];
+    tmp.rhoE = this->timeIntegratedFlux_1[3];
+    return tmp;
+}
+
+ConservedVariable Interface::getTimeIntegratedFlux_2()
+{
+    ConservedVariable tmp;
+    tmp.rho  = this->timeIntegratedFlux_2[0];
+    tmp.rhoU = this->timeIntegratedFlux_2[1];
+    tmp.rhoV = this->timeIntegratedFlux_2[2];
+    tmp.rhoE = this->timeIntegratedFlux_2[3];
+    return tmp;
+}
+
+ConservedVariable Interface::getTimeIntegratedFlux_3()
+{
+    ConservedVariable tmp;
+    tmp.rho  = this->timeIntegratedFlux_3[0];
+    tmp.rhoU = this->timeIntegratedFlux_3[1];
+    tmp.rhoV = this->timeIntegratedFlux_3[2];
+    tmp.rhoE = this->timeIntegratedFlux_3[3];
     return tmp;
 }
 

@@ -29,6 +29,9 @@ protected:
     FluidParameter fluidParam;
 
     double timeIntegratedFlux[4];
+    double timeIntegratedFlux_1[4];
+    double timeIntegratedFlux_2[4];
+    double timeIntegratedFlux_3[4];
     double FluxDensity[4];
 
     static int interpolationOrder;
@@ -51,6 +54,9 @@ public:
     Cell* getCellInDomain();
 
     ConservedVariable getTimeIntegratedFlux();
+    ConservedVariable getTimeIntegratedFlux_1();
+    ConservedVariable getTimeIntegratedFlux_2();
+    ConservedVariable getTimeIntegratedFlux_3();
     ConservedVariable getFluxDensity();
     double getFluxSign(Cell* askingCell);
 
