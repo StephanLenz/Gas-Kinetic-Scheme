@@ -468,6 +468,22 @@ void Cell::computeLeastSquareCoefficients()
 
 void Cell::computeGradients()
 {
+    if( this->isGhostCell() )
+    {
+        // loop over conserved variables
+        for(int i = 0; i < 4; i++)
+        {
+            double dx = this->InterfaceList[0]->getNeigborCell(this)->getCenter().x - this->center.x;
+            double dy = this->InterfaceList[0]->getNeigborCell(this)->getCenter().y - this->center.y;
+
+            double dW = ((double*)&this->InterfaceList[0]->getNeigborCell(this)->getCons())[i] - this->cons[i];
+
+            ((double*)&this->gradientX)[i] = dW / (dx*dx + dy*dy) * dx;
+            ((double*)&this->gradientY)[i] = dW / (dx*dx + dy*dy) * dy;
+        }
+        return;
+    }
+
     // loop over conserved variables
     for(int i = 0; i < 4; i++)
     {
