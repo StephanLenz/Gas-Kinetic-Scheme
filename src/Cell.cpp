@@ -58,6 +58,12 @@ Cell::Cell(InterfaceType interfaceType, float2** nodes, BoundaryCondition* BC, F
     this->updateVal.rhoV = 0.0;
     this->updateVal.rhoE = 0.0;
 
+    for(int i = 0; i < 4; i++)
+    {
+        ((double*)&this->gradientX)[i] = 0.0;
+        ((double*)&this->gradientY)[i] = 0.0;
+    }
+
     // minDx must be computed in annother step, when the interfaces are created and connected
     this->minDx = 1.0e99;
 }
@@ -439,6 +445,51 @@ void Cell::addFlux(double * Flux, double sign, Interface* origin)
     int i = 0;
 }
 
+void Cell::computeLeastSquareCoefficients()
+{
+    this->r11 = 0.0;
+    this->r12 = 0.0;
+    this->r22 = 0.0;
+
+    for(int i = 0; i < 4; i++)
+    {
+        double dx = this->InterfaceList[i]->getNeigborCell(this)->getCenter().x - this->center.x;
+        double dy = this->InterfaceList[i]->getNeigborCell(this)->getCenter().y - this->center.y;
+
+        this->r11 += dx*dx;
+        this->r12 += dx*dy;
+        this->r22 += dy*dy;
+    }
+
+    this->r11 = sqrt(this->r11);
+    this->r12 = this->r12 / r11;
+    this->r22 = sqrt(this->r22 - r12*r12);
+}
+
+void Cell::computeGradients()
+{
+    // loop over conserved variables
+    for(int i = 0; i < 4; i++)
+    {
+        ((double*)&this->gradientX)[i] = 0.0;
+        ((double*)&this->gradientY)[i] = 0.0;
+
+        for(int j = 0; j < 4; j++)
+        {
+            double dx = this->InterfaceList[j]->getNeigborCell(this)->getCenter().x - this->center.x;
+            double dy = this->InterfaceList[j]->getNeigborCell(this)->getCenter().y - this->center.y;
+
+            double dW = ((double*)&this->InterfaceList[j]->getNeigborCell(this)->getCons())[i] - this->cons[i];
+
+            double w1 = dx / (r11*r11) - r12/r11 * ( dy - r12/r11 * dx ) / (r22*r22);
+            double w2 =                            ( dy - r12/r11 * dx ) / (r22*r22);
+
+            ((double*)&this->gradientX)[i] += w1 * dW;
+            ((double*)&this->gradientY)[i] += w2 * dW;
+        }
+    }
+}
+
 float2 Cell::getCenter()
 {
 	return this->center;
@@ -484,6 +535,16 @@ ConservedVariable Cell::getLocalResidual()
 ConservedVariable Cell::getUpdate()
 {
     return this->updateVal;
+}
+
+ConservedVariable Cell::getGradientX()
+{
+    return this->gradientX;
+}
+
+ConservedVariable Cell::getGradientY()
+{
+    return this->gradientY;
 }
 
 Cell * Cell::getNeighborCell(int i)

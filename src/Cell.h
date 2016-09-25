@@ -32,6 +32,11 @@ private:
 
     ConservedVariable residual;
 
+    ConservedVariable gradientX;
+    ConservedVariable gradientY;
+
+    double r11, r12, r22;
+
     // Boundary Cell
     BoundaryCondition* BoundaryContitionPointer;
 
@@ -61,6 +66,9 @@ public:
 
     void addFlux(double* Flux, double sign, Interface* origin);
 
+    void computeLeastSquareCoefficients();
+    void computeGradients();
+
 	float2 getCenter();
     float2 getNode(int i);
 
@@ -71,6 +79,9 @@ public:
     ConservedVariable getLocalResidual();
 
     ConservedVariable getUpdate();
+
+    ConservedVariable getGradientX();
+    ConservedVariable getGradientY();
 
     Cell* getNeighborCell(int i);
 

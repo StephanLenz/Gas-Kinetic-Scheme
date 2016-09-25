@@ -104,7 +104,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
 		for (int j = 0; j < nx + 1; j++)   // X-Direction
 		{
             // ===== No Distortion =====================
-            //float2* tmpNode = new float2( NodesX[j], NodesY[i] );
+            float2* tmpNode = new float2( NodesX[j], NodesY[i] );
 
             // ===== Parallelogram =====================
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] + NodesX[j] / this->lengthX * heightDiff );
@@ -122,7 +122,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] + 0.05 * cos( NodesX[j] * 2.0 * M_PI / this->lengthX ) * sin( NodesY[i] * M_PI/this->lengthY ) );
 
             // ===== y-Distortion (parallel) ===========
-            float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.4 * this->lengthY * sin( NodesY[i] / this->lengthY * M_PI ) );
+            //float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.4 * this->lengthY * sin( NodesY[i] / this->lengthY * M_PI ) );
 
             // ===== internal parabular Distortion =====
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.25 * (NodesX[j] - this->lengthX)*NodesX[j] * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY ) );
@@ -296,6 +296,21 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
     for(vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
     {
         (*i)->computeMinDx();
+    }
+    
+	//=========================================================================
+
+	//=========================================================================
+	//=========================================================================
+	//						Compute least square coefficients
+	//=========================================================================
+	//=========================================================================
+    for(vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
+    {
+        if( !(*i)->isGhostCell() )
+        {
+            (*i)->computeLeastSquareCoefficients();
+        }
     }
     
 	//=========================================================================
@@ -594,6 +609,15 @@ void GKSMesh::timeStep()
     {
         if ( !CellList[i]->isGhostCell() )
             CellList[i]->update(this->dt);
+    }
+
+    // ========================================================================
+
+    //#pragma omp parallel for
+    for ( int i = 0; i < CellList.size(); i++ )
+    {
+        if ( !CellList[i]->isGhostCell() )
+            CellList[i]->computeGradients();
     }
 
     // ========================================================================
@@ -1382,6 +1406,27 @@ void GKSMesh::writeCellData(ofstream& file)
         {
             file << (*i)->getConnectivity(j).x << " " << (*i)->getConnectivity(j).y << " 0.0" << endl;
         }
+    }
+    // ================================================================================================================
+    file << "VECTORS dRho" << " double\n";
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+    {
+        file << (*i)->getGradientX().rho << " " << (*i)->getGradientY().rho << " 0.0" << endl;
+    }
+    file << "VECTORS dRhoU" << " double\n";
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+    {
+        file << (*i)->getGradientX().rhoU << " " << (*i)->getGradientY().rhoU << " 0.0" << endl;
+    }
+    file << "VECTORS dRhoV" << " double\n";
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+    {
+        file << (*i)->getGradientX().rhoV << " " << (*i)->getGradientY().rhoV << " 0.0" << endl;
+    }
+    file << "VECTORS dRhoE" << " double\n";
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+    {
+        file << (*i)->getGradientX().rhoE << " " << (*i)->getGradientY().rhoE << " 0.0" << endl;
     }
     // ================================================================================================================
 }
