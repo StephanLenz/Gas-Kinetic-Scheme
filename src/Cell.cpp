@@ -52,6 +52,25 @@ Cell::Cell(InterfaceType interfaceType, float2** nodes, BoundaryCondition* BC, F
     this->center.x = ( triCenter[0].x * triVolume[0] + triCenter[1].x * triVolume[1] ) / this->volume;
     this->center.y = ( triCenter[0].y * triVolume[0] + triCenter[1].y * triVolume[1] ) / this->volume;
     // ========================================================================
+    // ========================================================================
+
+    //// ========================================================================
+    ////                  Compute Volume of the Quad (old)
+    //// ========================================================================
+    //this->volume = 0.5 * fabs( this->nodes[0]->x * ( this->nodes[1]->y - this->nodes[3]->y ) 
+    //                         + this->nodes[1]->x * ( this->nodes[3]->y - this->nodes[0]->y ) 
+    //                         + this->nodes[3]->x * ( this->nodes[0]->y - this->nodes[1]->y ) )
+    //             + 0.5 * fabs( this->nodes[2]->x * ( this->nodes[3]->y - this->nodes[1]->y ) 
+    //                         + this->nodes[3]->x * ( this->nodes[1]->y - this->nodes[2]->y ) 
+    //                         + this->nodes[1]->x * ( this->nodes[2]->y - this->nodes[3]->y ) );
+    //// ========================================================================
+    //
+    //// ========================================================================
+    ////                  Compute geometric Center of the Quad (Old)
+    //// ========================================================================
+    //this->center.x = 0.25 * (this->nodes[0]->x + this->nodes[1]->x + this->nodes[2]->x + this->nodes[3]->x);
+    //this->center.y = 0.25 * (this->nodes[0]->y + this->nodes[1]->y + this->nodes[2]->y + this->nodes[3]->y);
+    //// ========================================================================
     
     this->updateVal.rho  = 0.0;
     this->updateVal.rhoU = 0.0;
