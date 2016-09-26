@@ -427,6 +427,8 @@ void Cell::addFlux(double * Flux, double sign, Interface* origin)
     int  j = 0;
     bool flag = false;
 
+    // Check wether the interface is part of the cells InterfaceList
+    // In case of periodic boundaries five interfaces point to one cell
     for(int i = 0; i < 4; ++i)
     {
         flag = flag || this->InterfaceList[i] == origin;
@@ -490,6 +492,7 @@ void Cell::computeGradients()
         ((double*)&this->gradientX)[i] = 0.0;
         ((double*)&this->gradientY)[i] = 0.0;
 
+        // loop over 4 adjacent cells
         for(int j = 0; j < 4; j++)
         {
             double dx = this->InterfaceList[j]->getNeigborCell(this)->getCenter().x - this->center.x;

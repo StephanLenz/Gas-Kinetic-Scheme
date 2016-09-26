@@ -25,10 +25,10 @@ void CompressibleInterface::computeTimeDerivative(double * prim, double * Moment
                 + a[1] * MomentU[2] * MomentV[0]
                 + a[2] * MomentU[1] * MomentV[1]
                 + a[3] * 0.5 * ( MomentU[3] * MomentV[0] + MomentU[1] * MomentV[2] + MomentU[1] * MomentV[0] * MomentXi[2] )
-                //+ b[0] * MomentU[0] * MomentV[1]
-                //+ b[1] * MomentU[1] * MomentV[1]
-                //+ b[2] * MomentU[0] * MomentV[2]
-                //+ b[3] * 0.5 * ( MomentU[2] * MomentV[1] + MomentU[0] * MomentV[3] + MomentU[0] * MomentV[1] * MomentXi[2] )
+                + b[0] * MomentU[0] * MomentV[1]
+                + b[1] * MomentU[1] * MomentV[1]
+                + b[2] * MomentU[0] * MomentV[2]
+                + b[3] * 0.5 * ( MomentU[2] * MomentV[1] + MomentU[0] * MomentV[3] + MomentU[0] * MomentV[1] * MomentXi[2] )
     // this part comes from the inclusion of the forcing into the flux computation
                 //+ 2.0 * prim[3] * ( MomentU[0]*MomentV[0] * prim[1] - MomentU[1]*MomentV[0] ) * this->fluidParam.Force.x
                 //+ 2.0 * prim[3] * ( MomentU[0]*MomentV[0] * prim[2] - MomentU[0]*MomentV[1] ) * this->fluidParam.Force.y
@@ -40,10 +40,10 @@ void CompressibleInterface::computeTimeDerivative(double * prim, double * Moment
                 + a[1] * MomentU[3] * MomentV[0]
                 + a[2] * MomentU[2] * MomentV[1]
                 + a[3] * 0.5 * ( MomentU[4] * MomentV[0] + MomentU[2] * MomentV[2] + MomentU[2] * MomentV[0] * MomentXi[2] )
-                //+ b[0] * MomentU[1] * MomentV[1]
-                //+ b[1] * MomentU[2] * MomentV[1]
-                //+ b[2] * MomentU[1] * MomentV[2]
-                //+ b[3] * 0.5 * ( MomentU[3] * MomentV[1] + MomentU[1] * MomentV[3] + MomentU[1] * MomentV[1] * MomentXi[2] )
+                + b[0] * MomentU[1] * MomentV[1]
+                + b[1] * MomentU[2] * MomentV[1]
+                + b[2] * MomentU[1] * MomentV[2]
+                + b[3] * 0.5 * ( MomentU[3] * MomentV[1] + MomentU[1] * MomentV[3] + MomentU[1] * MomentV[1] * MomentXi[2] )
     // this part comes from the inclusion of the forcing into the flux computation
                 //+ 2.0 * prim[3] * ( MomentU[1]*MomentV[0] * prim[1] - MomentU[2]*MomentV[0] ) * this->fluidParam.Force.x
                 //+ 2.0 * prim[3] * ( MomentU[1]*MomentV[0] * prim[2] - MomentU[1]*MomentV[1] ) * this->fluidParam.Force.y
@@ -55,10 +55,10 @@ void CompressibleInterface::computeTimeDerivative(double * prim, double * Moment
                 + a[1] * MomentU[2] * MomentV[1]
                 + a[2] * MomentU[1] * MomentV[2]
                 + a[3] * 0.5 * ( MomentU[3] * MomentV[1] + MomentU[1] * MomentV[3] + MomentU[1] * MomentV[1] * MomentXi[2] )
-                //+ b[0] * MomentU[0] * MomentV[2]
-                //+ b[1] * MomentU[1] * MomentV[2]
-                //+ b[2] * MomentU[0] * MomentV[3]
-                //+ b[3] * 0.5 * ( MomentU[2] * MomentV[2] + MomentU[0] * MomentV[4] + MomentU[0] * MomentV[2] * MomentXi[2] )
+                + b[0] * MomentU[0] * MomentV[2]
+                + b[1] * MomentU[1] * MomentV[2]
+                + b[2] * MomentU[0] * MomentV[3]
+                + b[3] * 0.5 * ( MomentU[2] * MomentV[2] + MomentU[0] * MomentV[4] + MomentU[0] * MomentV[2] * MomentXi[2] )
     // this part comes from the inclusion of the forcing into the flux computation
                 //+ 2.0 * prim[3] * ( MomentU[0]*MomentV[1] * prim[1] - MomentU[1]*MomentV[1] ) * this->fluidParam.Force.x
                 //+ 2.0 * prim[3] * ( MomentU[0]*MomentV[1] * prim[2] - MomentU[0]*MomentV[2] ) * this->fluidParam.Force.y
@@ -74,14 +74,14 @@ void CompressibleInterface::computeTimeDerivative(double * prim, double * Moment
                                 + 2.0 * MomentU[3] * MomentXi[2]
                                 + 2.0 * MomentU[1] * MomentV[2] * MomentXi[2]
                                 )
-                //+ b[0] * 0.50 * ( MomentU[2] * MomentV[1] + MomentU[0] * MomentV[3] + MomentU[0] * MomentV[1] * MomentXi[2] )
-                //+ b[1] * 0.50 * ( MomentU[3] * MomentV[1] + MomentU[1] * MomentV[3] + MomentU[1] * MomentV[1] * MomentXi[2] )
-                //+ b[2] * 0.50 * ( MomentU[2] * MomentV[2] + MomentU[0] * MomentV[4] + MomentU[0] * MomentV[2] * MomentXi[2] )
-                //+ b[3] * 0.25 * ( MomentV[5] + MomentV[1] * ( MomentU[4] + MomentXi[4] )
-                //                + 2.0 * MomentU[2] * MomentV[3]
-                //                + 2.0 * MomentU[2] * MomentV[1] * MomentXi[2]
-                //                + 2.0 * MomentV[3] * MomentXi[2]
-                //                )
+                + b[0] * 0.50 * ( MomentU[2] * MomentV[1] + MomentU[0] * MomentV[3] + MomentU[0] * MomentV[1] * MomentXi[2] )
+                + b[1] * 0.50 * ( MomentU[3] * MomentV[1] + MomentU[1] * MomentV[3] + MomentU[1] * MomentV[1] * MomentXi[2] )
+                + b[2] * 0.50 * ( MomentU[2] * MomentV[2] + MomentU[0] * MomentV[4] + MomentU[0] * MomentV[2] * MomentXi[2] )
+                + b[3] * 0.25 * ( MomentV[5] + MomentV[1] * ( MomentU[4] + MomentXi[4] )
+                                + 2.0 * MomentU[2] * MomentV[3]
+                                + 2.0 * MomentU[2] * MomentV[1] * MomentXi[2]
+                                + 2.0 * MomentV[3] * MomentXi[2]
+                                )
     // this part comes from the inclusion of the forcing into the flux computation
                 //+ prim[3] * ( ( MomentU[2] + MomentV[2] + MomentXi[2] ) * prim[1] 
                 //            - ( MomentU[3] * MomentV[0] + MomentU[1] * MomentV[2] + MomentU[1] * MomentV[0] * MomentXi[2] )
@@ -128,12 +128,12 @@ void CompressibleInterface::assembleFlux(double * MomentU, double * MomentV, dou
                 + a[3] * 0.5 * ( MomentU[3+u] * MomentV[0+v]
                                + MomentU[1+u] * MomentV[2+v] 
                                + MomentU[1+u] * MomentV[0+v] * MomentXi[2] )
-                //+ b[0] * MomentU[0+u] * MomentV[1+v]
-                //+ b[1] * MomentU[1+u] * MomentV[1+v]
-                //+ b[2] * MomentU[0+u] * MomentV[2+v]
-                //+ b[3] * 0.5 * ( MomentU[2+u] * MomentV[1+v] 
-                //               + MomentU[0+u] * MomentV[3+v] 
-                //               + MomentU[0+u] * MomentV[1+v] * MomentXi[2] )
+                + b[0] * MomentU[0+u] * MomentV[1+v]
+                + b[1] * MomentU[1+u] * MomentV[1+v]
+                + b[2] * MomentU[0+u] * MomentV[2+v]
+                + b[3] * 0.5 * ( MomentU[2+u] * MomentV[1+v] 
+                               + MomentU[0+u] * MomentV[3+v] 
+                               + MomentU[0+u] * MomentV[1+v] * MomentXi[2] )
                 )
     // this part comes from the inclusion of the forcing into the flux computation
                 //+ 2.0 * prim[3] * ( MomentU[0+u]*MomentV[0+v] * prim[1] - MomentU[1+u]*MomentV[0+v] ) * this->fluidParam.Force.x
@@ -148,12 +148,12 @@ void CompressibleInterface::assembleFlux(double * MomentU, double * MomentV, dou
                 + a[3] * 0.5 * ( MomentU[4+u] * MomentV[0+v] 
                                + MomentU[2+u] * MomentV[2+v] 
                                + MomentU[2+u] * MomentV[0+v] * MomentXi[2] )
-                //+ b[0] * MomentU[1+u] * MomentV[1+v]
-                //+ b[1] * MomentU[2+u] * MomentV[1+v]
-                //+ b[2] * MomentU[1+u] * MomentV[2+v]
-                //+ b[3] * 0.5 * ( MomentU[3+u] * MomentV[1+v] 
-                //               + MomentU[1+u] * MomentV[3+v] 
-                //               + MomentU[1+u] * MomentV[1+v] * MomentXi[2] )
+                + b[0] * MomentU[1+u] * MomentV[1+v]
+                + b[1] * MomentU[2+u] * MomentV[1+v]
+                + b[2] * MomentU[1+u] * MomentV[2+v]
+                + b[3] * 0.5 * ( MomentU[3+u] * MomentV[1+v] 
+                               + MomentU[1+u] * MomentV[3+v] 
+                               + MomentU[1+u] * MomentV[1+v] * MomentXi[2] )
                 )
     // this part comes from the inclusion of the forcing into the flux computation
                 //+ 2.0 * prim[3] * ( MomentU[1+u]*MomentV[0+v] * prim[1] - MomentU[2+u]*MomentV[0+v] ) * this->fluidParam.Force.x
@@ -168,12 +168,12 @@ void CompressibleInterface::assembleFlux(double * MomentU, double * MomentV, dou
                 + a[3] * 0.5 * ( MomentU[3+u] * MomentV[1+v]
                                + MomentU[1+u] * MomentV[3+v]
                                + MomentU[1+u] * MomentV[1+v] * MomentXi[2] )
-                //+ b[0] * MomentU[0+u] * MomentV[2+v]
-                //+ b[1] * MomentU[1+u] * MomentV[2+v]
-                //+ b[2] * MomentU[0+u] * MomentV[3+v]
-                //+ b[3] * 0.5 * ( MomentU[2+u] * MomentV[2+v]
-                //               + MomentU[0+u] * MomentV[4+v]
-                //               + MomentU[0+u] * MomentV[2+v] * MomentXi[2] )
+                + b[0] * MomentU[0+u] * MomentV[2+v]
+                + b[1] * MomentU[1+u] * MomentV[2+v]
+                + b[2] * MomentU[0+u] * MomentV[3+v]
+                + b[3] * 0.5 * ( MomentU[2+u] * MomentV[2+v]
+                               + MomentU[0+u] * MomentV[4+v]
+                               + MomentU[0+u] * MomentV[2+v] * MomentXi[2] )
                 )
     // this part comes from the inclusion of the forcing into the flux computation
                 //+ 2.0 * prim[3] * ( MomentU[0+u]*MomentV[1+v] * prim[1] - MomentU[1+u]*MomentV[1+v] ) * this->fluidParam.Force.x
@@ -198,22 +198,22 @@ void CompressibleInterface::assembleFlux(double * MomentU, double * MomentV, dou
                                        + MomentU[3+u] * MomentV[0+v] * MomentXi[2]
                                        + MomentU[1+u] * MomentV[2+v] * MomentXi[2] ) 
                                )
-                      //+ b[0] * ( MomentU[2+u] * MomentV[1+v] 
-                      //         + MomentU[0+u] * MomentV[3+v]
-                      //         + MomentU[0+u] * MomentV[1+v] * MomentXi[2] )
-                      //+ b[1] * ( MomentU[3+u] * MomentV[1+v]
-                      //         + MomentU[1+u] * MomentV[3+v]
-                      //         + MomentU[1+u] * MomentV[1+v] * MomentXi[2] )
-                      //+ b[2] * ( MomentU[2+u] * MomentV[2+v]
-                      //         + MomentU[0+u] * MomentV[4+v]
-                      //         + MomentU[0+u] * MomentV[2+v] * MomentXi[2] )
-                      //+ b[3] * ( 0.5 * ( MomentU[4+u] * MomentV[1+v] 
-                      //                 + MomentU[0+u] * MomentV[5+v]
-                      //                 + MomentU[0+u] * MomentV[1+v] * MomentXi[4] )
-                      //         +       ( MomentU[2+u] * MomentV[3+v]
-                      //                 + MomentU[2+u] * MomentV[1+v] * MomentXi[2]
-                      //                 + MomentU[0+u] * MomentV[3+v] * MomentXi[2] )
-                      //         )
+                      + b[0] * ( MomentU[2+u] * MomentV[1+v] 
+                               + MomentU[0+u] * MomentV[3+v]
+                               + MomentU[0+u] * MomentV[1+v] * MomentXi[2] )
+                      + b[1] * ( MomentU[3+u] * MomentV[1+v]
+                               + MomentU[1+u] * MomentV[3+v]
+                               + MomentU[1+u] * MomentV[1+v] * MomentXi[2] )
+                      + b[2] * ( MomentU[2+u] * MomentV[2+v]
+                               + MomentU[0+u] * MomentV[4+v]
+                               + MomentU[0+u] * MomentV[2+v] * MomentXi[2] )
+                      + b[3] * ( 0.5 * ( MomentU[4+u] * MomentV[1+v] 
+                                       + MomentU[0+u] * MomentV[5+v]
+                                       + MomentU[0+u] * MomentV[1+v] * MomentXi[4] )
+                               +       ( MomentU[2+u] * MomentV[3+v]
+                                       + MomentU[2+u] * MomentV[1+v] * MomentXi[2]
+                                       + MomentU[0+u] * MomentV[3+v] * MomentXi[2] )
+                               )
                       )
     // this part comes from the inclusion of the forcing into the flux computation
                     //+ prim[3] * ( ( MomentU[2+u] * MomentV[0+v] + MomentU[0+u] * MomentV[2+v] + MomentU[0+u] * MomentV[0+v] * MomentXi[2] ) * prim[1] 

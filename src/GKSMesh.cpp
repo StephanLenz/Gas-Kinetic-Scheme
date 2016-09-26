@@ -595,7 +595,7 @@ void GKSMesh::timeStep()
 
     // ========================================================================
 
-    //#pragma omp parallel for
+    #pragma omp parallel for
     for ( int i = 0; i < CellList.size(); i++ )
     {
         //if ( !CellList[i]->isGhostCell() )
@@ -604,7 +604,7 @@ void GKSMesh::timeStep()
 
     // ========================================================================
 
-    //#pragma omp parallel for
+    #pragma omp parallel for
     for ( int i = 0; i < InterfaceList.size(); i++ )
     {
         if ( !InterfaceList[i]->isGhostInterface() )
@@ -613,7 +613,7 @@ void GKSMesh::timeStep()
 
     // ========================================================================
 
-    //#pragma omp parallel for
+    #pragma omp parallel for
     for ( int i = 0; i < CellList.size(); i++ )
     {
         if ( !CellList[i]->isGhostCell() )

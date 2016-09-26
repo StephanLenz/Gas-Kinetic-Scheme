@@ -125,7 +125,7 @@ void Interface::computeInternalFlux(double dt)
     double prim[4];
     double normalGradCons[4];
     double normalGradConsTest[4];
-    double tangentialGradCons[4];
+    double tangentialGradCons[4] = {0.0, 0.0, 0.0, 0.0};
     double timeGrad[4];
 
     double a[4];
@@ -155,10 +155,11 @@ void Interface::computeInternalFlux(double dt)
     // ========================================================================
     
     // ========================================================================
-    // Transformation in local coordinate system
+    // Momentum Transformation in local coordinate system
     // ========================================================================
     transformGlobal2Local(prim);
     transformGlobal2Local(normalGradCons);
+    transformGlobal2Local(tangentialGradCons);
     // ========================================================================
     
     // ========================================================================
@@ -448,47 +449,68 @@ void Interface::differentiateConsNormal(double* normalGradCons, double* prim)
 
 void Interface::differentiateConsLeastSquare(double* normalGradCons, double* tangentialGradCons, double* prim)
 {
-    // ========================================================================
-    // Read gradients from adjacent Cells and transform into local coordinates
-    // ========================================================================
-
-    ConservedVariable posGradN;
-    posGradN.rho  =   this->normal.x * this->posCell->getGradientX().rho  + this->normal.y * this->posCell->getGradientY().rho ;
-    posGradN.rhoU =   this->normal.x * this->posCell->getGradientX().rhoU + this->normal.y * this->posCell->getGradientY().rhoU;
-    posGradN.rhoV =   this->normal.x * this->posCell->getGradientX().rhoV + this->normal.y * this->posCell->getGradientY().rhoV;
-    posGradN.rhoE =   this->normal.x * this->posCell->getGradientX().rhoE + this->normal.y * this->posCell->getGradientY().rhoE;
-    ConservedVariable posGradT;
-    posGradT.rho  = - this->normal.y * this->posCell->getGradientX().rho  + this->normal.x * this->posCell->getGradientY().rho ;
-    posGradT.rhoU = - this->normal.y * this->posCell->getGradientX().rhoU + this->normal.x * this->posCell->getGradientY().rhoU;
-    posGradT.rhoV = - this->normal.y * this->posCell->getGradientX().rhoV + this->normal.x * this->posCell->getGradientY().rhoV;
-    posGradT.rhoE = - this->normal.y * this->posCell->getGradientX().rhoE + this->normal.x * this->posCell->getGradientY().rhoE;
-
-    ConservedVariable negGradN;
-    negGradN.rho  =   this->normal.x * this->negCell->getGradientX().rho  + this->normal.y * this->negCell->getGradientY().rho ;
-    negGradN.rhoU =   this->normal.x * this->negCell->getGradientX().rhoU + this->normal.y * this->negCell->getGradientY().rhoU;
-    negGradN.rhoV =   this->normal.x * this->negCell->getGradientX().rhoV + this->normal.y * this->negCell->getGradientY().rhoV;
-    negGradN.rhoE =   this->normal.x * this->negCell->getGradientX().rhoE + this->normal.y * this->negCell->getGradientY().rhoE;
-    ConservedVariable negGradT;
-    negGradT.rho  = - this->normal.y * this->negCell->getGradientX().rho  + this->normal.x * this->negCell->getGradientY().rho ;
-    negGradT.rhoU = - this->normal.y * this->negCell->getGradientX().rhoU + this->normal.x * this->negCell->getGradientY().rhoU;
-    negGradT.rhoV = - this->normal.y * this->negCell->getGradientX().rhoV + this->normal.x * this->negCell->getGradientY().rhoV;
-    negGradT.rhoE = - this->normal.y * this->negCell->getGradientX().rhoE + this->normal.x * this->negCell->getGradientY().rhoE;
-    // ========================================================================
     
     // ========================================================================
-    // Average Gradients
+    // Interpolate Gradients
     // ========================================================================
     double distance = this->posDistance + this->negDistance;
 
-    normalGradCons[0] = ( posGradN.rho  * this->posDistance + negGradN.rho  * this->negDistance ) / ( distance * prim[0] );
-    normalGradCons[1] = ( posGradN.rhoU * this->posDistance + negGradN.rhoU * this->negDistance ) / ( distance * prim[0] );
-    normalGradCons[2] = ( posGradN.rhoV * this->posDistance + negGradN.rhoV * this->negDistance ) / ( distance * prim[0] );
-    normalGradCons[3] = ( posGradN.rhoE * this->posDistance + negGradN.rhoE * this->negDistance ) / ( distance * prim[0] );
+    ConservedVariable interpolatedGradientX;
+    ConservedVariable interpolatedGradientY;
 
-    tangentialGradCons[0] = ( posGradT.rho  * this->posDistance + negGradT.rho  * this->negDistance ) / ( distance * prim[0] );
-    tangentialGradCons[1] = ( posGradT.rhoU * this->posDistance + negGradT.rhoU * this->negDistance ) / ( distance * prim[0] );
-    tangentialGradCons[2] = ( posGradT.rhoV * this->posDistance + negGradT.rhoV * this->negDistance ) / ( distance * prim[0] );
-    tangentialGradCons[3] = ( posGradT.rhoE * this->posDistance + negGradT.rhoE * this->negDistance ) / ( distance * prim[0] );
+    interpolatedGradientX.rho  = ( this->posCell->getGradientX().rho  * this->negDistance + this->negCell->getGradientX().rho  * this->posDistance ) / ( distance );
+    interpolatedGradientX.rhoU = ( this->posCell->getGradientX().rhoU * this->negDistance + this->negCell->getGradientX().rhoU * this->posDistance ) / ( distance );
+    interpolatedGradientX.rhoV = ( this->posCell->getGradientX().rhoV * this->negDistance + this->negCell->getGradientX().rhoV * this->posDistance ) / ( distance );
+    interpolatedGradientX.rhoE = ( this->posCell->getGradientX().rhoE * this->negDistance + this->negCell->getGradientX().rhoE * this->posDistance ) / ( distance );
+
+    interpolatedGradientY.rho  = ( this->posCell->getGradientY().rho  * this->negDistance + this->negCell->getGradientY().rho  * this->posDistance ) / ( distance );
+    interpolatedGradientY.rhoU = ( this->posCell->getGradientY().rhoU * this->negDistance + this->negCell->getGradientY().rhoU * this->posDistance ) / ( distance );
+    interpolatedGradientY.rhoV = ( this->posCell->getGradientY().rhoV * this->negDistance + this->negCell->getGradientY().rhoV * this->posDistance ) / ( distance );
+    interpolatedGradientY.rhoE = ( this->posCell->getGradientY().rhoE * this->negDistance + this->negCell->getGradientY().rhoE * this->posDistance ) / ( distance );
+    // ========================================================================
+    
+    // ========================================================================
+    // Decoupling correction as given in Blazeks Book
+    // ========================================================================
+    double dx = this->posCell->getCenter().x - this->negCell->getCenter().x;
+    double dy = this->posCell->getCenter().y - this->negCell->getCenter().y;
+
+    // Eq. 5.71 in Blazek
+    ConservedVariable directionalGradient;
+    directionalGradient.rho  = ( this->posCell->getCons().rho  - this->negCell->getCons().rho  ) / sqrt( dx*dx + dy*dy );
+    directionalGradient.rhoU = ( this->posCell->getCons().rhoU - this->negCell->getCons().rhoU ) / sqrt( dx*dx + dy*dy );
+    directionalGradient.rhoV = ( this->posCell->getCons().rhoV - this->negCell->getCons().rhoV ) / sqrt( dx*dx + dy*dy );
+    directionalGradient.rhoE = ( this->posCell->getCons().rhoE - this->negCell->getCons().rhoE ) / sqrt( dx*dx + dy*dy );
+
+    // Eq. 5.72 in Blazek
+    dx /= sqrt( dx*dx + dy*dy );
+    dy /= sqrt( dx*dx + dy*dy );
+
+    // eq. 5.73 in Blazek
+    interpolatedGradientX.rho  -= ( interpolatedGradientX.rho  * dx + interpolatedGradientY.rho  * dy - directionalGradient.rho  ) * dx;
+    interpolatedGradientX.rhoU -= ( interpolatedGradientX.rhoU * dx + interpolatedGradientY.rhoU * dy - directionalGradient.rhoU ) * dx;
+    interpolatedGradientX.rhoV -= ( interpolatedGradientX.rhoV * dx + interpolatedGradientY.rhoV * dy - directionalGradient.rhoV ) * dx;
+    interpolatedGradientX.rhoE -= ( interpolatedGradientX.rhoE * dx + interpolatedGradientY.rhoE * dy - directionalGradient.rhoE ) * dx;
+
+    interpolatedGradientY.rho  -= ( interpolatedGradientX.rho  * dx + interpolatedGradientY.rho  * dy - directionalGradient.rho  ) * dy;
+    interpolatedGradientY.rhoU -= ( interpolatedGradientX.rhoU * dx + interpolatedGradientY.rhoU * dy - directionalGradient.rhoU ) * dy;
+    interpolatedGradientY.rhoV -= ( interpolatedGradientX.rhoV * dx + interpolatedGradientY.rhoV * dy - directionalGradient.rhoV ) * dy;
+    interpolatedGradientY.rhoE -= ( interpolatedGradientX.rhoE * dx + interpolatedGradientY.rhoE * dy - directionalGradient.rhoE ) * dy;
+    // ========================================================================
+    
+    // ========================================================================
+    // transformation from global into local coordinatesystem and normalization
+    //    by projection onto normal and tangential vectors
+    // ========================================================================
+    normalGradCons[0]     = (   this->normal.x * interpolatedGradientX.rho  + this->normal.y * interpolatedGradientY.rho  ) / prim[0];
+    normalGradCons[1]     = (   this->normal.x * interpolatedGradientX.rhoU + this->normal.y * interpolatedGradientY.rhoU ) / prim[0];
+    normalGradCons[2]     = (   this->normal.x * interpolatedGradientX.rhoV + this->normal.y * interpolatedGradientY.rhoV ) / prim[0];
+    normalGradCons[3]     = (   this->normal.x * interpolatedGradientX.rhoE + this->normal.y * interpolatedGradientY.rhoE ) / prim[0];
+
+    tangentialGradCons[0] = ( - this->normal.y * interpolatedGradientX.rho  + this->normal.x * interpolatedGradientY.rho  ) / prim[0];
+    tangentialGradCons[1] = ( - this->normal.y * interpolatedGradientX.rhoU + this->normal.x * interpolatedGradientY.rhoU ) / prim[0];
+    tangentialGradCons[2] = ( - this->normal.y * interpolatedGradientX.rhoV + this->normal.x * interpolatedGradientY.rhoV ) / prim[0];
+    tangentialGradCons[3] = ( - this->normal.y * interpolatedGradientX.rhoE + this->normal.x * interpolatedGradientY.rhoE ) / prim[0];
     // ========================================================================
 
     int i = 0;
