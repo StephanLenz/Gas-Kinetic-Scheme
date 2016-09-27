@@ -141,8 +141,8 @@ void Interface::computeInternalFlux(double dt)
     this->interpolatePrim(prim);
 
     // spacial gradients of the conservative varibles
-    //this->differentiateConsNormal(normalGradCons, prim);
-    this->differentiateConsLeastSquare(normalGradCons, tangentialGradCons, prim);
+    this->differentiateConsNormal(normalGradCons, prim);
+    //this->differentiateConsLeastSquare(normalGradCons, tangentialGradCons, prim);
     // ========================================================================
     
     // ========================================================================
@@ -159,7 +159,7 @@ void Interface::computeInternalFlux(double dt)
     // ========================================================================
     transformGlobal2Local(prim);
     transformGlobal2Local(normalGradCons);
-    transformGlobal2Local(tangentialGradCons);
+    //transformGlobal2Local(tangentialGradCons);
     // ========================================================================
     
     // ========================================================================

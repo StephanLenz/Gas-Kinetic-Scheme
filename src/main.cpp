@@ -204,7 +204,7 @@ int main(int argc, char* argv[])
         double H = 1.0;
         double W = 1.0;
 
-        param.numberOfIterations = 10000000;
+        param.numberOfIterations = 100000000;
         param.outputIntervalVTK = 10000;
         param.outputInterval = 10000;
 
@@ -213,7 +213,7 @@ int main(int argc, char* argv[])
         param.convergenceCriterium[2] = 1.0;
         param.convergenceCriterium[3] = 1.0;
 
-        param.CFL = 0.01;
+        param.CFL = 0.7;
 
         param.verbose = false;
         param.fluxOutput = false;
@@ -224,7 +224,7 @@ int main(int argc, char* argv[])
         FluidParameter fluidParam;
 
         // ========== Weidongs Parameters ==========
-        int    nx = 16;
+        int    nx = 2;
         int    ny = 16;//nyList[j];
         double Re = 4.0;
         double u0 = 0.1;

@@ -104,7 +104,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
 		for (int j = 0; j < nx + 1; j++)   // X-Direction
 		{
             // ===== No Distortion =====================
-            //float2* tmpNode = new float2( NodesX[j], NodesY[i] );
+            float2* tmpNode = new float2( NodesX[j], NodesY[i] );
 
             // ===== Parallelogram =====================
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] + NodesX[j] / this->lengthX * heightDiff );
@@ -128,7 +128,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.25 * (NodesX[j] - this->lengthX)*NodesX[j] * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY ) );
 
             // ===== internal sine Distortion ==========
-            float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.05 * sin( NodesX[j] * 2.0 * M_PI/this->lengthX ) * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY ) );
+            //float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.05 * sin( NodesX[j] * 2.0 * M_PI/this->lengthX ) * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY ) );
             
 			this->NodeList.push_back(tmpNode);
 		}
