@@ -13,7 +13,7 @@ class CompressibleInterface : public Interface
 {
 public:
 	CompressibleInterface();
-    CompressibleInterface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC, double periodicLength);
+    CompressibleInterface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC);
 	~CompressibleInterface();
 
 protected:

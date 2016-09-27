@@ -12,7 +12,7 @@ Interface::Interface()
 {
 }
 
-Interface::Interface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC, double periodicLength)
+Interface::Interface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC)
 {
     // ========================================================================
     //                  Copy attributes
@@ -70,16 +70,16 @@ Interface::Interface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, flo
     // Ghostcells have the same distance as their pendants in the domain
     if(negCell != NULL){
         if(negAdd) this->negDistance =                  this->distance( this->negCell->getCenter() );
-        else       this->negDistance = periodicLength - this->distance( this->negCell->getCenter() );
+        else       this->negDistance = 0.0;
     }else{
         this->negDistance = this->distance( this->posCell->getCenter() );
     }
     if(posCell != NULL){
         if(posAdd) this->posDistance =                  this->distance( this->posCell->getCenter() );
-        else       this->posDistance = periodicLength - this->distance( this->posCell->getCenter() );
+        else       this->posDistance = 0.0;
     }else{
         this->posDistance = this->distance( this->negCell->getCenter() );
-    }
+}
     // ========================================================================
     
     // ========================================================================
@@ -303,12 +303,37 @@ bool Interface::isBoundaryInterface()
     return this->BoundaryConditionPointer != NULL;
 }
 
-void Interface::addCell(Cell * that)
+void Interface::addCell(Cell * newCell)
 {
     if(this->posCell == NULL)
-        this->posCell = that;
+    {
+        this->posCell = newCell;
+        this->posDistance = this->distance( this->posCell->getCenter() );
+    }
     else if(this->negCell == NULL)
-        this->negCell = that;
+    {
+        this->negCell = newCell;
+        this->negDistance = this->distance( this->negCell->getCenter() );
+    }
+}
+
+Cell * Interface::getPeriodicCell()
+{
+    Cell* tmp = NULL;
+
+    if( fabs( posDistance - this->distance( this->posCell->getCenter() ) ) > 1.0e-12  )
+    {
+        tmp = posCell;
+        posCell = NULL;
+    }
+
+    if( fabs( negDistance - this->distance( this->negCell->getCenter() ) ) > 1.0e-12  )
+    {
+        tmp = negCell;
+        negCell = NULL;
+    }
+
+    return tmp;
 }
 
 float2 * Interface::getNode(int i)

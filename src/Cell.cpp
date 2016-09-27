@@ -323,6 +323,11 @@ void Cell::applyBoundaryCondition()
                 
             break;
         }
+        // ====================================================================
+        case periodic:
+        {
+            prim = this->InterfaceList[1]->getNeigborCell(this)->getPrim();
+        }
     }
     
     this->computeCons(prim);

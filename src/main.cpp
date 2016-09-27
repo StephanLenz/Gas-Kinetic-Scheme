@@ -213,7 +213,7 @@ int main(int argc, char* argv[])
         param.convergenceCriterium[2] = 1.0;
         param.convergenceCriterium[3] = 1.0;
 
-        param.CFL = 0.7;
+        param.CFL = 0.01;
 
         param.verbose = false;
         param.fluxOutput = false;
@@ -224,7 +224,7 @@ int main(int argc, char* argv[])
         FluidParameter fluidParam;
 
         // ========== Weidongs Parameters ==========
-        int    nx = 2;
+        int    nx = 16;
         int    ny = 16;//nyList[j];
         double Re = 4.0;
         double u0 = 0.1;
@@ -575,8 +575,8 @@ int main(int argc, char* argv[])
         // ====================================================================
         
         // ====================================================================
-        mesh->writeResultFields("out/ResultFields.dat");
-        mesh->writeOverviewFile("out/OverviewFile.dat");
+        //mesh->writeResultFields("out/ResultFields.dat");
+        //mesh->writeOverviewFile("out/OverviewFile.dat");
         //mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
         ////mesh->writePressureGradientProfile("out/PressureGradientProfile.dat", 0.5);
         ////mesh->writeVelocityProfile("out/VelocityProfile.dat", 0.5);

@@ -39,11 +39,11 @@ protected:
 public:
 	Interface();
 	Interface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd,
-              float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC, double periodicLength);
+              float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC);
 	~Interface();
 
     static Interface* createInterface(InterfaceType type, Cell* negCell, Cell* posCell, bool negAdd, bool posAdd,
-                                      float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC, double periodicLength);
+                                      float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC);
 
 
 	virtual void computeFlux(double dt);
@@ -64,6 +64,7 @@ public:
     bool isBoundaryInterface();
 
     void addCell(Cell* that);
+    Cell* getPeriodicCell();
 
     float2* getNode(int i);
     float2 getNormal();
