@@ -12,7 +12,7 @@ Interface::Interface()
 {
 }
 
-Interface::Interface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC)
+Interface::Interface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC, double periodicLengthX, double periodicLengthY)
 {
     // ========================================================================
     //                  Copy attributes
@@ -101,14 +101,14 @@ Interface::~Interface()
 //                     Interface Factory
 // ============================================================================
 Interface * Interface::createInterface(InterfaceType type, Cell * negCell, Cell * posCell, bool negAdd, bool posAdd, 
-                                       float2** nodes, FluidParameter fluidParam, BoundaryCondition * BC, double periodicLength)
+                                       float2** nodes, FluidParameter fluidParam, BoundaryCondition * BC, double periodicLengthX, double periodicLengthY)
 {
     Interface* tmp = NULL;
 
     if ( type == incompressible )
-        tmp = new IncompressibleInterface(negCell, posCell, negAdd, posAdd, nodes, fluidParam, BC, periodicLength);
+        tmp = new IncompressibleInterface(negCell, posCell, negAdd, posAdd, nodes, fluidParam, BC, periodicLengthX, periodicLengthY);
     else
-        tmp = new CompressibleInterface(negCell, posCell, negAdd, posAdd, nodes, fluidParam, BC, periodicLength);
+        tmp = new CompressibleInterface(negCell, posCell, negAdd, posAdd, nodes, fluidParam, BC, periodicLengthX, periodicLengthY);
 
     return tmp;
 }
@@ -123,9 +123,13 @@ void Interface::computeInternalFlux(double dt)
     const int NUMBER_OF_MOMENTS = 7;
 
     double prim[4];
+    double primTest[4] = {0.0, 0.0, 0.0, 0.0};
+
     double normalGradCons[4];
     double normalGradConsTest[4];
+
     double tangentialGradCons[4] = {0.0, 0.0, 0.0, 0.0};
+
     double timeGrad[4];
 
     double a[4];
@@ -139,6 +143,7 @@ void Interface::computeInternalFlux(double dt)
     // ========================================================================
     // interpolated primary variables at the interface
     this->interpolatePrim(prim);
+    //this->reconstructPrim(prim);
 
     // spacial gradients of the conservative varibles
     this->differentiateConsNormal(normalGradCons, prim);
@@ -159,7 +164,7 @@ void Interface::computeInternalFlux(double dt)
     // ========================================================================
     transformGlobal2Local(prim);
     transformGlobal2Local(normalGradCons);
-    //transformGlobal2Local(tangentialGradCons);
+    transformGlobal2Local(tangentialGradCons);
     // ========================================================================
     
     // ========================================================================
@@ -451,6 +456,45 @@ void Interface::interpolatePrim(double * prim)
     int i = 0;
 }
 
+void Interface::reconstructPrim(double * prim)
+{
+    ConservedVariable negGradientX = this->negCell->getGradientX();
+    ConservedVariable negGradientY = this->negCell->getGradientY();
+    ConservedVariable posGradientX = this->posCell->getGradientX();
+    ConservedVariable posGradientY = this->posCell->getGradientY();
+
+    ConservedVariable cons;
+    ConservedVariable negCons;
+    ConservedVariable posCons;
+
+    double negDx = this->center.x - this->negCell->getCenter().x;
+    double negDy = this->center.y - this->negCell->getCenter().y;
+    double posDx = this->center.x - this->posCell->getCenter().x;
+    double posDy = this->center.y - this->posCell->getCenter().y;
+
+    negCons.rho  = this->negCell->getCons().rho  + negGradientX.rho  * negDx + negGradientY.rho  * negDy;
+    negCons.rhoU = this->negCell->getCons().rhoU + negGradientX.rhoU * negDx + negGradientY.rhoU * negDy;
+    negCons.rhoV = this->negCell->getCons().rhoV + negGradientX.rhoV * negDx + negGradientY.rhoV * negDy;
+    negCons.rhoE = this->negCell->getCons().rhoE + negGradientX.rhoE * negDx + negGradientY.rhoE * negDy;
+
+    posCons.rho  = this->posCell->getCons().rho  + posGradientX.rho  * posDx + posGradientY.rho  * posDy;
+    posCons.rhoU = this->posCell->getCons().rhoU + posGradientX.rhoU * posDx + posGradientY.rhoU * posDy;
+    posCons.rhoV = this->posCell->getCons().rhoV + posGradientX.rhoV * posDx + posGradientY.rhoV * posDy;
+    posCons.rhoE = this->posCell->getCons().rhoE + posGradientX.rhoE * posDx + posGradientY.rhoE * posDy;
+
+    cons.rho  = 0.5 * ( negCons.rho  + posCons.rho  );
+    cons.rhoU = 0.5 * ( negCons.rhoU + posCons.rhoU );
+    cons.rhoV = 0.5 * ( negCons.rhoV + posCons.rhoV );
+    cons.rhoE = 0.5 * ( negCons.rhoE + posCons.rhoE );
+
+    prim[0] = this->cons2Prim(cons).rho;
+    prim[1] = this->cons2Prim(cons).U;
+    prim[2] = this->cons2Prim(cons).V;
+    prim[3] = this->cons2Prim(cons).L;
+
+    int i = 0;
+}
+
 void Interface::differentiateConsNormal(double* normalGradCons, double* prim)
 {
     // This method computes the spacial derivatives of the conservative Variables.
@@ -567,6 +611,18 @@ void Interface::transformLocal2Global(double * vec)
     // vL = [n t] * v0
     vec[1] = this->normal.x * un - this->normal.y * vt;
     vec[2] = this->normal.y * un + this->normal.x * vt;
+}
+
+PrimitiveVariable Interface::cons2Prim(ConservedVariable cons)
+{
+    PrimitiveVariable prim;
+    prim.rho = cons.rho;
+    prim.U   = cons.rhoU / cons.rho;
+    prim.V   = cons.rhoV / cons.rho;
+
+    prim.L = ( this->fluidParam.K + 2.0 ) * cons.rho / ( 4.0 * ( cons.rhoE - 0.5 * ( cons.rhoU * cons.rhoU + cons.rhoV * cons.rhoV ) / cons.rho ) );
+
+    return prim;
 }
 
 double Interface::distance(float2 point)

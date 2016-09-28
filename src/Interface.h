@@ -39,11 +39,11 @@ protected:
 public:
 	Interface();
 	Interface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd,
-              float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC);
+              float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC, double periodicLengthX, double periodicLengthY);
 	~Interface();
 
     static Interface* createInterface(InterfaceType type, Cell* negCell, Cell* posCell, bool negAdd, bool posAdd,
-                                      float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC);
+                                      float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC, double periodicLengthX, double periodicLengthY);
 
 
 	virtual void computeFlux(double dt);
@@ -89,6 +89,8 @@ protected:
 
     void interpolatePrim(double* prim);
 
+    void reconstructPrim(double* prim);
+
     void differentiateConsNormal(double* normalGradCons, double* prim);
 
     void differentiateConsLeastSquare(double* normalGradCons, double* tangentialGradCons, double* prim);
@@ -102,6 +104,8 @@ protected:
 
     void transformGlobal2Local(double* vec);
     void transformLocal2Global(double * vec);
+
+    PrimitiveVariable cons2Prim(ConservedVariable cons);
 
     virtual void computeMicroSlope(double* prim, double* macroSlope, double* microSlope) = 0;
     void computeMoments(double* prim, double* MomentU, double* MomentV, double* MomentXi, int numberMoments);

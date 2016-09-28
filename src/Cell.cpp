@@ -324,9 +324,11 @@ void Cell::applyBoundaryCondition()
             break;
         }
         // ====================================================================
-        case periodic:
+        case periodicGhost:
         {
             prim = this->InterfaceList[1]->getNeigborCell(this)->getPrim();
+            this->gradientX = this->InterfaceList[1]->getNeigborCell(this)->getGradientX();
+            this->gradientY = this->InterfaceList[1]->getNeigborCell(this)->getGradientY();
         }
     }
     
@@ -481,6 +483,9 @@ void Cell::computeLeastSquareCoefficients()
     {
         double dx = this->InterfaceList[i]->getNeigborCell(this)->getCenter().x - this->center.x;
         double dy = this->InterfaceList[i]->getNeigborCell(this)->getCenter().y - this->center.y;
+        double weight = 1.0 / sqrt( dx*dx + dy*dy );
+        dx *= weight;
+        dy *= weight;
 
         this->r11 += dx*dx;
         this->r12 += dx*dy;
@@ -521,8 +526,11 @@ void Cell::computeGradients()
         {
             double dx = this->InterfaceList[j]->getNeigborCell(this)->getCenter().x - this->center.x;
             double dy = this->InterfaceList[j]->getNeigborCell(this)->getCenter().y - this->center.y;
+            double weight = 1.0 / sqrt( dx*dx + dy*dy );
+            dx *= weight;
+            dy *= weight;
 
-            double dW = ((double*)&this->InterfaceList[j]->getNeigborCell(this)->getCons())[i] - this->cons[i];
+            double dW = weight * ( ((double*)&this->InterfaceList[j]->getNeigborCell(this)->getCons())[i] - this->cons[i] );
 
             double w1 = dx / (r11*r11) - r12/r11 * ( dy - r12/r11 * dx ) / (r22*r22);
             double w2 =                            ( dy - r12/r11 * dx ) / (r22*r22);

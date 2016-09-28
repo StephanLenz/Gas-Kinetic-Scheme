@@ -104,7 +104,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
 		for (int j = 0; j < nx + 1; j++)   // X-Direction
 		{
             // ===== No Distortion =====================
-            //float2* tmpNode = new float2( NodesX[j], NodesY[i] );
+            float2* tmpNode = new float2( NodesX[j], NodesY[i] );
 
             // ===== Parallelogram =====================
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] + NodesX[j] / this->lengthX * heightDiff );
@@ -128,7 +128,10 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.25 * (NodesX[j] - this->lengthX)*NodesX[j] * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY ) );
 
             // ===== internal sine Distortion ==========
-            float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.05 * sin( NodesX[j] * 2.0 * M_PI/this->lengthX ) * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY ) );
+            //float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.05 * sin( NodesX[j] * 2.0 * M_PI/this->lengthX ) * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY ) );
+
+            // ===== internal linear Distortion ========
+            if( i != 0 && i != ny && j != 0 && j != nx ) tmpNode->y += 0.1;
             
 			this->NodeList.push_back(tmpNode);
 		}
@@ -192,26 +195,26 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
 
             if( j != 0  ) 
                 negCell = this->CellList[i*nx + (j  - 1)];
-            else if( this->BoundaryConditionList[0]->getType() == periodic )
+            else if( this->BoundaryConditionList[0]->getType() == periodic || this->BoundaryConditionList[0]->getType() == periodicGhost )
                 negCell = this->CellList[i*nx + (nx - 1)];
 
             if( j != nx ) 
                 posCell = this->CellList[i*nx + (j  - 0)];
-            else if( this->BoundaryConditionList[2]->getType() == periodic )       
+            else if( this->BoundaryConditionList[2]->getType() == periodic || this->BoundaryConditionList[2]->getType() == periodicGhost )       
                 posCell = this->CellList[i*nx + (0  - 0)];
 
             BoundaryCondition* currentBC = NULL;
-            if( j == 0  )
+            if( j == 0  && this->BoundaryConditionList[0]->getType() != periodic )
                 currentBC = this->BoundaryConditionList[0];
 
-            if( j == nx )
+            if( j == nx && this->BoundaryConditionList[2]->getType() != periodic )
                 currentBC = this->BoundaryConditionList[2];
             
             bool posAdd = (j != nx);
             bool negAdd = (j != 0) ;
 
 			// create a new interface with the adjacent cells
-			Interface* tmpInterface = Interface::createInterface(type,negCell, posCell, negAdd, posAdd, tmpNodes, this->fluidParam, currentBC, lengthX);
+			Interface* tmpInterface = Interface::createInterface(type,negCell, posCell, negAdd, posAdd, tmpNodes, this->fluidParam, currentBC, lengthX, lengthY);
 			// add itnerface to list
 			this->InterfaceList.push_back(tmpInterface);
 		}
@@ -236,26 +239,26 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
 
             if( i != 0  ) 
                 negCell = this->CellList[(i -1)*nx + j];
-            else if( this->BoundaryConditionList[1]->getType() == periodic )
+            else if( this->BoundaryConditionList[1]->getType() == periodic || this->BoundaryConditionList[1]->getType() == periodicGhost )
                 negCell = this->CellList[(ny-1)*nx + j];
 
             if( i != ny ) 
                 posCell = this->CellList[(i -0)*nx + j];
-            else if( this->BoundaryConditionList[3]->getType() == periodic )       
+            else if( this->BoundaryConditionList[3]->getType() == periodic || this->BoundaryConditionList[3]->getType() == periodicGhost )       
                 posCell = this->CellList[(0 -0)*nx + j];
 
             BoundaryCondition* currentBC = NULL;
-            if( i == 0  ) 
+            if( i == 0  && this->BoundaryConditionList[1]->getType() != periodic ) 
                 currentBC = this->BoundaryConditionList[1];
 
-            if( i == ny ) 
+            if( i == ny && this->BoundaryConditionList[3]->getType() != periodic ) 
                 currentBC = this->BoundaryConditionList[3];
             
             bool posAdd = (i != ny);
             bool negAdd = (i != 0) ;
 
 			// create a new interface with the adjacent cells
-			Interface* tmpInterface = Interface::createInterface(type,negCell, posCell, negAdd, posAdd, tmpNodes, this->fluidParam, currentBC, lengthY);
+			Interface* tmpInterface = Interface::createInterface(type,negCell, posCell, negAdd, posAdd, tmpNodes, this->fluidParam, currentBC, lengthX, lengthY);
 			// add itnerface to list
 			this->InterfaceList.push_back(tmpInterface);
 		}
@@ -274,19 +277,25 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
         if( (*i)->isBoundaryInterface() )
         {
             Cell* periodicCell = NULL;
-            if( (*i)->getBoundaryCondition()->getType() == periodic)
-            {
-                periodicCell = (*i)->getPeriodicCell();
-            }
-
             float2* tmpNodes[4];
-            float2  normal = (*i)->getScaledNormal();
             
             tmpNodes[1] = (*i)->getNode(0);
             tmpNodes[2] = (*i)->getNode(1);
 
-            tmpNodes[0] = new float2( tmpNodes[1]->x + 2.0*normal.x, tmpNodes[1]->y + 2.0*normal.y );
-            tmpNodes[3] = new float2( tmpNodes[2]->x + 2.0*normal.x, tmpNodes[2]->y + 2.0*normal.y );
+            if( (*i)->getBoundaryCondition()->getType() == periodicGhost)
+            {
+                periodicCell = (*i)->getPeriodicCell();
+                
+                float2  normal = (*i)->getScaledNormal();
+                tmpNodes[0] = new float2( tmpNodes[1]->x + 2.0*normal.x, tmpNodes[1]->y + 2.0*normal.y );
+                tmpNodes[3] = new float2( tmpNodes[2]->x + 2.0*normal.x, tmpNodes[2]->y + 2.0*normal.y );
+            }
+            else
+            {
+                float2  normal = (*i)->getScaledNormal();
+                tmpNodes[0] = new float2( tmpNodes[1]->x + 2.0*normal.x, tmpNodes[1]->y + 2.0*normal.y );
+                tmpNodes[3] = new float2( tmpNodes[2]->x + 2.0*normal.x, tmpNodes[2]->y + 2.0*normal.y );
+            }
 
             this->NodeList.push_back(tmpNodes[0]);
             this->NodeList.push_back(tmpNodes[3]);
@@ -296,13 +305,13 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             tmpCell->addInterface(*i);
             (*i)->addCell(tmpCell);
 
-            if( (*i)->getBoundaryCondition()->getType() == periodic)
+            if( (*i)->getBoundaryCondition()->getType() == periodicGhost)
             {
                 float2* tmpNodesInterface[2];
                 tmpNodesInterface[0] = tmpNodes[0];
                 tmpNodesInterface[1] = tmpNodes[3];
 
-                Interface* tmpInterface = Interface::createInterface(type, tmpCell, periodicCell, true, true, tmpNodesInterface, fluidParam, (*i)->getBoundaryCondition(), lengthY);
+                Interface* tmpInterface = Interface::createInterface(type, tmpCell, periodicCell, true, true, tmpNodesInterface, fluidParam, (*i)->getBoundaryCondition(), lengthX, lengthY);
 
                 tmpInterfaceList.push_back(tmpInterface);
             }
@@ -624,9 +633,15 @@ void GKSMesh::timeStep()
     #pragma omp parallel for
     for ( int i = 0; i < CellList.size(); i++ )
     {
+        // TODO: Right now the Gradients in the periodic ghost cells are 
+        // computed by finite differences and not by least square
         //if ( !CellList[i]->isGhostCell() )
             CellList[i]->computeGradients();
     }
+
+    // ========================================================================
+
+    this->applyBoundaryCondition();
 
     // ========================================================================
 
