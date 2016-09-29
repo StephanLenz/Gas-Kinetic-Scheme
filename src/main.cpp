@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
         */
 
 
-        /*
+        ///*
 
         // ========================================================================
         //
@@ -124,19 +124,19 @@ int main(int argc, char* argv[])
         double H = 1.0;
         double W = 1.0;
 
-        param.numberOfIterations = 1000000;
-        param.outputIntervalVTK = 100000;
-        param.outputInterval = 100000;
+        param.numberOfIterations = 100000;
+        param.outputIntervalVTK = 10000;
+        param.outputInterval = 10000;
 
         param.convergenceCriterium[0] = 1.0e-10;
         param.convergenceCriterium[1] = 1.0e-10;
-        param.convergenceCriterium[2] = 1.0e-8;
+        param.convergenceCriterium[2] = 1.0e-10;
         param.convergenceCriterium[3] = 1.0e-10;
 
         param.L = 1.0;
-        param.CFL = 0.5;
+        param.CFL = 0.7;
 
-        param.fluxOutput = true;
+        param.fluxOutput = false;
         param.resOutput = false;
 
         param.verbose = false;
@@ -145,19 +145,26 @@ int main(int argc, char* argv[])
 
         FluidParameter fluidParam;
 
-        int    ny = nyList[j];
-        int    nx = 1;
-        double Re = 1.0;//ReList[i];
-        double u0 = 1.0;
+        int    ny = 32;//nyList[j];
+        int    nx = 2;
+        double Ec = 40.0;
+        double Pr = 0.1;
+
+        double TTop   = 293.15 + 5.0e-5;
+        double TBot   = 293.15;
+
 
         fluidParam.K = 1;
-        fluidParam.nu = 0.1;
         fluidParam.R = 200.0;
+        fluidParam.nu = 0.1;
         fluidParam.Force.x = 0.0;
         fluidParam.Force.y = 0.0;
+        fluidParam.BoussinesqForce.x = 0.0;
+        fluidParam.BoussinesqForce.y = 0.0;
+        fluidParam.Pr = Pr;
 
-        double TTop   = 293.15 + 5.0e-4;
-        double TBot   = 293.15;
+        double u0 = sqrt( Ec * 2.5 * fluidParam.R * ( TTop - TBot ) );
+
         double lambda[] = { 1.0 / (2.0 * fluidParam.R * TBot), 1.0 / (2.0 * fluidParam.R * TTop) };
         double rho[]    = { 1.0, 1.0 * lambda[1] / lambda[0] };
         //double rho[]    = { 1.0, 1.0 };
@@ -171,27 +178,27 @@ int main(int argc, char* argv[])
 
         // Define Boundary Conditions
         //    -----------
+        //    |    3    |
+        //    | 0     2 |
         //    |    1    |
-        //    |         |
-        //    |    0    |
         //    -----------
-        mesh->addBoundaryCondition(3, 0, 0, 0,  0.0, 0.0, 0.0, lambda[0]);
-        mesh->addBoundaryCondition(3, 0, 0, 0,  0.0, u0 , 0.0, lambda[1]);
-        //mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0);
-        //mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, u0 , 0.0, 0.0);
+        mesh->addBoundaryCondition(periodic,       0.0, 0.0, 0.0, 0.0);
+        mesh->addBoundaryCondition(isothermalWall, 0.0, 0.0, 0.0, lambda[0]);
+        mesh->addBoundaryCondition(periodic,       0.0, 0.0, 0.0, 0.0);
+        mesh->addBoundaryCondition(isothermalWall, 0.0, u0 , 0.0, lambda[1]);
 
         Interface::setInterpolationOrder(1);
 
         // Generate Mesh
-        mesh->generateRectMeshPeriodic(compressible, W, H, 1, ny);
+        mesh->generateRectMeshGraded(compressible, W, H, nx, ny, 1.0, 1.0);
 
         // Initialize Values
         //mesh->initMeshConstant(1.0, 0.0, 0.0, 1.5 );
         mesh->initMeshLinear(rho, U, V, lambda);
 
-        */
+        //*/
     
-        ///*
+        /*
 
         // ========================================================================
         //
@@ -270,7 +277,7 @@ int main(int argc, char* argv[])
         //mesh->initMeshParabularVelocity(1.0, u0, 0.0, lambda);
         //mesh->initMeshSineVelocity(1.0, u0, 0.0, lambda);
 
-        //*/
+        */
     
         /*
 
@@ -580,7 +587,7 @@ int main(int argc, char* argv[])
         //mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
         ////mesh->writePressureGradientProfile("out/PressureGradientProfile.dat", 0.5);
         ////mesh->writeVelocityProfile("out/VelocityProfile.dat", 0.5);
-        ////mesh->writeTemperatureProfile("out/TemperatureProfile.dat", 0.5);
+        mesh->writeTemperatureProfile("out/TemperatureProfile.dat", 0.5);
         //mesh->writeTimeSteps("out/TimeSteps.dat");
         ////mesh->writeVelocityU("out/VelocityU.dat");
         ////mesh->writeVelocityV("out/VelocityV.dat");

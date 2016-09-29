@@ -131,7 +131,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.05 * sin( NodesX[j] * 2.0 * M_PI/this->lengthX ) * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY ) );
 
             // ===== internal linear Distortion ========
-            if( i != 0 && i != ny && j != 0 && j != nx ) tmpNode->y += 0.1;
+            //if( i != 0 && i != ny && j != 0 && j != nx ) tmpNode->y += 0.1;
             
 			this->NodeList.push_back(tmpNode);
 		}

@@ -40,6 +40,7 @@ struct FluidParameter
     float2 Force;
     float2 BoussinesqForce;
     double rhoReference;
+    double Pr;
 };
 
 struct Parameters
