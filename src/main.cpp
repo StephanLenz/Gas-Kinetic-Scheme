@@ -147,23 +147,27 @@ int main(int argc, char* argv[])
 
         int    ny = 32;//nyList[j];
         int    nx = 2;
-        double Ec = 40.0;
-        double Pr = 0.1;
-
-        double TTop   = 293.15 + 5.0e-5;
-        double TBot   = 293.15;
-
-
+        double Ec = 20.0;
+        double Pr = 0.5;
+        double Ma = 0.1;
+        double Re = 10.0;
+        double u0 = 10.0;
         fluidParam.K = 1;
         fluidParam.R = 200.0;
-        fluidParam.nu = 0.1;
+
+        double dT = u0*u0 / ( Ec * 2.5 * fluidParam.R );
+        double TRef = (u0*u0)/(Ma*Ma) / fluidParam.R;
+
+        double TTop   = TRef + 0.5*dT;
+        double TBot   = TRef - 0.5*dT;
+
+
+        fluidParam.nu = u0 * param.L / Re;
         fluidParam.Force.x = 0.0;
         fluidParam.Force.y = 0.0;
         fluidParam.BoussinesqForce.x = 0.0;
         fluidParam.BoussinesqForce.y = 0.0;
         fluidParam.Pr = Pr;
-
-        double u0 = sqrt( Ec * 2.5 * fluidParam.R * ( TTop - TBot ) );
 
         double lambda[] = { 1.0 / (2.0 * fluidParam.R * TBot), 1.0 / (2.0 * fluidParam.R * TTop) };
         double rho[]    = { 1.0, 1.0 * lambda[1] / lambda[0] };
