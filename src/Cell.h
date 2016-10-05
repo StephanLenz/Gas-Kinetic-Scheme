@@ -14,6 +14,10 @@ class Cell
 {
 private:
 
+    static unsigned long int numberOfCells;
+
+    unsigned long int ID;
+
     float2* nodes[4];
 
 	float2 center;
@@ -71,6 +75,7 @@ public:
 
 	float2 getCenter();
     float2 getNode(int i);
+    unsigned long int getID();
 
     PrimitiveVariable getPrim();
 

@@ -6,6 +6,7 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 #include <algorithm>    //min()
 #include <chrono>
 
@@ -99,12 +100,14 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
 	//=========================================================================
     double heightDiff = 0.5;
 
+    int currentID = 1;
+
     for (int i = 0; i < ny + 1; i++)       // Y-Direction
 	{
 		for (int j = 0; j < nx + 1; j++)   // X-Direction
 		{
             // ===== No Distortion =====================
-            float2* tmpNode = new float2( NodesX[j], NodesY[i] );
+            //float2* tmpNode = new float2( NodesX[j], NodesY[i] );
 
             // ===== Parallelogram =====================
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] + NodesX[j] / this->lengthX * heightDiff );
@@ -127,12 +130,17 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             // ===== internal parabular Distortion =====
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.25 * (NodesX[j] - this->lengthX)*NodesX[j] * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY ) );
 
-            // ===== internal sine Distortion ==========
+            // ===== internal sine Distortion (x) ======
+            float2* tmpNode = new float2( NodesX[j] - 0.05 * sin( NodesY[i] * 2.0 * M_PI/this->lengthY ) * sin( (NodesX[j] - 0.5*this->lengthX) * 2.0 * M_PI/this->lengthX ), NodesY[i] );
+
+            // ===== internal sine Distortion (y) ======
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.05 * sin( NodesX[j] * 2.0 * M_PI/this->lengthX ) * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY ) );
 
             // ===== internal linear Distortion ========
             //if( i != 0 && i != ny && j != 0 && j != nx ) tmpNode->y += 0.1;
             
+            tmpNode->ID = currentID++;
+
 			this->NodeList.push_back(tmpNode);
 		}
 	}
@@ -296,6 +304,9 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
                 tmpNodes[0] = new float2( tmpNodes[1]->x + 2.0*normal.x, tmpNodes[1]->y + 2.0*normal.y );
                 tmpNodes[3] = new float2( tmpNodes[2]->x + 2.0*normal.x, tmpNodes[2]->y + 2.0*normal.y );
             }
+
+            tmpNodes[0]->ID = 9999999; // 9.999.99
+            tmpNodes[3]->ID = 9999999; // 9.999.99
 
             this->NodeList.push_back(tmpNodes[0]);
             this->NodeList.push_back(tmpNodes[3]);
@@ -1234,6 +1245,197 @@ void GKSMesh::writeConvergenceHistory(string filename)
     file.close();
 
     cout << "done!" << endl;
+}
+
+void GKSMesh::writeGambitNeutralFile(string filename)
+{
+    cout << "Wrinting file " << filename << " ... ";
+    // open file stream
+    ofstream file;
+    file.precision(11);
+    file.open(filename.c_str());
+
+    if ( !file.is_open() ) {
+        cout << " File cound not be opened.\n\nERROR!\n\n\n";
+        return;
+    }
+    
+    // ========================================================================
+    // count number of Nodes and Cells (without Ghost Cells)
+    // ========================================================================
+    unsigned long int numberOfNodes = 0;
+    for(int i = 0; i < this->NodeList.size(); i++)  if(  this->NodeList[i]->ID != 9999999 ) numberOfNodes++;
+
+    unsigned long int numberOfCells = 0;
+    for(int i = 0; i < this->CellList.size(); i++)  if( !this->CellList[i]->isGhostCell() ) numberOfCells++;
+    // ========================================================================
+    
+    // ========================================================================
+    file << "        CONTROL INFO 2.4.6"                                    << endl;
+    file << "** GAMBIT NEUTRAL FILE"                                        << endl;
+    file << "SineDistortedMesh"                                             << endl;
+    file << "PROGRAM:               GKSLenz     VERSION:  2.4.6"            << endl;
+    file << " "                                                             << endl;
+    file << "     NUMNP     NELEM     NGRPS    NBSETS     NDFCD     NDFVL"  << endl;
+    file << right << setw(10) << setfill(' ') << numberOfNodes;
+    file << right << setw(10) << setfill(' ') << numberOfCells;
+    file << right << setw(10) << setfill(' ') << "1";
+    file << right << setw(10) << setfill(' ') << "4";
+    file << right << setw(10) << setfill(' ') << "2";
+    file << right << setw(10) << setfill(' ') << "2";
+    file << endl;
+    file << "ENDOFSECTION"                                                  << endl;
+    // ========================================================================
+
+    // ========================================================================
+    file << "   NODAL COORDINATES 2.4.6"                                    << endl;
+    for(int i = 0; i < this->NodeList.size(); i++)
+    {
+        if(this->NodeList[i]->ID != 9999999)
+        {
+            file        << right <<               setw(10) << setfill(' ') << this->NodeList[i]->ID;
+            file << " " << right << scientific << setw(19) << setfill(' ') << this->NodeList[i]->x;
+            file << " " << right << scientific << setw(19) << setfill(' ') << this->NodeList[i]->y;
+            file << endl;
+        }
+    }
+    file << "ENDOFSECTION"                                                  << endl;
+    // ========================================================================
+    
+    // ========================================================================
+    file << "      ELEMENTS/CELLS 2.4.6"                                    << endl;
+    for(int i = 0; i < this->CellList.size(); i++)
+    {
+        if( !this->CellList[i]->isGhostCell() )
+        {
+            file << right << setw(8) << setfill(' ') << this->CellList[i]->getID();
+            file << right << setw(3) << setfill(' ') << "2";
+            file << right << setw(3) << setfill(' ') << "4";
+            file << right << setw(1) << setfill(' ') << " ";
+            file << right << setw(8) << setfill(' ') << this->CellList[i]->getNode(0).ID;
+            file << right << setw(8) << setfill(' ') << this->CellList[i]->getNode(1).ID;
+            file << right << setw(8) << setfill(' ') << this->CellList[i]->getNode(2).ID;
+            file << right << setw(8) << setfill(' ') << this->CellList[i]->getNode(3).ID;
+            file << endl;
+        }
+    }
+    file << "ENDOFSECTION"                                                  << endl;
+    // ========================================================================
+    
+    // ========================================================================
+    file << "       ELEMENT GROUP 2.4.6"                                    << endl;
+    file << "GROUP:          1 ELEMENTS: ";
+    file << right << setw(10) << setfill(' ') << numberOfCells;
+    file << " MATERIAL:          2 NFLAGS:          1"                      << endl;
+    file << "                           fluid"                              << endl;
+    file << "       0"                                                      << endl;
+    int j = 0;
+    for(int i = 0; i < this->CellList.size(); i++)
+    {
+        if( !this->CellList[i]->isGhostCell() )
+        {
+            file << right << setw(8) << setfill(' ') << this->CellList[i]->getID();
+            j++;
+            if(j%10 == 0) file << endl;
+        }
+    }
+    file << endl;
+    file << "ENDOFSECTION"                                                  << endl;
+    // ========================================================================
+    
+    // ================================================================================================================
+    // ================================================================================================================
+    // ================================================================================================================
+    // ================================================================================================================
+    
+    // ========================================================================
+    int numberBC = 0;
+    for(int i = 0; i < this->InterfaceList.size(); i++)
+        if( this->InterfaceList[i]->getBoundaryCondition() == this->BoundaryConditionList[0] )  numberBC++;
+
+    file << " BOUNDARY CONDITIONS 2.4.6"                                    << endl;
+    file << "                           left       1";
+    file << right << setw(8) << setfill(' ') << numberBC;
+    file << "       0       6" << endl;
+    for(int i = 0; i < this->InterfaceList.size(); i++)
+    {
+        if( this->InterfaceList[i]->getBoundaryCondition() == this->BoundaryConditionList[0] )
+        {
+            file << right << setw(10) << setfill(' ') << this->InterfaceList[i]->getCellInDomain()->getID();
+            file << right << setw(5)  << setfill(' ') << 2;
+            file << right << setw(5)  << setfill(' ') << 4;
+            file << endl;
+        }
+    }
+    file << "ENDOFSECTION"                                                  << endl;
+    // ========================================================================
+    
+    // ========================================================================
+    numberBC = 0;
+    for(int i = 0; i < this->InterfaceList.size(); i++)
+        if( this->InterfaceList[i]->getBoundaryCondition() == this->BoundaryConditionList[1] )  numberBC++;
+
+    file << " BOUNDARY CONDITIONS 2.4.6"                                    << endl;
+    file << "                         bottom       1";
+    file << right << setw(8) << setfill(' ') << numberBC;
+    file << "       0       6" << endl;
+    for(int i = 0; i < this->InterfaceList.size(); i++)
+    {
+        if( this->InterfaceList[i]->getBoundaryCondition() == this->BoundaryConditionList[1] )
+        {
+            file << right << setw(10) << setfill(' ') << this->InterfaceList[i]->getCellInDomain()->getID();
+            file << right << setw(5)  << setfill(' ') << 2;
+            file << right << setw(5)  << setfill(' ') << 1;
+            file << endl;
+        }
+    }
+    file << "ENDOFSECTION"                                                  << endl;
+    // ========================================================================
+    
+    // ========================================================================
+    numberBC = 0;
+    for(int i = 0; i < this->InterfaceList.size(); i++)
+        if( this->InterfaceList[i]->getBoundaryCondition() == this->BoundaryConditionList[2] )  numberBC++;
+
+    file << " BOUNDARY CONDITIONS 2.4.6"                                    << endl;
+    file << "                          right       1";
+    file << right << setw(8) << setfill(' ') << numberBC;
+    file << "       0       6" << endl;
+    for(int i = 0; i < this->InterfaceList.size(); i++)
+    {
+        if( this->InterfaceList[i]->getBoundaryCondition() == this->BoundaryConditionList[2] )
+        {
+            file << right << setw(10) << setfill(' ') << this->InterfaceList[i]->getCellInDomain()->getID();
+            file << right << setw(5)  << setfill(' ') << 2;
+            file << right << setw(5)  << setfill(' ') << 2;
+            file << endl;
+        }
+    }
+    file << "ENDOFSECTION"                                                  << endl;
+    // ========================================================================
+    
+    // ========================================================================
+    numberBC = 0;
+    for(int i = 0; i < this->InterfaceList.size(); i++)
+        if( this->InterfaceList[i]->getBoundaryCondition() == this->BoundaryConditionList[3] )  numberBC++;
+
+    file << " BOUNDARY CONDITIONS 2.4.6"                                    << endl;
+    file << "                            top       1";
+    file << right << setw(8) << setfill(' ') << numberBC;
+    file << "       0       6" << endl;
+    for(int i = 0; i < this->InterfaceList.size(); i++)
+    {
+        if( this->InterfaceList[i]->getBoundaryCondition() == this->BoundaryConditionList[3] )
+        {
+            file << right << setw(10) << setfill(' ') << this->InterfaceList[i]->getCellInDomain()->getID();
+            file << right << setw(5)  << setfill(' ') << 2;
+            file << right << setw(5)  << setfill(' ') << 3;
+            file << endl;
+        }
+    }
+    file << "ENDOFSECTION"                                                  << endl;
+    // ========================================================================
+
 }
 
 void GKSMesh::writeCellGeometry(ofstream& file)

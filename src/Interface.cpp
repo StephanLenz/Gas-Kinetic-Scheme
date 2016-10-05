@@ -232,9 +232,9 @@ Cell * Interface::getCellInDomain()
 {
     if( !this->isBoundaryInterface() )
         return NULL;
-    if ( posCell != NULL )
+    if ( !posCell->isGhostCell() )
         return posCell;
-    if ( negCell != NULL )
+    if ( !negCell->isGhostCell() )
         return negCell;
 }
 

@@ -22,6 +22,7 @@ struct float2
 {
 	double x;
 	double y;
+    unsigned long int ID;
 
     float2(){x = 0.0; y = 0.0;}
 

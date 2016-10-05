@@ -118,6 +118,8 @@ public:
 
     void writeConvergenceHistory(string filename);
 
+    void writeGambitNeutralFile(string filename);
+
 private:
 
     void writeCellGeometry(ofstream& file);

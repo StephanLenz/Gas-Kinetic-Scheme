@@ -146,7 +146,7 @@ int main(int argc, char* argv[])
         FluidParameter fluidParam;
 
         int    ny = 32;//nyList[j];
-        int    nx = 2;
+        int    nx = 32;
         double Ec = 20.0;
         double Pr = 0.5;
         double Ma = 0.1;
@@ -186,10 +186,10 @@ int main(int argc, char* argv[])
         //    | 0     2 |
         //    |    1    |
         //    -----------
-        mesh->addBoundaryCondition(periodic,       0.0, 0.0, 0.0, 0.0);
-        mesh->addBoundaryCondition(isothermalWall, 0.0, 0.0, 0.0, lambda[0]);
-        mesh->addBoundaryCondition(periodic,       0.0, 0.0, 0.0, 0.0);
-        mesh->addBoundaryCondition(isothermalWall, 0.0, u0 , 0.0, lambda[1]);
+        mesh->addBoundaryCondition(wall,       0.0, 0.0, 0.0, 0.0);
+        mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, lambda[0]);
+        mesh->addBoundaryCondition(wall,       0.0, 0.0, 0.0, 0.0);
+        mesh->addBoundaryCondition(wall, 0.0, u0 , 0.0, lambda[1]);
 
         Interface::setInterpolationOrder(1);
 
@@ -552,8 +552,9 @@ int main(int argc, char* argv[])
 
         mesh->writeVTKFile("out/InitialState.vtk");
         mesh->writeVTKFileFlux("out/InitialStateFlux.vtk");
+        mesh->writeGambitNeutralFile("out/SineDistortedMesh.neu");
 
-        mesh->iterate();
+        //mesh->iterate();
 
         //mesh->writeTimeSteps("out/timeSteps.dat");
 
@@ -586,12 +587,12 @@ int main(int argc, char* argv[])
         // ====================================================================
         
         // ====================================================================
-        mesh->writeResultFields("out/ResultFields.dat");
-        mesh->writeOverviewFile("out/OverviewFile.dat");
+        //mesh->writeResultFields("out/ResultFields.dat");
+        //mesh->writeOverviewFile("out/OverviewFile.dat");
         //mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
         ////mesh->writePressureGradientProfile("out/PressureGradientProfile.dat", 0.5);
         ////mesh->writeVelocityProfile("out/VelocityProfile.dat", 0.5);
-        mesh->writeTemperatureProfile("out/TemperatureProfile.dat", 0.5);
+        //mesh->writeTemperatureProfile("out/TemperatureProfile.dat", 0.5);
         //mesh->writeTimeSteps("out/TimeSteps.dat");
         ////mesh->writeVelocityU("out/VelocityU.dat");
         ////mesh->writeVelocityV("out/VelocityV.dat");

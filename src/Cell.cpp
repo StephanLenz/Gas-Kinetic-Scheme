@@ -7,6 +7,8 @@
 
 using namespace std;
 
+unsigned long int Cell::numberOfCells = 1;
+
 Cell::Cell()
 {
     memset(InterfaceList, NULL, 4 * sizeof(Interface*));
@@ -29,6 +31,11 @@ Cell::Cell(InterfaceType interfaceType, float2** nodes, BoundaryCondition* BC, F
     this->fluidParam = fluidParam;
 
     this->interfaceType = interfaceType;
+    // ========================================================================
+    //                  Copy attributes
+    // ========================================================================
+    this->ID = Cell::numberOfCells++;
+
     // ========================================================================
     
     // ========================================================================
@@ -549,6 +556,11 @@ float2 Cell::getCenter()
 float2 Cell::getNode(int i)
 {
     return *this->nodes[i];
+}
+
+unsigned long int Cell::getID()
+{
+    return this->ID;
 }
 
 PrimitiveVariable Cell::getPrim()
