@@ -70,13 +70,13 @@ Interface::Interface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, flo
     // Ghostcells have the same distance as their pendants in the domain
     if(negCell != NULL){
         if(negAdd) this->negDistance =                  this->distance( this->negCell->getCenter() );
-        else       this->negDistance = 0.0;
+        else       this->negDistance = periodicLengthX - this->distance( this->negCell->getCenter() );
     }else{
         this->negDistance = this->distance( this->posCell->getCenter() );
     }
     if(posCell != NULL){
         if(posAdd) this->posDistance =                  this->distance( this->posCell->getCenter() );
-        else       this->posDistance = 0.0;
+        else       this->posDistance = periodicLengthX - this->distance( this->posCell->getCenter() );
     }else{
         this->posDistance = this->distance( this->negCell->getCenter() );
 }

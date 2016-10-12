@@ -37,7 +37,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
     this->lengthY = lengthY;
 
     // make nx and ny an even number
-    nx = 2 * (nx/2);
+    //nx = 2 * (nx/2);
     ny = 2 * (ny/2);
     
     double etaX = pow( gradingX, 1.0 / (nx/2 - 1) );
@@ -55,6 +55,11 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
     else
         dy0 = this->lengthY / double(ny);
 
+    // ========== Test ==========
+    //etaY = 0.5;
+    //dy0 =  this->lengthY * (1-etaY)/(1-pow(etaY, ny));
+    // ==========================
+
     //=========================================================================
     //=========================================================================
     //		Computation of the coordinates and spacings
@@ -62,11 +67,15 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
     //=========================================================================
 
     double* CellSpacingsX = new double[nx];
-    for(int i = 0; i < nx/2; i++)
-    {
-        CellSpacingsX[nx/2 - i - 1] = dx0 * pow( etaX, i);
-        CellSpacingsX[nx/2 + i    ] = dx0 * pow( etaX, i);
-    }
+    //for(int i = 0; i < nx/2; i++)
+    //{
+    //    CellSpacingsX[nx/2 - i - 1] = dx0 * pow( etaX, i);
+    //    CellSpacingsX[nx/2 + i    ] = dx0 * pow( etaX, i);
+    //}
+
+    // ========== Test ==========
+    CellSpacingsX[0] = dx0;
+    // ==========================
 
     double* CellSpacingsY = new double[ny];
     for(int i = 0; i < ny/2; i++)
@@ -75,6 +84,13 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
         CellSpacingsY[ny/2 + i    ] = dy0 * pow( etaY, i);
     }
 
+    // ========== Test ==========
+    //for(int i = 0; i < ny; i++)
+    //{
+    //    CellSpacingsY[ny - i - 1] = dy0 * pow( etaY, i);
+    //}
+    // ==========================
+    
     // ========================================================================
     
     double* NodesX = new double[nx+1]; 
@@ -107,7 +123,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
 		for (int j = 0; j < nx + 1; j++)   // X-Direction
 		{
             // ===== No Distortion =====================
-            //float2* tmpNode = new float2( NodesX[j], NodesY[i] );
+            float2* tmpNode = new float2( NodesX[j], NodesY[i] );
 
             // ===== Parallelogram =====================
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] + NodesX[j] / this->lengthX * heightDiff );
@@ -125,13 +141,13 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] + 0.05 * cos( NodesX[j] * 2.0 * M_PI / this->lengthX ) * sin( NodesY[i] * M_PI/this->lengthY ) );
 
             // ===== y-Distortion (parallel) ===========
-            //float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.4 * this->lengthY * sin( NodesY[i] / this->lengthY * M_PI ) );
+            tmpNode->y += - 0.4 * this->lengthY * sin( NodesY[i] / this->lengthY * M_PI );
 
             // ===== internal parabular Distortion =====
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.25 * (NodesX[j] - this->lengthX)*NodesX[j] * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY ) );
 
             // ===== internal sine Distortion (x) ======
-            float2* tmpNode = new float2( NodesX[j] - 0.05 * sin( NodesY[i] * 2.0 * M_PI/this->lengthY ) * sin( (NodesX[j] - 0.5*this->lengthX) * 2.0 * M_PI/this->lengthX ), NodesY[i] );
+            //float2* tmpNode = new float2( NodesX[j] - 0.05 * sin( NodesY[i] * 2.0 * M_PI/this->lengthY ) * sin( (NodesX[j] - 0.5*this->lengthX) * 2.0 * M_PI/this->lengthX ), NodesY[i] );
 
             // ===== internal sine Distortion (y) ======
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.05 * sin( NodesX[j] * 2.0 * M_PI/this->lengthX ) * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY ) );
@@ -1440,6 +1456,10 @@ void GKSMesh::writeGambitNeutralFile(string filename)
 
 void GKSMesh::writeCellGeometry(ofstream& file)
 {
+    
+    int numberOfCells = 0;
+    for(int i = 0; i < this->CellList.size(); i++)  
+        if( !this->CellList[i]->isGhostCell() || this->param.ghostOutput)  numberOfCells++;
 
     // write VTK Header
     file << "# vtk DataFile Version 1.0\n";
@@ -1449,29 +1469,32 @@ void GKSMesh::writeCellGeometry(ofstream& file)
 
     // write nodes
     //( one dummy node with the ID 0 must be written )
-    file << "POINTS " << 4 * this->CellList.size() + 1 << " double\n";
+    file << "POINTS " << 4 * numberOfCells + 1 << " double\n";
     file << "0.0 0.0 0.0 \n";
 
     for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
     {
-        file << (*i)->writeNodes();
+        if( !(*i)->isGhostCell() || this->param.ghostOutput )
+            file << (*i)->writeNodes();
     }
 
     // write elements
-    file << "CELLS " << this->CellList.size() << " " << 5 * this->CellList.size() << endl;
+    file << "CELLS " << numberOfCells << " " << 5 * numberOfCells << endl;
     for (int i = 0; i < this->CellList.size(); ++i)
     {
-        file << 4 << " " << i * 4 + 1
-            << " " << i * 4 + 2
-            << " " << i * 4 + 3
-            << " " << i * 4 + 4 << endl;
+        if( !CellList[i]->isGhostCell() || this->param.ghostOutput )
+            file << 4 << " " << i * 4 + 1
+                << " " << i * 4 + 2
+                << " " << i * 4 + 3
+                << " " << i * 4 + 4 << endl;
     }
 
     // write element tyes( 9 = quad element )
-    file << "CELL_TYPES " << this->CellList.size() << endl;
+    file << "CELL_TYPES " << numberOfCells << endl;
     for (int i = 0; i < this->CellList.size(); ++i)
     {
-        file << "9" << endl;
+        if( !CellList[i]->isGhostCell() || this->param.ghostOutput )
+            file << "9" << endl;
     }
 }
 
@@ -1513,132 +1536,156 @@ void GKSMesh::writeCellData(ofstream& file)
     if ( this->param.resOutput )
         numberOfFields += 4;
     
+    int numberOfCells = 0;
+    for(int i = 0; i < this->CellList.size(); i++)  
+        if( !this->CellList[i]->isGhostCell() || this->param.ghostOutput)  numberOfCells++;
+
     // write cell data ( ID and stress )
-    file << "CELL_DATA " << this->CellList.size() << endl;
+    file << "CELL_DATA " << numberOfCells << endl;
     file << "FIELD Lable " << numberOfFields << "\n";
 
     // ================================================================================================================
 
-    file << "rho 1 " << this->CellList.size() << " double\n";
+    file << "rho 1 " << numberOfCells << " double\n";
     for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
-        file << ( *i )->getPrim().rho << endl;
+        if( !(*i)->isGhostCell() || this->param.ghostOutput )
+            file << ( *i )->getPrim().rho << endl;
     }
 
-    file << "U 1 " << this->CellList.size() << " double\n";
+    file << "U 1 " << numberOfCells << " double\n";
     for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
-        file << ( *i )->getPrim().U << endl;
+        if( !(*i)->isGhostCell() || this->param.ghostOutput )
+            file << ( *i )->getPrim().U << endl;
     }
 
-    file << "V 1 " << this->CellList.size() << " double\n";
+    file << "V 1 " << numberOfCells << " double\n";
     for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
-        file << ( *i )->getPrim().V << endl;
+        if( !(*i)->isGhostCell() || this->param.ghostOutput )
+            file << ( *i )->getPrim().V << endl;
     }
 
-    file << "Lambda 1 " << this->CellList.size() << " double\n";
+    file << "Lambda 1 " << numberOfCells << " double\n";
     for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
-        file << ( *i )->getPrim().L << endl;
-    }
-
-    // ================================================================================================================
-
-    file << "GhostCell 1 " << this->CellList.size() << " int\n";
-    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
-    {
-        if ( ( *i )->isGhostCell() )
-            file << 1 << endl;
-        else
-            file << 0 << endl;
+        if( !(*i)->isGhostCell() || this->param.ghostOutput )
+            file << ( *i )->getPrim().L << endl;
     }
 
     // ================================================================================================================
 
-    file << "rhoU 1 " << this->CellList.size() << " double\n";
+    file << "GhostCell 1 " << numberOfCells << " int\n";
     for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
-        file << ( *i )->getCons().rhoU << endl;
-    }
-
-    file << "rhoV 1 " << this->CellList.size() << " double\n";
-    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
-    {
-        file << ( *i )->getCons().rhoV << endl;
-    }
-
-    file << "rhoE 1 " << this->CellList.size() << " double\n";
-    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
-    {
-        file << ( *i )->getCons().rhoE << endl;
+        if( !(*i)->isGhostCell() || this->param.ghostOutput )
+        {
+            if ( ( *i )->isGhostCell() )
+                file << 1 << endl;
+            else
+                file << 0 << endl;
+        }
     }
 
     // ================================================================================================================
 
-    file << "p 1 " << this->CellList.size() << " double\n";
+    file << "rhoU 1 " << numberOfCells << " double\n";
     for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
-        file << ( *i )->getPrim().rho / ( 2.0 * ( *i )->getPrim().L ) << endl;
+        if( !(*i)->isGhostCell() || this->param.ghostOutput )
+            file << ( *i )->getCons().rhoU << endl;
     }
 
-    file << "T 1 " << this->CellList.size() << " double\n";
+    file << "rhoV 1 " << numberOfCells << " double\n";
     for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
-        file << 1.0 / ( 2.0 * this->fluidParam.R * ( *i )->getPrim().L ) << endl;
+        if( !(*i)->isGhostCell() || this->param.ghostOutput )
+            file << ( *i )->getCons().rhoV << endl;
+    }
+
+    file << "rhoE 1 " << numberOfCells << " double\n";
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+    {
+        if( !(*i)->isGhostCell() || this->param.ghostOutput )
+            file << ( *i )->getCons().rhoE << endl;
+    }
+
+    // ================================================================================================================
+
+    file << "p 1 " << numberOfCells << " double\n";
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+    {
+        if( !(*i)->isGhostCell() || this->param.ghostOutput )
+            file << ( *i )->getPrim().rho / ( 2.0 * ( *i )->getPrim().L ) << endl;
+    }
+
+    file << "T 1 " << numberOfCells << " double\n";
+    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
+    {
+        if( !(*i)->isGhostCell() || this->param.ghostOutput )
+            file << 1.0 / ( 2.0 * this->fluidParam.R * ( *i )->getPrim().L ) << endl;
     }
 
     // ================================================================================================================
 
     if ( this->param.resOutput )
     {
-        file << "res_rho 1 " << this->CellList.size() << " double\n";
+        file << "res_rho 1 " << numberOfCells << " double\n";
         for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
         {
-            file << ( *i )->getLocalResidual().rho << endl;
+            if( !(*i)->isGhostCell() || this->param.ghostOutput )
+                file << ( *i )->getLocalResidual().rho << endl;
         }
 
-        file << "res_rhoU 1 " << this->CellList.size() << " double\n";
+        file << "res_rhoU 1 " << numberOfCells << " double\n";
         for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
         {
-            file << ( *i )->getLocalResidual().rhoU << endl;
+            if( !(*i)->isGhostCell() || this->param.ghostOutput )
+                file << ( *i )->getLocalResidual().rhoU << endl;
         }
 
-        file << "res_rhoV 1 " << this->CellList.size() << " double\n";
+        file << "res_rhoV 1 " << numberOfCells << " double\n";
         for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
         {
-            file << ( *i )->getLocalResidual().rhoV << endl;
+            if( !(*i)->isGhostCell() || this->param.ghostOutput )
+                file << ( *i )->getLocalResidual().rhoV << endl;
         }
 
-        file << "res_rhoE 1 " << this->CellList.size() << " double\n";
+        file << "res_rhoE 1 " << numberOfCells << " double\n";
         for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
         {
-            file << ( *i )->getLocalResidual().rhoE << endl;
+            if( !(*i)->isGhostCell() || this->param.ghostOutput )
+                file << ( *i )->getLocalResidual().rhoE << endl;
         }
     }
     // ================================================================================================================
-    file << "update_rho 1 " << this->CellList.size() << " double\n";
+    file << "update_rho 1 " << numberOfCells << " double\n";
     for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
-        file << ( *i )->getUpdate().rho << endl;
+        if( !(*i)->isGhostCell() || this->param.ghostOutput )
+            file << ( *i )->getUpdate().rho << endl;
     }
 
-    file << "update_rhoU 1 " << this->CellList.size() << " double\n";
+    file << "update_rhoU 1 " << numberOfCells << " double\n";
     for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
-        file << ( *i )->getUpdate().rhoU << endl;
+        if( !(*i)->isGhostCell() || this->param.ghostOutput )
+            file << ( *i )->getUpdate().rhoU << endl;
     }
 
-    file << "update_rhoV 1 " << this->CellList.size() << " double\n";
+    file << "update_rhoV 1 " << numberOfCells << " double\n";
     for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
-        file << ( *i )->getUpdate().rhoV << endl;
+        if( !(*i)->isGhostCell() || this->param.ghostOutput )
+            file << ( *i )->getUpdate().rhoV << endl;
     }
 
-    file << "update_rhoE 1 " << this->CellList.size() << " double\n";
+    file << "update_rhoE 1 " << numberOfCells << " double\n";
     for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
-        file << ( *i )->getUpdate().rhoE << endl;
+        if( !(*i)->isGhostCell() || this->param.ghostOutput )
+            file << ( *i )->getUpdate().rhoE << endl;
     }
     // ================================================================================================================
     for(int j = 0; j < 4; j++)
@@ -1646,29 +1693,34 @@ void GKSMesh::writeCellData(ofstream& file)
         file << "VECTORS Connectivity" << j << " double\n";
         for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
         {
-            file << (*i)->getConnectivity(j).x << " " << (*i)->getConnectivity(j).y << " 0.0" << endl;
+            if( !(*i)->isGhostCell() || this->param.ghostOutput )
+                file << (*i)->getConnectivity(j).x << " " << (*i)->getConnectivity(j).y << " 0.0" << endl;
         }
     }
     // ================================================================================================================
     file << "VECTORS dRho" << " double\n";
     for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
-        file << (*i)->getGradientX().rho << " " << (*i)->getGradientY().rho << " 0.0" << endl;
+        if( !(*i)->isGhostCell() || this->param.ghostOutput )
+            file << (*i)->getGradientX().rho << " " << (*i)->getGradientY().rho << " 0.0" << endl;
     }
     file << "VECTORS dRhoU" << " double\n";
     for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
-        file << (*i)->getGradientX().rhoU << " " << (*i)->getGradientY().rhoU << " 0.0" << endl;
+        if( !(*i)->isGhostCell() || this->param.ghostOutput )
+            file << (*i)->getGradientX().rhoU << " " << (*i)->getGradientY().rhoU << " 0.0" << endl;
     }
     file << "VECTORS dRhoV" << " double\n";
     for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
-        file << (*i)->getGradientX().rhoV << " " << (*i)->getGradientY().rhoV << " 0.0" << endl;
+        if( !(*i)->isGhostCell() || this->param.ghostOutput )
+            file << (*i)->getGradientX().rhoV << " " << (*i)->getGradientY().rhoV << " 0.0" << endl;
     }
     file << "VECTORS dRhoE" << " double\n";
     for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
     {
-        file << (*i)->getGradientX().rhoE << " " << (*i)->getGradientY().rhoE << " 0.0" << endl;
+        if( !(*i)->isGhostCell() || this->param.ghostOutput )
+            file << (*i)->getGradientX().rhoE << " " << (*i)->getGradientY().rhoE << " 0.0" << endl;
     }
     // ================================================================================================================
 }

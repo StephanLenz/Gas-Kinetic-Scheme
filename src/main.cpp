@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
         */
 
 
-        ///*
+        /*
 
         // ========================================================================
         //
@@ -200,9 +200,9 @@ int main(int argc, char* argv[])
         //mesh->initMeshConstant(1.0, 0.0, 0.0, 1.5 );
         mesh->initMeshLinear(rho, U, V, lambda);
 
-        //*/
+        */
     
-        /*
+        ///*
 
         // ========================================================================
         //
@@ -215,7 +215,7 @@ int main(int argc, char* argv[])
         double H = 1.0;
         double W = 1.0;
 
-        param.numberOfIterations = 1000000000;
+        param.numberOfIterations = 100000000;
         param.outputIntervalVTK = 10000;
         param.outputInterval = 10000;
 
@@ -229,16 +229,17 @@ int main(int argc, char* argv[])
         param.verbose = false;
         param.fluxOutput = false;
         param.resOutput = false;
+        param.ghostOutput = false;
 
         // ========================================================================
 
         FluidParameter fluidParam;
 
         // ========== Weidongs Parameters ==========
-        int    nx = 2;
-        int    ny = 4;//nyList[j];
+        int    nx = 1;
+        int    ny = 2;//nyList[j];
         double Re = 4.0;
-        double u0 = 1000.0;
+        double u0 = 0.1;
         double angle = 0.0*M_PI;//atan(0.0);
         param.L = 1.0;//*cos(angle);
 
@@ -250,6 +251,7 @@ int main(int argc, char* argv[])
         fluidParam.BoussinesqForce.x = 0.0;
         fluidParam.BoussinesqForce.y = 0.0;
         fluidParam.rhoReference = 1.0;
+        fluidParam.Pr = 1.0;
 
         double T      = 300.0;
         double lambda = 1.0 / (2.0 * fluidParam.R * T);
@@ -266,9 +268,9 @@ int main(int argc, char* argv[])
         //    |    1    |
         //    -----------
         mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
-        mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(isothermalWall, 0.0, 0.0, 0.0, lambda);
         mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
-        mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(isothermalWall, 0.0, 0.0, 0.0, lambda);
         //mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
 
         Interface::setInterpolationOrder(1);
@@ -281,7 +283,7 @@ int main(int argc, char* argv[])
         //mesh->initMeshParabularVelocity(1.0, u0, 0.0, lambda);
         //mesh->initMeshSineVelocity(1.0, u0, 0.0, lambda);
 
-        */
+        //*/
     
         /*
 
@@ -552,9 +554,9 @@ int main(int argc, char* argv[])
 
         mesh->writeVTKFile("out/InitialState.vtk");
         mesh->writeVTKFileFlux("out/InitialStateFlux.vtk");
-        mesh->writeGambitNeutralFile("out/SineDistortedMesh.neu");
+        //mesh->writeGambitNeutralFile("out/SineDistortedMesh.neu");
 
-        //mesh->iterate();
+        mesh->iterate();
 
         //mesh->writeTimeSteps("out/timeSteps.dat");
 
@@ -588,7 +590,7 @@ int main(int argc, char* argv[])
         
         // ====================================================================
         //mesh->writeResultFields("out/ResultFields.dat");
-        //mesh->writeOverviewFile("out/OverviewFile.dat");
+        mesh->writeOverviewFile("out/OverviewFile.dat");
         //mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
         ////mesh->writePressureGradientProfile("out/PressureGradientProfile.dat", 0.5);
         ////mesh->writeVelocityProfile("out/VelocityProfile.dat", 0.5);
