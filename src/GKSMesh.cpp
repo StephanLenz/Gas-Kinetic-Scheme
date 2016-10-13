@@ -37,7 +37,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
     this->lengthY = lengthY;
 
     // make nx and ny an even number
-    //nx = 2 * (nx/2);
+    nx = 2 * (nx/2);
     ny = 2 * (ny/2);
     
     double etaX = pow( gradingX, 1.0 / (nx/2 - 1) );
@@ -67,14 +67,14 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
     //=========================================================================
 
     double* CellSpacingsX = new double[nx];
-    //for(int i = 0; i < nx/2; i++)
-    //{
-    //    CellSpacingsX[nx/2 - i - 1] = dx0 * pow( etaX, i);
-    //    CellSpacingsX[nx/2 + i    ] = dx0 * pow( etaX, i);
-    //}
+    for(int i = 0; i < nx/2; i++)
+    {
+        CellSpacingsX[nx/2 - i - 1] = dx0 * pow( etaX, i);
+        CellSpacingsX[nx/2 + i    ] = dx0 * pow( etaX, i);
+    }
 
     // ========== Test ==========
-    CellSpacingsX[0] = dx0;
+    //CellSpacingsX[0] = dx0;
     // ==========================
 
     double* CellSpacingsY = new double[ny];
@@ -141,7 +141,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] + 0.05 * cos( NodesX[j] * 2.0 * M_PI / this->lengthX ) * sin( NodesY[i] * M_PI/this->lengthY ) );
 
             // ===== y-Distortion (parallel) ===========
-            tmpNode->y += - 0.4 * this->lengthY * sin( NodesY[i] / this->lengthY * M_PI );
+            //tmpNode->y += - 0.4 * this->lengthY * sin( NodesY[i] / this->lengthY * M_PI );
 
             // ===== internal parabular Distortion =====
             //float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.25 * (NodesX[j] - this->lengthX)*NodesX[j] * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY ) );
@@ -150,7 +150,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             //float2* tmpNode = new float2( NodesX[j] - 0.05 * sin( NodesY[i] * 2.0 * M_PI/this->lengthY ) * sin( (NodesX[j] - 0.5*this->lengthX) * 2.0 * M_PI/this->lengthX ), NodesY[i] );
 
             // ===== internal sine Distortion (y) ======
-            //float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.05 * sin( NodesX[j] * 2.0 * M_PI/this->lengthX ) * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY ) );
+            //tmpNode->y -= 0.05 * sin( NodesX[j] * 2.0 * M_PI/this->lengthX ) * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY );
 
             // ===== internal linear Distortion ========
             //if( i != 0 && i != ny && j != 0 && j != nx ) tmpNode->y += 0.1;

@@ -69,13 +69,13 @@ Interface::Interface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, flo
     // ========================================================================
     // Ghostcells have the same distance as their pendants in the domain
     if(negCell != NULL){
-        if(negAdd) this->negDistance =                   this->distance( this->negCell->getCenter() );
+        if(negAdd) this->negDistance =                  this->distance( this->negCell->getCenter() );
         else       this->negDistance = periodicLengthX - this->distance( this->negCell->getCenter() );
     }else{
         this->negDistance = this->distance( this->posCell->getCenter() );
     }
     if(posCell != NULL){
-        if(posAdd) this->posDistance =                   this->distance( this->posCell->getCenter() );
+        if(posAdd) this->posDistance =                  this->distance( this->posCell->getCenter() );
         else       this->posDistance = periodicLengthX - this->distance( this->posCell->getCenter() );
     }else{
         this->posDistance = this->distance( this->negCell->getCenter() );
@@ -217,8 +217,7 @@ void Interface::computeInternalFlux(double dt)
     //this->negCell->addFlux(this->timeIntegratedFlux, -1.0, this);
     // ========================================================================
 
-    if( fabs(this->normal.x) < 1.0e-12 )
-        int i = 1;
+    int i = 1;
 }
 
 Cell * Interface::getNeigborCell(Cell * askingCell)
@@ -438,40 +437,23 @@ void Interface::interpolatePrim(double * prim)
 
     double distance = this->posDistance + this->negDistance;
 
-    //prim[0] = ( this->negCell->getPrim().rho * this->posDistance
-    //          + this->posCell->getPrim().rho * this->negDistance )
-    //        / ( distance );
+    prim[0] = ( this->negCell->getPrim().rho * this->posDistance
+              + this->posCell->getPrim().rho * this->negDistance )
+            / ( distance );
 
-    //prim[1] = ( this->negCell->getPrim().U   * this->posDistance
-    //          + this->posCell->getPrim().U   * this->negDistance )
-    //        / ( distance );
+    prim[1] = ( this->negCell->getPrim().U   * this->posDistance
+              + this->posCell->getPrim().U   * this->negDistance )
+            / ( distance );
 
-    //prim[2] = ( this->negCell->getPrim().V   * this->posDistance
-    //          + this->posCell->getPrim().V   * this->negDistance )
-    //        / ( distance );
+    prim[2] = ( this->negCell->getPrim().V   * this->posDistance
+              + this->posCell->getPrim().V   * this->negDistance )
+            / ( distance );
 
-    //prim[3] = ( this->negCell->getPrim().L   * this->posDistance
-    //          + this->posCell->getPrim().L   * this->negDistance )
-    //        / ( distance );
+    prim[3] = ( this->negCell->getPrim().L   * this->posDistance
+              + this->posCell->getPrim().L   * this->negDistance )
+            / ( distance );
 
-    prim[0] = ( this->negCell->getPrim().rho 
-              + this->posCell->getPrim().rho )
-            / ( 2.0 );
-
-    prim[1] = ( this->negCell->getPrim().U   
-              + this->posCell->getPrim().U   )
-            / ( 2.0 );
-
-    prim[2] = ( this->negCell->getPrim().V   
-              + this->posCell->getPrim().V   )
-            / ( 2.0 );
-
-    prim[3] = ( this->negCell->getPrim().L   
-              + this->posCell->getPrim().L   )
-            / ( 2.0 );
-
-    if( fabs(this->normal.x) < 1.0e-12 )
-        int i = 0;
+    int i = 0;
 }
 
 void Interface::reconstructPrim(double * prim)

@@ -3,6 +3,8 @@
 #include "Interface.h"
 #include <sstream>
 #include <iostream>
+#include <fstream>
+#include <iomanip>
 #include <algorithm>    // min()
 
 using namespace std;
@@ -170,83 +172,83 @@ void Cell::update(double dt)
 
     //// ========================================================================
 
-    //ConservedVariable update_1;
+    ConservedVariable update_1;
 
-    //update_1.rho     = ( Sign0 * this->InterfaceList[0]->getTimeIntegratedFlux_1().rho
-    //                   + Sign1 * this->InterfaceList[1]->getTimeIntegratedFlux_1().rho
-    //                   + Sign2 * this->InterfaceList[2]->getTimeIntegratedFlux_1().rho
-    //                   + Sign3 * this->InterfaceList[3]->getTimeIntegratedFlux_1().rho
-    //                 ) / this->volume;
+    update_1.rho     = ( Sign0 * this->InterfaceList[0]->getTimeIntegratedFlux_1().rho
+                       + Sign1 * this->InterfaceList[1]->getTimeIntegratedFlux_1().rho
+                       + Sign2 * this->InterfaceList[2]->getTimeIntegratedFlux_1().rho
+                       + Sign3 * this->InterfaceList[3]->getTimeIntegratedFlux_1().rho
+                     ) / this->volume;
 
-    //update_1.rhoU    = ( Sign0 * this->InterfaceList[0]->getTimeIntegratedFlux_1().rhoU
-    //                   + Sign1 * this->InterfaceList[1]->getTimeIntegratedFlux_1().rhoU
-    //                   + Sign2 * this->InterfaceList[2]->getTimeIntegratedFlux_1().rhoU
-    //                   + Sign3 * this->InterfaceList[3]->getTimeIntegratedFlux_1().rhoU
-    //                 ) / this->volume;
+    update_1.rhoU    = ( Sign0 * this->InterfaceList[0]->getTimeIntegratedFlux_1().rhoU
+                       + Sign1 * this->InterfaceList[1]->getTimeIntegratedFlux_1().rhoU
+                       + Sign2 * this->InterfaceList[2]->getTimeIntegratedFlux_1().rhoU
+                       + Sign3 * this->InterfaceList[3]->getTimeIntegratedFlux_1().rhoU
+                     ) / this->volume;
 
-    //update_1.rhoV    = ( Sign0 * this->InterfaceList[0]->getTimeIntegratedFlux_1().rhoV
-    //                   + Sign1 * this->InterfaceList[1]->getTimeIntegratedFlux_1().rhoV
-    //                   + Sign2 * this->InterfaceList[2]->getTimeIntegratedFlux_1().rhoV
-    //                   + Sign3 * this->InterfaceList[3]->getTimeIntegratedFlux_1().rhoV
-    //                 ) / this->volume;
+    update_1.rhoV    = ( Sign0 * this->InterfaceList[0]->getTimeIntegratedFlux_1().rhoV
+                       + Sign1 * this->InterfaceList[1]->getTimeIntegratedFlux_1().rhoV
+                       + Sign2 * this->InterfaceList[2]->getTimeIntegratedFlux_1().rhoV
+                       + Sign3 * this->InterfaceList[3]->getTimeIntegratedFlux_1().rhoV
+                     ) / this->volume;
 
-    //update_1.rhoE    = ( Sign0 * this->InterfaceList[0]->getTimeIntegratedFlux_1().rhoE
-    //                   + Sign1 * this->InterfaceList[1]->getTimeIntegratedFlux_1().rhoE
-    //                   + Sign2 * this->InterfaceList[2]->getTimeIntegratedFlux_1().rhoE
-    //                   + Sign3 * this->InterfaceList[3]->getTimeIntegratedFlux_1().rhoE
-    //                 ) / this->volume;
+    update_1.rhoE    = ( Sign0 * this->InterfaceList[0]->getTimeIntegratedFlux_1().rhoE
+                       + Sign1 * this->InterfaceList[1]->getTimeIntegratedFlux_1().rhoE
+                       + Sign2 * this->InterfaceList[2]->getTimeIntegratedFlux_1().rhoE
+                       + Sign3 * this->InterfaceList[3]->getTimeIntegratedFlux_1().rhoE
+                     ) / this->volume;
 
-    //ConservedVariable update_2;
+    ConservedVariable update_2;
 
-    //update_2.rho     = ( Sign0 * this->InterfaceList[0]->getTimeIntegratedFlux_2().rho
-    //                   + Sign1 * this->InterfaceList[1]->getTimeIntegratedFlux_2().rho
-    //                   + Sign2 * this->InterfaceList[2]->getTimeIntegratedFlux_2().rho
-    //                   + Sign3 * this->InterfaceList[3]->getTimeIntegratedFlux_2().rho
-    //                 ) / this->volume;
+    update_2.rho     = ( Sign0 * this->InterfaceList[0]->getTimeIntegratedFlux_2().rho
+                       + Sign1 * this->InterfaceList[1]->getTimeIntegratedFlux_2().rho
+                       + Sign2 * this->InterfaceList[2]->getTimeIntegratedFlux_2().rho
+                       + Sign3 * this->InterfaceList[3]->getTimeIntegratedFlux_2().rho
+                     ) / this->volume;
 
-    //update_2.rhoU    = ( Sign0 * this->InterfaceList[0]->getTimeIntegratedFlux_2().rhoU
-    //                   + Sign1 * this->InterfaceList[1]->getTimeIntegratedFlux_2().rhoU
-    //                   + Sign2 * this->InterfaceList[2]->getTimeIntegratedFlux_2().rhoU
-    //                   + Sign3 * this->InterfaceList[3]->getTimeIntegratedFlux_2().rhoU
-    //                 ) / this->volume;
+    update_2.rhoU    = ( Sign0 * this->InterfaceList[0]->getTimeIntegratedFlux_2().rhoU
+                       + Sign1 * this->InterfaceList[1]->getTimeIntegratedFlux_2().rhoU
+                       + Sign2 * this->InterfaceList[2]->getTimeIntegratedFlux_2().rhoU
+                       + Sign3 * this->InterfaceList[3]->getTimeIntegratedFlux_2().rhoU
+                     ) / this->volume;
 
-    //update_2.rhoV    = ( Sign0 * this->InterfaceList[0]->getTimeIntegratedFlux_2().rhoV
-    //                   + Sign1 * this->InterfaceList[1]->getTimeIntegratedFlux_2().rhoV
-    //                   + Sign2 * this->InterfaceList[2]->getTimeIntegratedFlux_2().rhoV
-    //                   + Sign3 * this->InterfaceList[3]->getTimeIntegratedFlux_2().rhoV
-    //                 ) / this->volume;
+    update_2.rhoV    = ( Sign0 * this->InterfaceList[0]->getTimeIntegratedFlux_2().rhoV
+                       + Sign1 * this->InterfaceList[1]->getTimeIntegratedFlux_2().rhoV
+                       + Sign2 * this->InterfaceList[2]->getTimeIntegratedFlux_2().rhoV
+                       + Sign3 * this->InterfaceList[3]->getTimeIntegratedFlux_2().rhoV
+                     ) / this->volume;
 
-    //update_2.rhoE    = ( Sign0 * this->InterfaceList[0]->getTimeIntegratedFlux_2().rhoE
-    //                   + Sign1 * this->InterfaceList[1]->getTimeIntegratedFlux_2().rhoE
-    //                   + Sign2 * this->InterfaceList[2]->getTimeIntegratedFlux_2().rhoE
-    //                   + Sign3 * this->InterfaceList[3]->getTimeIntegratedFlux_2().rhoE
-    //                 ) / this->volume;
+    update_2.rhoE    = ( Sign0 * this->InterfaceList[0]->getTimeIntegratedFlux_2().rhoE
+                       + Sign1 * this->InterfaceList[1]->getTimeIntegratedFlux_2().rhoE
+                       + Sign2 * this->InterfaceList[2]->getTimeIntegratedFlux_2().rhoE
+                       + Sign3 * this->InterfaceList[3]->getTimeIntegratedFlux_2().rhoE
+                     ) / this->volume;
 
-    //ConservedVariable update_3;
+    ConservedVariable update_3;
 
-    //update_3.rho     = ( Sign0 * this->InterfaceList[0]->getTimeIntegratedFlux_3().rho
-    //                   + Sign1 * this->InterfaceList[1]->getTimeIntegratedFlux_3().rho
-    //                   + Sign2 * this->InterfaceList[2]->getTimeIntegratedFlux_3().rho
-    //                   + Sign3 * this->InterfaceList[3]->getTimeIntegratedFlux_3().rho
-    //                 ) / this->volume;
+    update_3.rho     = ( Sign0 * this->InterfaceList[0]->getTimeIntegratedFlux_3().rho
+                       + Sign1 * this->InterfaceList[1]->getTimeIntegratedFlux_3().rho
+                       + Sign2 * this->InterfaceList[2]->getTimeIntegratedFlux_3().rho
+                       + Sign3 * this->InterfaceList[3]->getTimeIntegratedFlux_3().rho
+                     ) / this->volume;
 
-    //update_3.rhoU    = ( Sign0 * this->InterfaceList[0]->getTimeIntegratedFlux_3().rhoU
-    //                   + Sign1 * this->InterfaceList[1]->getTimeIntegratedFlux_3().rhoU
-    //                   + Sign2 * this->InterfaceList[2]->getTimeIntegratedFlux_3().rhoU
-    //                   + Sign3 * this->InterfaceList[3]->getTimeIntegratedFlux_3().rhoU
-    //                 ) / this->volume;
+    update_3.rhoU    = ( Sign0 * this->InterfaceList[0]->getTimeIntegratedFlux_3().rhoU
+                       + Sign1 * this->InterfaceList[1]->getTimeIntegratedFlux_3().rhoU
+                       + Sign2 * this->InterfaceList[2]->getTimeIntegratedFlux_3().rhoU
+                       + Sign3 * this->InterfaceList[3]->getTimeIntegratedFlux_3().rhoU
+                     ) / this->volume;
 
-    //update_3.rhoV    = ( Sign0 * this->InterfaceList[0]->getTimeIntegratedFlux_3().rhoV
-    //                   + Sign1 * this->InterfaceList[1]->getTimeIntegratedFlux_3().rhoV
-    //                   + Sign2 * this->InterfaceList[2]->getTimeIntegratedFlux_3().rhoV
-    //                   + Sign3 * this->InterfaceList[3]->getTimeIntegratedFlux_3().rhoV
-    //                 ) / this->volume;
+    update_3.rhoV    = ( Sign0 * this->InterfaceList[0]->getTimeIntegratedFlux_3().rhoV
+                       + Sign1 * this->InterfaceList[1]->getTimeIntegratedFlux_3().rhoV
+                       + Sign2 * this->InterfaceList[2]->getTimeIntegratedFlux_3().rhoV
+                       + Sign3 * this->InterfaceList[3]->getTimeIntegratedFlux_3().rhoV
+                     ) / this->volume;
 
-    //update_3.rhoE    = ( Sign0 * this->InterfaceList[0]->getTimeIntegratedFlux_3().rhoE
-    //                   + Sign1 * this->InterfaceList[1]->getTimeIntegratedFlux_3().rhoE
-    //                   + Sign2 * this->InterfaceList[2]->getTimeIntegratedFlux_3().rhoE
-    //                   + Sign3 * this->InterfaceList[3]->getTimeIntegratedFlux_3().rhoE
-    //                 ) / this->volume;
+    update_3.rhoE    = ( Sign0 * this->InterfaceList[0]->getTimeIntegratedFlux_3().rhoE
+                       + Sign1 * this->InterfaceList[1]->getTimeIntegratedFlux_3().rhoE
+                       + Sign2 * this->InterfaceList[2]->getTimeIntegratedFlux_3().rhoE
+                       + Sign3 * this->InterfaceList[3]->getTimeIntegratedFlux_3().rhoE
+                     ) / this->volume;
 
     //ConservedVariable update_test;
 
@@ -292,6 +294,17 @@ void Cell::update(double dt)
     this->cons_old[1] = this->cons[1];
     this->cons_old[2] = this->cons[2];
     this->cons_old[3] = this->cons[3];
+    // ========================================================================
+
+    // ========================================================================
+    //                        Output Cell updates for smaller cell
+    // ========================================================================
+    //ofstream file;
+    //file.precision(16);
+    //file.open("out/update_rhoV.dat", fstream::app );
+    //file << scientific << setw(25) << setfill(' ') << update_1.rhoV;
+    //file << scientific << setw(25) << setfill(' ') << update_2.rhoV;
+    //file << scientific << setw(25) << setfill(' ') << update_3.rhoV << endl;
     // ========================================================================
 
     int j = 0;
