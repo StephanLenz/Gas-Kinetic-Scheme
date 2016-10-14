@@ -18,10 +18,10 @@ using namespace std;
 int main(int argc, char* argv[])
 {
     double ReList[] = {40.0, 100.0, 400.0, 1000.0};
-    int    nyList[] = {8, 16, 32, 64};
+    int    nyList[] = {8, 16, 32, 64, 128};
     double RaList[] = {1.0e3, 1.0e4, 1.0e5, 1.0e6, 1.0e7, 1.0e8};
     //for (int i = 0; i < 4;i++)      //ReList
-    for (int j = 0; j < 4;j++)      // nyList
+    for (int j = 0; j < 5;j++)      // nyList
     //for(int i = 0; i < 6; i++)      // RaList
     {
     
@@ -216,8 +216,8 @@ int main(int argc, char* argv[])
         double W = 1.0;
 
         param.numberOfIterations = 100000000;
-        param.outputIntervalVTK = 100000;
-        param.outputInterval = 100000;
+        param.outputIntervalVTK = 1000000;
+        param.outputInterval = 1000000;
 
         param.convergenceCriterium[0] = 1.0;
         param.convergenceCriterium[1] = 1.0e-10;

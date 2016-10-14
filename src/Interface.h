@@ -89,7 +89,9 @@ protected:
 
     void interpolatePrim(double* prim);
 
-    void reconstructPrim(double* prim);
+    void reconstructPrimPiecewiseConstant(double* prim);
+
+    void reconstructPrimPiecewiseLinear(double* prim);
 
     void differentiateConsNormal(double* normalGradCons, double* prim);
 

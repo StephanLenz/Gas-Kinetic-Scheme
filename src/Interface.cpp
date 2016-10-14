@@ -142,8 +142,9 @@ void Interface::computeInternalFlux(double dt)
 
     // ========================================================================
     // interpolated primary variables at the interface
-    this->interpolatePrim(prim);
-    //this->reconstructPrim(prim);
+    //this->interpolatePrim(prim);
+    this->reconstructPrimPiecewiseConstant(prim);
+    //this->reconstructPrimPiecewiseLinear(prim);
 
     // spacial gradients of the conservative varibles
     this->differentiateConsNormal(normalGradCons, prim);
@@ -438,43 +439,50 @@ void Interface::interpolatePrim(double * prim)
 
     double distance = this->posDistance + this->negDistance;
 
-    //prim[0] = ( this->negCell->getPrim().rho * this->posDistance
-    //          + this->posCell->getPrim().rho * this->negDistance )
-    //        / ( distance );
+    prim[0] = ( this->negCell->getPrim().rho * this->posDistance
+              + this->posCell->getPrim().rho * this->negDistance )
+            / ( distance );
 
-    //prim[1] = ( this->negCell->getPrim().U   * this->posDistance
-    //          + this->posCell->getPrim().U   * this->negDistance )
-    //        / ( distance );
+    prim[1] = ( this->negCell->getPrim().U   * this->posDistance
+              + this->posCell->getPrim().U   * this->negDistance )
+            / ( distance );
 
-    //prim[2] = ( this->negCell->getPrim().V   * this->posDistance
-    //          + this->posCell->getPrim().V   * this->negDistance )
-    //        / ( distance );
+    prim[2] = ( this->negCell->getPrim().V   * this->posDistance
+              + this->posCell->getPrim().V   * this->negDistance )
+            / ( distance );
 
-    //prim[3] = ( this->negCell->getPrim().L   * this->posDistance
-    //          + this->posCell->getPrim().L   * this->negDistance )
-    //        / ( distance );
-
-    prim[0] = ( this->negCell->getPrim().rho 
-              + this->posCell->getPrim().rho )
-            / ( 2.0 );
-
-    prim[1] = ( this->negCell->getPrim().U   
-              + this->posCell->getPrim().U   )
-            / ( 2.0 );
-
-    prim[2] = ( this->negCell->getPrim().V   
-              + this->posCell->getPrim().V   )
-            / ( 2.0 );
-
-    prim[3] = ( this->negCell->getPrim().L   
-              + this->posCell->getPrim().L   )
-            / ( 2.0 );
+    prim[3] = ( this->negCell->getPrim().L   * this->posDistance
+              + this->posCell->getPrim().L   * this->negDistance )
+            / ( distance );
 
     if( fabs(this->normal.x) < 1.0e-12 )
         int i = 0;
 }
 
-void Interface::reconstructPrim(double * prim)
+void Interface::reconstructPrimPiecewiseConstant(double * prim)
+{
+    // This method computes the Values of the primary variables at the interface
+    // with pice wise constant reconstruction and averaging
+
+    double distance = this->posDistance + this->negDistance;
+
+    prim[0] = 0.5 * ( this->negCell->getPrim().rho 
+                    + this->posCell->getPrim().rho );
+
+    prim[1] = 0.5 * ( this->negCell->getPrim().U   
+                    + this->posCell->getPrim().U   );
+
+    prim[2] = 0.5 * ( this->negCell->getPrim().V   
+                    + this->posCell->getPrim().V   );
+
+    prim[3] = 0.5 * ( this->negCell->getPrim().L   
+                    + this->posCell->getPrim().L   );
+
+    if( fabs(this->normal.x) < 1.0e-12 )
+        int i = 0;
+}
+
+void Interface::reconstructPrimPiecewiseLinear(double * prim)
 {
     ConservedVariable negGradientX = this->negCell->getGradientX();
     ConservedVariable negGradientY = this->negCell->getGradientY();
