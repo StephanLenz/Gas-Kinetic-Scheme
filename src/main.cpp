@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
     int    nyList[] = {8, 16, 32, 64, 128};
     double RaList[] = {1.0e3, 1.0e4, 1.0e5, 1.0e6, 1.0e7, 1.0e8};
     //for (int i = 0; i < 4;i++)      //ReList
-    for (int j = 0; j < 5;j++)      // nyList
+    //for (int j = 0; j < 5;j++)      // nyList
     //for(int i = 0; i < 6; i++)      // RaList
     {
     
@@ -215,16 +215,16 @@ int main(int argc, char* argv[])
         double H = 1.0;
         double W = 1.0;
 
-        param.numberOfIterations = 100000000;
+        param.numberOfIterations = 1000000000;
         param.outputIntervalVTK = 1000000;
-        param.outputInterval = 1000000;
+        param.outputInterval = 10000;
 
         param.convergenceCriterium[0] = 1.0;
-        param.convergenceCriterium[1] = 1.0e-10;
+        param.convergenceCriterium[1] = 1.0e-12;
         param.convergenceCriterium[2] = 1.0;
         param.convergenceCriterium[3] = 1.0;
 
-        param.CFL = 0.7;
+        param.CFL = 0.001;
 
         param.verbose = false;
         param.fluxOutput = false;
@@ -236,8 +236,8 @@ int main(int argc, char* argv[])
         FluidParameter fluidParam;
 
         // ========== Weidongs Parameters ==========
-        int    nx = 2;
-        int    ny = nyList[j];
+        int    nx = 16;
+        int    ny = 16; //nyList[j];
         double Re = 4.0;
         double u0 = 0.1;
         double angle = 0.0*M_PI;//atan(0.0);
@@ -276,7 +276,7 @@ int main(int argc, char* argv[])
         Interface::setInterpolationOrder(1);
 
         // Generate Mesh
-        mesh->generateRectMeshGraded(compressible, W, H, nx, ny, 1.0, 0.1);
+        mesh->generateRectMeshGraded(compressible, W, H, nx, ny, 1.0, 1.0);
 
         // Initialize Values
         mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
@@ -589,9 +589,9 @@ int main(int argc, char* argv[])
         // ====================================================================
         
         // ====================================================================
-        //mesh->writeResultFields("out/ResultFields.dat");
-        //mesh->writeOverviewFile("out/OverviewFile.dat");
-        //mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
+        mesh->writeResultFields("out/ResultFields.dat");
+        mesh->writeOverviewFile("out/OverviewFile.dat");
+        mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
         ////mesh->writePressureGradientProfile("out/PressureGradientProfile.dat", 0.5);
         ////mesh->writeVelocityProfile("out/VelocityProfile.dat", 0.5);
         //mesh->writeTemperatureProfile("out/TemperatureProfile.dat", 0.5);

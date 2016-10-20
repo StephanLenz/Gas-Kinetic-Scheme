@@ -11,6 +11,10 @@ using namespace std;
 
 class Interface
 {
+protected:
+    static unsigned long int numberOfCells;
+    unsigned long int ID;
+
 public:
 	Cell* negCell;
 	Cell* posCell;

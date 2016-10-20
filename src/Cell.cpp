@@ -276,7 +276,6 @@ void Cell::update(double dt)
     this->updateVal.rhoV = update.rhoV;
     this->updateVal.rhoE = update.rhoE;
 
-    int i = 0;
     // ========================================================================
 
     // ========================================================================
@@ -287,7 +286,8 @@ void Cell::update(double dt)
     this->residual.rhoV = fabs(this->cons[2] - this->cons_old[2]);
     this->residual.rhoE = fabs(this->cons[3] - this->cons_old[3]);
 
-    int k = 0;
+    if( this->ID == 1 )
+        int breakPoint = 0;
 
     // store values of this time step for residual computation in the next one
     this->cons_old[0] = this->cons[0];
@@ -306,8 +306,6 @@ void Cell::update(double dt)
     //file << scientific << setw(25) << setfill(' ') << update_2.rhoV;
     //file << scientific << setw(25) << setfill(' ') << update_3.rhoV << endl;
     // ========================================================================
-
-    int j = 0;
 
 }
 
@@ -384,7 +382,7 @@ void Cell::applyForcing(double dt)
     double xForce = dt * Force.x;
     double yForce = dt * Force.y;
 
-    int i = 0;
+    int breakpoint = 0;
     // ========================================================================
 
     // ========================================================================

@@ -7,6 +7,7 @@
 #include <sstream>
 
 int Interface::interpolationOrder = 3;
+unsigned long int Interface::numberOfCells = 1;
 
 Interface::Interface()
 {
@@ -14,6 +15,8 @@ Interface::Interface()
 
 Interface::Interface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC, double periodicLengthX, double periodicLengthY)
 {
+    this->ID = Interface::numberOfCells++;
+
     // ========================================================================
     //                  Copy attributes
     // ========================================================================
@@ -144,10 +147,12 @@ void Interface::computeInternalFlux(double dt)
     // interpolated primary variables at the interface
     //this->interpolatePrim(prim);
     this->reconstructPrimPiecewiseConstant(prim);
+    this->reconstructPrimPiecewiseConstant(primTest);
     //this->reconstructPrimPiecewiseLinear(prim);
 
     // spacial gradients of the conservative varibles
     this->differentiateConsNormal(normalGradCons, prim);
+    this->differentiateConsNormal(normalGradConsTest, prim);
     //this->differentiateConsLeastSquare(normalGradCons, tangentialGradCons, prim);
     // ========================================================================
     
@@ -156,6 +161,11 @@ void Interface::computeInternalFlux(double dt)
     // ========================================================================
     PrimitiveVariable posPrim = this->posCell->getPrim();
     PrimitiveVariable negPrim = this->negCell->getPrim();
+
+    //if( fabs(this->normal.x - 1.0) > 1.0e-12 )
+    if(this->ID == 9)
+        int breakPoint = 0;
+
     this->transformGlobal2Local( (double*)&posPrim );
     this->transformGlobal2Local( (double*)&negPrim );
     // ========================================================================
@@ -204,6 +214,9 @@ void Interface::computeInternalFlux(double dt)
     // ========================================================================
     this->assembleFlux(MomentU, MomentV, MomentXi, a, b, A, timeCoefficients, prim, tau);
     // ========================================================================
+
+    if(this->ID == 9)
+        int breakPoint = 1;
     
     transformLocal2Global(this->timeIntegratedFlux);
     transformLocal2Global(this->timeIntegratedFlux_1);
@@ -218,8 +231,9 @@ void Interface::computeInternalFlux(double dt)
     //this->negCell->addFlux(this->timeIntegratedFlux, -1.0, this);
     // ========================================================================
 
-    if( fabs(this->normal.x) < 1.0e-12 )
-        int i = 1;
+    //if( fabs(this->normal.x - 1.0) > 1.0e-12 )
+    if(this->ID == 9)
+        int breakPoint = 1;
 }
 
 Cell * Interface::getNeigborCell(Cell * askingCell)
