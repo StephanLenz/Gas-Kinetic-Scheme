@@ -574,6 +574,11 @@ unsigned long int Cell::getID()
     return this->ID;
 }
 
+double Cell::getVolume()
+{
+    return this->volume;
+}
+
 PrimitiveVariable Cell::getPrim()
 {
     PrimitiveVariable prim;

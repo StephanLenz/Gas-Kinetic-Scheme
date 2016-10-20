@@ -55,6 +55,7 @@ struct Parameters
     bool resOutput;
     bool fluxOutput;
     bool ghostOutput;
+    bool csvOutput;
 
     double L;
 	double CFL;

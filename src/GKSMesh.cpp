@@ -699,6 +699,8 @@ void GKSMesh::timeStep()
 void GKSMesh::iterate()
 {
     this->time = 0.0;
+    this->timeList.push_back(this->time);
+
     this->applyBoundaryCondition();
 
     ostringstream filename;
@@ -710,6 +712,13 @@ void GKSMesh::iterate()
         ostringstream filenameFlux;
         filenameFlux << "out/resultFlux_0.vtk";
         writeVTKFileFlux(filenameFlux.str(), true, false);
+    }
+
+    if ( param.csvOutput == true )
+    {
+        ostringstream filename;
+        filename << "out/result_" << this->iter << ".dat";
+        writeResultFields(filename.str());
     }
 
     chrono::high_resolution_clock::time_point startTime = chrono::high_resolution_clock::now();
@@ -730,6 +739,7 @@ void GKSMesh::iterate()
         if ( this->iter % this->param.outputInterval == 0 )
         {
             this->dtList.push_back(this->dt);
+            this->timeList.push_back(this->time);
 
             ConservedVariable residual = this->getL2GlobalResidual();
 
@@ -775,6 +785,13 @@ void GKSMesh::iterate()
                 ostringstream filenameFlux;
                 filenameFlux << "out/resultFlux_" << this->iter << ".vtk";
                 writeVTKFileFlux(filenameFlux.str(), true, false);
+            }
+
+            if ( param.csvOutput == true )
+            {
+                ostringstream filename;
+                filename << "out/result_" << this->iter << ".dat";
+                writeResultFields(filename.str());
             }
         }
         // ========================================================================
@@ -1003,6 +1020,27 @@ void GKSMesh::writeTimeSteps(string filename)
     cout << "done!" << endl;
 }
 
+void GKSMesh::writeTime(string filename)
+{
+    cout << "Wrinting file " << filename << " ... ";
+    // open file stream
+    ofstream file;
+    file.precision(15);
+    file.open(filename.c_str());
+
+    if (!file.is_open()) {
+        cout << " File cound not be opened.\n\nERROR!\n\n\n";
+        return;
+    }
+
+    for (vector<double>::iterator i = this->timeList.begin(); i != this->timeList.end(); ++i)
+        file << (*i) << "\n";
+
+    file.close();
+
+    cout << "done!" << endl;
+}
+
 void GKSMesh::writeVelocityProfile(string filename, double x)
 {
 
@@ -1059,13 +1097,18 @@ void GKSMesh::writeResultFields(string filename)
 
     for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
     {
-        file << ( *i )->getCenter().x << " ";
-        file << ( *i )->getCenter().y << " ";
-        file << ( *i )->getPrim().rho << " ";
-        file << ( *i )->getPrim().U << " ";
-        file << ( *i )->getPrim().V << " ";
-        file << 1.0 / ( 2.0 * ( *i )->getPrim().L * this->fluidParam.R ) << " ";
-        file << ( *i )->isGhostCell() << endl;
+        file << right << scientific << setw(25) << setfill(' ') << ( *i )->getCenter().x << " ";
+        file << right << scientific << setw(25) << setfill(' ') << ( *i )->getCenter().y << " ";
+        file << right << scientific << setw(25) << setfill(' ') << ( *i )->getPrim().rho << " ";
+        file << right << scientific << setw(25) << setfill(' ') << ( *i )->getPrim().U << " ";
+        file << right << scientific << setw(25) << setfill(' ') << ( *i )->getPrim().V << " ";
+        file << right << scientific << setw(25) << setfill(' ') << 1.0 / ( 2.0 * ( *i )->getPrim().L * this->fluidParam.R ) << " ";
+        file << right <<               setw(3)  << setfill(' ') << ( *i )->isGhostCell() << " ";
+        file << right << scientific << setw(25) << setfill(' ') << ( *i )->getCons().rhoU << " ";
+        file << right << scientific << setw(25) << setfill(' ') << ( *i )->getCons().rhoV << " ";
+        file << right << scientific << setw(25) << setfill(' ') << ( *i )->getCons().rhoE << " ";
+        file << right << scientific << setw(25) << setfill(' ') << ( *i )->getVolume() << " ";
+        file << endl;
     }
 
     file.close();

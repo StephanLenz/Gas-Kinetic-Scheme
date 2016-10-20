@@ -77,6 +77,8 @@ public:
     float2 getNode(int i);
     unsigned long int getID();
 
+    double getVolume();
+
     PrimitiveVariable getPrim();
 
     ConservedVariable getCons();

@@ -215,8 +215,8 @@ int main(int argc, char* argv[])
         double H = 1.0;
         double W = 1.0;
 
-        param.numberOfIterations = 1000000000;
-        param.outputIntervalVTK = 1000000;
+        param.numberOfIterations = 20000000000;
+        param.outputIntervalVTK = 10000;
         param.outputInterval = 10000;
 
         param.convergenceCriterium[0] = 1.0;
@@ -224,20 +224,21 @@ int main(int argc, char* argv[])
         param.convergenceCriterium[2] = 1.0;
         param.convergenceCriterium[3] = 1.0;
 
-        param.CFL = 0.001;
+        param.CFL = 0.7;
 
-        param.verbose = false;
-        param.fluxOutput = false;
-        param.resOutput = false;
+        param.verbose     = false;
+        param.fluxOutput  = false;
+        param.resOutput   = false;
         param.ghostOutput = false;
+        param.csvOutput   = true;
 
         // ========================================================================
 
         FluidParameter fluidParam;
 
         // ========== Weidongs Parameters ==========
-        int    nx = 16;
-        int    ny = 16; //nyList[j];
+        int    nx = 2;
+        int    ny = 32; //nyList[j];
         double Re = 4.0;
         double u0 = 0.1;
         double angle = 0.0*M_PI;//atan(0.0);
@@ -268,9 +269,9 @@ int main(int argc, char* argv[])
         //    |    1    |
         //    -----------
         mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
-        mesh->addBoundaryCondition(isothermalWall, 0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, lambda);
         mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
-        mesh->addBoundaryCondition(isothermalWall, 0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, lambda);
         //mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
 
         Interface::setInterpolationOrder(1);
@@ -558,7 +559,8 @@ int main(int argc, char* argv[])
 
         mesh->iterate();
 
-        //mesh->writeTimeSteps("out/timeSteps.dat");
+        mesh->writeTimeSteps("out/timeSteps.dat");
+        mesh->writeTime("out/time.dat");
 
         // ========== Poiseuille Convergence Study ============================
         ostringstream filename;

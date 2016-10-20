@@ -34,6 +34,8 @@ private:
     double dt;
     vector<double> dtList;
     double time;
+    vector<double> timeList;
+
     unsigned int iter;
 
     vector<ConservedVariable> convergenceHistory;
@@ -101,6 +103,8 @@ public:
     void writeVTKFileFlux(string filename, bool data = true, bool BC = false);
 
     void writeTimeSteps(string filename);
+
+    void writeTime(string filename);
 
     void writeVelocityProfile(string filename, double x);
     void writeResultFields(string filename);
