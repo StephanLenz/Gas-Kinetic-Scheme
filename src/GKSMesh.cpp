@@ -151,7 +151,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             //tmpNode->x -=  0.05 * sin( NodesY[i] * 2.0 * M_PI/this->lengthY ) * sin( (NodesX[j] - 0.5*this->lengthX) * 2.0 * M_PI/this->lengthX );
 
             // ===== internal sine Distortion (y) ======
-            tmpNode->y -= 0.05 * sin( NodesX[j] * 2.0 * M_PI/this->lengthX ) * sin( ( NodesY[i] - 0.5*this->lengthY ) * 2.0 * M_PI/this->lengthY );
+            //tmpNode->y -= 0.05 * sin( NodesX[j] * 2.0 * M_PI/this->lengthX ) * sin( ( NodesY[i] - 0.5*this->lengthY ) * 2.0 * M_PI/this->lengthY );
 
             // ===== internal linear Distortion ========
             //if( i != 0 && i != ny && j != 0 && j != nx ) tmpNode->y += 0.1;
@@ -703,23 +703,7 @@ void GKSMesh::iterate()
 
     this->applyBoundaryCondition();
 
-    ostringstream filename;
-    filename << "out/result_0.vtk";
-    writeVTKFile(filename.str(), true, false);
-
-    if ( param.fluxOutput == true )
-    {
-        ostringstream filenameFlux;
-        filenameFlux << "out/resultFlux_0.vtk";
-        writeVTKFileFlux(filenameFlux.str(), true, false);
-    }
-
-    if ( param.csvOutput == true )
-    {
-        ostringstream filename;
-        filename << "out/result_" << this->iter << ".dat";
-        writeResultFields(filename.str());
-    }
+    this->writeOutputFiles();
 
     chrono::high_resolution_clock::time_point startTime = chrono::high_resolution_clock::now();
 
@@ -759,16 +743,8 @@ void GKSMesh::iterate()
                 cout << "Timesteps: " << this->iter << endl;
                 cout << "Time: " << this->time << endl;
 
-                ostringstream filename;
-                filename << "out/result_" << this->iter << ".vtk";
-                writeVTKFile(filename.str(), true, false);
+                this->writeOutputFiles();
 
-                if ( param.fluxOutput == true )
-                {
-                    ostringstream filenameFlux;
-                    filenameFlux << "out/resultFlux_" << this->iter << ".vtk";
-                    writeVTKFileFlux(filenameFlux.str(), true, false);
-                }
                 break;
             }
 
@@ -776,23 +752,7 @@ void GKSMesh::iterate()
         // ========================================================================
         if (this->iter % this->param.outputIntervalVTK == 0)
         {
-            ostringstream filename;
-            filename << "out/result_" << this->iter << ".vtk";
-            writeVTKFile(filename.str(), true, false);
-
-            if ( param.fluxOutput == true )
-            {
-                ostringstream filenameFlux;
-                filenameFlux << "out/resultFlux_" << this->iter << ".vtk";
-                writeVTKFileFlux(filenameFlux.str(), true, false);
-            }
-
-            if ( param.csvOutput == true )
-            {
-                ostringstream filename;
-                filename << "out/result_" << this->iter << ".dat";
-                writeResultFields(filename.str());
-            }
+            this->writeOutputFiles();
         }
         // ========================================================================
     }
@@ -887,6 +847,34 @@ string GKSMesh::cellValuesToString()
             tmp << (*i)->valuesToString() << "\n";
     }
     return tmp.str();
+}
+
+void GKSMesh::writeOutputFiles()
+{
+    ostringstream filename;
+    filename << "out/result_" << this->iter << ".vtk";
+    writeVTKFile(filename.str(), true, false);
+
+    if ( param.fluxOutput == true )
+    {
+        ostringstream filenameFlux;
+        filenameFlux << "out/resultFlux_" << this->iter << ".vtk";
+        writeVTKFileFlux(filenameFlux.str(), true, false);
+    }
+
+    if ( param.csvOutput == true )
+    {
+        ostringstream filename;
+        filename << "out/result_" << this->iter << ".dat";
+        writeResultFields(filename.str());
+    }
+
+    if ( param.csvOutput == true )
+    {
+        ostringstream filename;
+        filename << "out/resultBoundaryFlux_" << this->iter << ".dat";
+        writeResultBoundaryFluxes(filename.str());
+    }
 }
 
 void GKSMesh::writeOverviewFile(string filename)
@@ -1115,6 +1103,43 @@ void GKSMesh::writeResultFields(string filename)
 
     cout << "done!" << endl;
 
+}
+
+void GKSMesh::writeResultBoundaryFluxes(string filename)
+{
+
+    cout << "Wrinting file " << filename << " ... ";
+    // open file stream
+    ofstream file;
+    file.precision(15);
+    file.open(filename.c_str());
+
+    if (!file.is_open()) {
+        cout << " File cound not be opened.\n\nERROR!\n\n\n";
+        return;
+    }
+
+    for (vector<Interface*>::iterator i = this->InterfaceList.begin(); i != this->InterfaceList.end(); ++i)
+    {
+        if( (*i)-> isBoundaryInterface() )
+        {
+            file << right << scientific << setw(25) << setfill(' ') << ( *i )->getCenter().x << " ";
+            file << right << scientific << setw(25) << setfill(' ') << ( *i )->getCenter().y << " ";
+            file << right << scientific << setw(25) << setfill(' ') << ( *i )->getNormal().x << " ";
+            file << right << scientific << setw(25) << setfill(' ') << ( *i )->getNormal().y << " ";
+            file << right << scientific << setw(25) << setfill(' ') << ( *i )->getFluxDensity().rho  << " ";
+            file << right << scientific << setw(25) << setfill(' ') << ( *i )->getFluxDensity().rhoU << " ";
+            file << right << scientific << setw(25) << setfill(' ') << ( *i )->getFluxDensity().rhoV << " ";
+            file << right << scientific << setw(25) << setfill(' ') << ( *i )->getFluxDensity().rhoE << " ";
+            file << right << scientific << setw(25) << setfill(' ') << ( *i )->getFluxSign( (*i)->getCellInDomain() ) << " ";
+            file << right << scientific << setw(25) << setfill(' ') << ( *i )->getArea() << " ";
+            file << endl;
+        }
+    }
+
+    file.close();
+
+    cout << "done!" << endl;
 }
 
 void GKSMesh::writeTemperatureProfile(string filename, double x)

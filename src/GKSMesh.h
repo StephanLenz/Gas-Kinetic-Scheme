@@ -96,6 +96,8 @@ public:
 	string toString();
     string cellValuesToString();
 
+    void writeOutputFiles();
+
     void writeOverviewFile(string filename);
 
 	void writeVTKFile(string filename, bool data = true, bool BC = false);
@@ -107,7 +109,11 @@ public:
     void writeTime(string filename);
 
     void writeVelocityProfile(string filename, double x);
+
     void writeResultFields(string filename);
+
+    void writeResultBoundaryFluxes(string filename);
+
     void writeTemperatureProfile(string filename, double x);
 
     void writeMeshAsText(string filename);

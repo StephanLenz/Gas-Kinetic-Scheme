@@ -74,6 +74,8 @@ public:
     float2 getNormal();
     float2 getCenter();
     float2 getScaledNormal();
+    double getArea();
+
     BoundaryCondition* getBoundaryCondition();
     float2 getPosConnectivity();
     float2 getNegConnectivity();
@@ -98,6 +100,8 @@ protected:
     void reconstructPrimPiecewiseLinear(double* prim);
 
     void differentiateConsNormal(double* normalGradCons, double* prim);
+
+    void differentiateConsNormalThreePoint(double* normalGradCons, double* prim);
 
     void differentiateConsLeastSquare(double* normalGradCons, double* tangentialGradCons, double* prim);
 

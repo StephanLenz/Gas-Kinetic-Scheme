@@ -153,6 +153,7 @@ void Interface::computeInternalFlux(double dt)
     // spacial gradients of the conservative varibles
     this->differentiateConsNormal(normalGradCons, prim);
     this->differentiateConsNormal(normalGradConsTest, prim);
+    //this->differentiateConsNormalThreePoint(normalGradCons, prim);
     //this->differentiateConsLeastSquare(normalGradCons, tangentialGradCons, prim);
     // ========================================================================
     
@@ -380,6 +381,11 @@ float2 Interface::getScaledNormal()
         return float2( - this->normal.x * this->distance(posCell->getCenter()), - this->normal.y * this->distance(posCell->getCenter()) );
 }
 
+double Interface::getArea()
+{
+    return this->area;
+}
+
 BoundaryCondition * Interface::getBoundaryCondition()
 {
     return this->BoundaryConditionPointer;
@@ -554,6 +560,29 @@ void Interface::differentiateConsNormal(double* normalGradCons, double* prim)
     normalGradCons[2] = ( this->posCell->getCons().rhoV - this->negCell->getCons().rhoV ) / ( distance * prim[0] );
 
     normalGradCons[3] = ( this->posCell->getCons().rhoE - this->negCell->getCons().rhoE ) / ( distance * prim[0] );
+}
+
+void Interface::differentiateConsNormalThreePoint(double* normalGradCons, double * prim)
+{
+    // This method computes the spacial derivatives of the conservative Variables.
+    // The derivatives are computed by three point finite differences.
+    // the values on the interface are assumed to be the average bet pos and neg side
+
+    // ========================================================================
+    // normal direction
+    // ========================================================================
+
+    // compute the distance factor 
+    double distanceFacctor = 0.5 * ( this->posDistance * this->posDistance + this->negDistance * this->negDistance ) 
+                                 / ( this->posDistance * this->negDistance * ( this->posDistance + this->negDistance ) );
+
+    normalGradCons[0] = distanceFacctor * ( this->posCell->getCons().rho  - this->negCell->getCons().rho )  / ( prim[0] );
+
+    normalGradCons[1] = distanceFacctor * ( this->posCell->getCons().rhoU - this->negCell->getCons().rhoU ) / ( prim[0] );
+
+    normalGradCons[2] = distanceFacctor * ( this->posCell->getCons().rhoV - this->negCell->getCons().rhoV ) / ( prim[0] );
+
+    normalGradCons[3] = distanceFacctor * ( this->posCell->getCons().rhoE - this->negCell->getCons().rhoE ) / ( prim[0] );
 }
 
 void Interface::differentiateConsLeastSquare(double* normalGradCons, double* tangentialGradCons, double* prim)

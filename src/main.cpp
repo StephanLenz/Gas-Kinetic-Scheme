@@ -216,11 +216,11 @@ int main(int argc, char* argv[])
         double W = 1.0;
 
         param.numberOfIterations = 20000000000;
-        param.outputIntervalVTK = 10000;
-        param.outputInterval = 10000;
+        param.outputIntervalVTK = 1000;
+        param.outputInterval = 1000;
 
         param.convergenceCriterium[0] = 1.0;
-        param.convergenceCriterium[1] = 1.0e-12;
+        param.convergenceCriterium[1] = 1.0e-10;
         param.convergenceCriterium[2] = 1.0;
         param.convergenceCriterium[3] = 1.0;
 
@@ -238,7 +238,7 @@ int main(int argc, char* argv[])
 
         // ========== Weidongs Parameters ==========
         int    nx = 2;
-        int    ny = 32; //nyList[j];
+        int    ny = 16; //nyList[j];
         double Re = 4.0;
         double u0 = 0.1;
         double angle = 0.0*M_PI;//atan(0.0);
