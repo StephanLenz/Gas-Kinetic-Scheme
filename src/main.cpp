@@ -2,8 +2,15 @@
 //
 //                      Compressible Thermal GKS
 //
+//      Developed by Stephan Lenz (stephan.lenz@tu-bs.de)
+//
 // ============================================================================
-
+//
+//      main.cpp
+//
+//      This file defines the Problem setup and starts the simulation.
+//
+// ============================================================================
 
 #include "GKSMesh.h"
 #include "BoundaryCondition.h"
@@ -17,6 +24,13 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
+    // ================================================================================================================
+    // ================================================================================================================
+    // ================================================================================================================
+    // ================================================================================================================
+    // ================================================================================================================
+
+    // These loops can be used for Convergence studies
     double ReList[] = {40.0, 100.0, 400.0, 1000.0};
     int    nyList[] = {8, 16, 32, 64, 128};
     double RaList[] = {1.0e3, 1.0e4, 1.0e5, 1.0e6, 1.0e7, 1.0e8};
@@ -24,240 +38,76 @@ int main(int argc, char* argv[])
     //for (int j = 0; j < 5;j++)      // nyList
     //for(int i = 0; i < 6; i++)      // RaList
     {
-    
-        /*
-
-        // ========================================================================
-        //
-        //                  Uniform Advection
-        //
-        // ========================================================================
-
-        Parameters param;
-
-        double H = 1.0;
-        double W = 1.0;
-
-        param.numberOfIterations = 1000000;
-        param.outputIntervalVTK = 10000;
-        param.outputInterval = 10000;
-
-        param.convergenceCriterium[0] = 1.0;
-        param.convergenceCriterium[1] = -1.0e-10;
-        param.convergenceCriterium[2] = 1.0;
-        param.convergenceCriterium[3] = 1.0;
-
-        param.CFL = 0.5;
-
-        param.verbose = false;
-        param.fluxOutput = true;
-        param.resOutput = false;
-
-        // ========================================================================
-
-        FluidParameter fluidParam;
-
-        // ========== Weidongs Parameters ==========
-        int    nx = 2;
-        int    ny = 2;//nyList[j];
-        double Re = 40.0;
-        double u0 = 0.1;
-        double angle = atan(0.0);
-        param.L = 1.0*cos(angle);
-
-        fluidParam.K = 1;
-        fluidParam.nu = (u0*param.L)/Re;
-        fluidParam.R = 200.0;
-        fluidParam.Force.x = 0.0;//cos(angle) * (u0*8.0*fluidParam.nu) / (param.L*param.L);
-        fluidParam.Force.y = 0.0;//sin(angle) * (u0*8.0*fluidParam.nu) / (param.L*param.L);
-        fluidParam.BoussinesqForce.x = 0.0;
-        fluidParam.BoussinesqForce.y = 0.0;
-        fluidParam.rhoReference = 1.0;
-
-        double T      = 300.0;
-        double lambda = 1.0 / (2.0 * fluidParam.R * T);
-
-        // ========================================================================
-
-        GKSMesh* mesh = new GKSMesh(param, fluidParam);
-
-        // Define Boundary Conditions
-        //    -----------
-        //    |    3    |
-        //    | 0     2 |
-        //    |    1    |
-        //    -----------
-        mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
-        mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
-        mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
-        mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
-
-        Interface::setInterpolationOrder(1);
-
-        // Generate Mesh
-        mesh->generateRectMeshGraded(compressible, W, H, nx, ny, 1.0, 1.0);
-
-        // Initialize Values
-        //mesh->initMeshConstant(1.0, 1.0, 0.0, lambda);
-        //mesh->initMeshParabularVelocity(1.0, u0, 0.0, lambda);
-        mesh->initMeshSineVelocity(1.0, 1.0, 0.0, lambda);
-
-        //double rhoLin[] = {1.0, 1.0};
-        //double uLin[] = {0.0, 1.0};
-        //double vLin[] = {0.0, 0.0};
-        //double lambdaLin[] = {lambda, lambda};
-        //mesh->initMeshLinear(rhoLin, uLin, vLin, lambdaLin);
-
-        */
-
-
-        /*
-
-        // ========================================================================
-        //
-        //                  Thermal Couette-Flow (Periodic)
-        //
-        // ========================================================================
-
-        Parameters param;
-
-        double H = 1.0;
-        double W = 1.0;
-
-        param.numberOfIterations = 100000;
-        param.outputIntervalVTK = 10000;
-        param.outputInterval = 10000;
-
-        param.convergenceCriterium[0] = 1.0e-10;
-        param.convergenceCriterium[1] = 1.0e-10;
-        param.convergenceCriterium[2] = 1.0e-10;
-        param.convergenceCriterium[3] = 1.0e-10;
-
-        param.L = 1.0;
-        param.CFL = 0.7;
-
-        param.fluxOutput = false;
-        param.resOutput = false;
-
-        param.verbose = false;
-
-        // ========================================================================
-
-        FluidParameter fluidParam;
-
-        int    ny = 32;//nyList[j];
-        int    nx = 32;
-        double Ec = 20.0;
-        double Pr = 0.5;
-        double Ma = 0.1;
-        double Re = 10.0;
-        double u0 = 10.0;
-        fluidParam.K = 1;
-        fluidParam.R = 200.0;
-
-        double dT = u0*u0 / ( Ec * 2.5 * fluidParam.R );
-        double TRef = (u0*u0)/(Ma*Ma) / fluidParam.R;
-
-        double TTop   = TRef + 0.5*dT;
-        double TBot   = TRef - 0.5*dT;
-
-
-        fluidParam.nu = u0 * param.L / Re;
-        fluidParam.Force.x = 0.0;
-        fluidParam.Force.y = 0.0;
-        fluidParam.BoussinesqForce.x = 0.0;
-        fluidParam.BoussinesqForce.y = 0.0;
-        fluidParam.Pr = Pr;
-
-        double lambda[] = { 1.0 / (2.0 * fluidParam.R * TBot), 1.0 / (2.0 * fluidParam.R * TTop) };
-        double rho[]    = { 1.0, 1.0 * lambda[1] / lambda[0] };
-        //double rho[]    = { 1.0, 1.0 };
-        double U[] = { 0.0, u0 };
-        double V[] = { 0.0, 0.0 };
-
-
-        // ========================================================================
-
-        GKSMesh* mesh = new GKSMesh(param, fluidParam);
-
-        // Define Boundary Conditions
-        //    -----------
-        //    |    3    |
-        //    | 0     2 |
-        //    |    1    |
-        //    -----------
-        mesh->addBoundaryCondition(wall,       0.0, 0.0, 0.0, 0.0);
-        mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, lambda[0]);
-        mesh->addBoundaryCondition(wall,       0.0, 0.0, 0.0, 0.0);
-        mesh->addBoundaryCondition(wall, 0.0, u0 , 0.0, lambda[1]);
-
-        Interface::setInterpolationOrder(1);
-
-        // Generate Mesh
-        mesh->generateRectMeshGraded(compressible, W, H, nx, ny, 1.0, 1.0);
-
-        // Initialize Values
-        //mesh->initMeshConstant(1.0, 0.0, 0.0, 1.5 );
-        mesh->initMeshLinear(rho, U, V, lambda);
-
-        */
-    
         ///*
-
-        // ========================================================================
+        
+        // ============================================================================================================
+        // ============================================================================================================
+        // ============================================================================================================
         //
+        //              Problem-Definition:
         //                  Poiseuille-Flow (Force driven)
         //
+        // ============================================================================================================
+        // ============================================================================================================
+        // ============================================================================================================
+
+        // ========================================================================
+        //                  Simulation parameters
         // ========================================================================
 
         Parameters param;
 
-        double H = 1.0;
-        double W = 1.0;
+        param.numberOfIterations = 20000000000;         // maximal number of Iterations
+        param.outputIntervalVTK = 10000;                 // Output interval for VTK Files (and .dat files)
+        param.outputInterval = 10000;                    // Output interval for Output on the screen
 
-        param.numberOfIterations = 20000000000;
-        param.outputIntervalVTK = 1000;
-        param.outputInterval = 1000;
-
+        // Abortion criteria for the different conserved variables
+        // These are thresholds for relative residual changes
+        // ||W^n+1 - W^n||_L2 / ||W^n||_L2
         param.convergenceCriterium[0] = 1.0;
         param.convergenceCriterium[1] = 1.0e-10;
         param.convergenceCriterium[2] = 1.0;
         param.convergenceCriterium[3] = 1.0;
 
-        param.CFL = 0.7;
+        param.CFL = 0.7;                                // CFL number for time step computation
 
-        param.verbose     = false;
-        param.fluxOutput  = false;
-        param.resOutput   = false;
-        param.ghostOutput = false;
-        param.csvOutput   = true;
-
+        param.verbose     = false;                      // detailed screen output
+        param.fluxOutput  = false;                      // VTK files for interfaces
+        param.resOutput   = false;                      // include residuals in VTK files
+        param.ghostOutput = false;                      // include ghost cells in VTK files
+        param.csvOutput   = true;                       // output csv files for postprocessing
+        
         // ========================================================================
+        //                  Fluid and domain parameters
+        // ========================================================================
+
+        // domain size in [m] for mesh generation
+        double H = 1.0;
+        double W = 1.0;
 
         FluidParameter fluidParam;
 
-        // ========== Weidongs Parameters ==========
-        int    nx = 2;
-        int    ny = 16; //nyList[j];
-        double Re = 4.0;
-        double u0 = 0.1;
-        double angle = 0.0*M_PI;//atan(0.0);
-        param.L = 1.0;//*cos(angle);
+        int    nx = 2;          // number of cells in x direction
+        int    ny = 32;         // number of cells in y direction
+        double Re = 4.0;        // Reynolds number
+        double u0 = 0.1;        // Velocits in the mid of the channel
+        param.L = 1.0;          // reference length for Re number
 
-        fluidParam.K = 1;
-        fluidParam.nu = (u0*param.L)/Re;
-        fluidParam.R = 200.0;
-        fluidParam.Force.x = cos(angle) * (u0*8.0*fluidParam.nu) / (param.L*param.L);
-        fluidParam.Force.y = sin(angle) * (u0*8.0*fluidParam.nu) / (param.L*param.L);
-        fluidParam.BoussinesqForce.x = 0.0;
-        fluidParam.BoussinesqForce.y = 0.0;
-        fluidParam.rhoReference = 1.0;
-        fluidParam.Pr = 1.0;
+        fluidParam.K = 1;                                                   // internal degrees of freedom
+        fluidParam.nu = (u0*param.L)/Re;                                    // kinematic viskosity
+        fluidParam.R = 200.0;                                               // specific gas constant
+        fluidParam.Force.x = (u0*8.0*fluidParam.nu) / (param.L*param.L);    // acceleration in x direction [m/s^2]
+        fluidParam.Force.y = 0.0;                                           // acceleration in y direction [m/s^2]
+        fluidParam.BoussinesqForce.x = 0.0;                                 // acceleration only allpied to density variations [m/s^2]
+        fluidParam.BoussinesqForce.y = 0.0;                                 // acceleration only allpied to density variations [m/s^2]
+        fluidParam.rhoReference = 1.0;                                      // reference density
+        fluidParam.Pr = 1.0;                                                // Prandl number 
 
-        double T      = 300.0;
+        double T      = 300.0;                                              // reference temperature [K]
         double lambda = 1.0 / (2.0 * fluidParam.R * T);
-        //double lambda = 1.5;
-
+        
+        // ========================================================================
+        //                  Definition of boundary conditions
         // ========================================================================
 
         GKSMesh* mesh = new GKSMesh(param, fluidParam);
@@ -272,304 +122,63 @@ int main(int argc, char* argv[])
         mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, lambda);
         mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
         mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, lambda);
-        //mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
 
-        Interface::setInterpolationOrder(1);
+        // Generate the Mesh
+        mesh->generateRectMeshGraded(compressible, W, H, nx, ny, 1.0, 0.1);
 
-        // Generate Mesh
-        mesh->generateRectMeshGraded(compressible, W, H, nx, ny, 1.0, 1.0);
-
-        // Initialize Values
+        // Set initial condition
         mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
         //mesh->initMeshParabularVelocity(1.0, u0, 0.0, lambda);
         //mesh->initMeshSineVelocity(1.0, u0, 0.0, lambda);
 
         //*/
-    
-        /*
-
-        // ========================================================================
-        //
-        //                  Atmospheric Pressure
-        //
-        // ========================================================================
-
-        Parameters param;
-
-        double H = 1.0;
-        double W = 1.0;
-
-        param.numberOfIterations = 10000000;
-        param.outputIntervalVTK = 100000;
-        param.outputInterval = 100000;
-
-        param.convergenceCriterium[0] = -1.0e-10;
-        param.convergenceCriterium[1] = -1.0e-10;
-        param.convergenceCriterium[2] = -1.0e-10;
-        param.convergenceCriterium[3] = -1.0e-10;
-
-        param.L = 1.0;
-        param.CFL = 0.7;
-
-        param.verbose = false;
-        param.fluxOutput = false;
-        param.resOutput = false;
-
-        // ========================================================================
-
-        FluidParameter fluidParam;
-
-        int    nx = 1;
-        int    ny = 32;//nyList[j];
-
-        double Ra = 1000;
-
-        double TReference = 300.0;
-        double TTop   = TReference - 0.0;
-        double TBot   = TReference + 0.0;
-        double g      = 10.0;
-
-        fluidParam.K = 1;
-        fluidParam.nu = sqrt( (g * H)/Ra * (TBot - TTop)/TReference );
-        fluidParam.R = 200.0;
-        fluidParam.Force.x = 0.0;
-        fluidParam.Force.y = -g;
-        fluidParam.BoussinesqForce.x = 0.0;
-        fluidParam.BoussinesqForce.y = 0.0;
-        fluidParam.rhoReference = 1.0;
-
-        double lambdaReference = 1.0 / (2.0 * fluidParam.R * TReference);
-        double lambda[] = { 1.0 / (2.0 * fluidParam.R * TBot), 1.0 / (2.0 * fluidParam.R * TTop) };
-        double rho[]    = { fluidParam.rhoReference * lambda[0]/lambdaReference, fluidParam.rhoReference * lambda[1]/lambdaReference };
-        double U[] = { 0.0, 0.0 };
-        double V[] = { 0.0, 0.0 };
-
-        // ========================================================================
-
-        GKSMesh* mesh = new GKSMesh(param, fluidParam);
-
-        // Define Boundary Conditions
-        //    -----------
-        //    |    3    |
-        //    | 0     2 |
-        //    |    1    |
-        //    -----------
-        mesh->addBoundaryCondition(3, 0, 0, 0,  0.0,    0.0, 0.0, lambda[0]);
-        //mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0   );
-        mesh->addBoundaryCondition(3, 0, 0, 0,  0.0,    0.0, 0.0, lambda[1]);
-        //mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0   );
-
-        Interface::setInterpolationOrder(1);
         
-        // Generate Mesh
-        //mesh->generateRectMesh(compressible, W, H, nx, ny);
-        mesh->generateRectMeshPeriodic(compressible, W, H, nx, ny);
-
-         // Initialize Values
-        //mesh->initMeshConstant(1.0, 0.0, 0.0, lambda[0]);
-        //mesh->initMeshLinear(rho, U, V, lambda);
-        mesh->initMeshAtmospheric(fluidParam.rhoReference, 0.0, 0.0, lambdaReference, g);
-
-        */
-    
-        /*
-
-        // ========================================================================
+        // ============================================================================================================
+        // ============================================================================================================
+        // ============================================================================================================
         //
-        //                  Thermal Driven Cavity
+        //              Start the simulation and output several files
         //
-        // ========================================================================
-
-        Parameters param;
-
-        double H = 1.0;
-        double W = 1.0;
-
-        param.numberOfIterations = 100000000;
-        param.outputIntervalVTK = 1000000;
-        param.outputInterval = 100000;
-
-        param.convergenceCriterium[0] = 1.0e-10;
-        param.convergenceCriterium[1] = 1.0e-10;
-        param.convergenceCriterium[2] = 1.0e-10;
-        param.convergenceCriterium[3] = 1.0e-10;
-
-        param.L = 1.0;
-        param.CFL = 0.05;
-
-        param.verbose = false;
-        param.fluxOutput = false;
-        param.resOutput = false;
-
-        // ========================================================================
-
-        FluidParameter fluidParam;
-
-        int    nx = 32;
-        int    ny = 32;//nyList[j];
-
-        double Ra = 1.0e5;
-
-        double TReference = 300.0;
-        double TTop   = TReference - 100.0;
-        double TBot   = TReference + 100.0;
-        double g      = 10.0;
-
-        fluidParam.K = 1;
-        fluidParam.nu = sqrt( (g * H)/Ra * (TBot - TTop)/TReference );
-        fluidParam.R = 200.0;
-        fluidParam.Force.x = 0.0;
-        fluidParam.Force.y = 0.0;
-        fluidParam.BoussinesqForce.x = 0.0;
-        fluidParam.BoussinesqForce.y = -g;
-        fluidParam.rhoReference = 1.0;
-
-        double lambdaReference = 1.0 / (2.0 * fluidParam.R * TReference);
-        double lambda[] = { 1.0 / (2.0 * fluidParam.R * TBot), 1.0 / (2.0 * fluidParam.R * TTop) };
-        double rho[]    = { fluidParam.rhoReference * lambda[0]/lambdaReference, fluidParam.rhoReference * lambda[1]/lambdaReference };
-        double U[] = { 0.0, 0.0 };
-        double V[] = { 0.0, 0.0 };
-
-        // ========================================================================
-
-        GKSMesh* mesh = new GKSMesh(param, fluidParam);
-
-        // Define Boundary Conditions
-        //    -----------
-        //    |    3    |
-        //    | 0     2 |
-        //    |    1    |
-        //    -----------
-        mesh->addBoundaryCondition(isothermalWall,  0.0, 0.0, 0.0, lambda[0]);
-        mesh->addBoundaryCondition(wall          ,  0.0, 0.0, 0.0, 0.0   );
-        mesh->addBoundaryCondition(isothermalWall,  0.0, 0.0, 0.0, lambda[1]);
-        mesh->addBoundaryCondition(wall          ,  0.0, 0.0, 0.0, 0.0   );
-
-        Interface::setInterpolationOrder(1);
-        
-        // Generate Mesh
-        //mesh->generateRectMesh(compressible, W, H, nx, ny);
-        //mesh->generateRectMesh(compressible, W, H, nx, ny);
-        mesh->generateRectMeshGraded(compressible, W, H, nx, ny, 1.0, 1.0);
-
-         // Initialize Values
-        mesh->initMeshLinearHorizontal(rho, U, V, lambda);
-
-        */
-    
-        /*
-
-        // ========================================================================
-        //
-        //                  Rayleigh-Bernard Convection
-        //
-        // ========================================================================
-
-        Parameters param;
-
-        double H = 1.0;
-        double W = 1.0;
-
-        param.numberOfIterations = 10000000;
-        param.outputIntervalVTK = 10000;
-        param.outputInterval = 10000;
-
-        param.convergenceCriterium[0] = 1.0e-10;
-        param.convergenceCriterium[1] = 1.0e-10;
-        param.convergenceCriterium[2] = 1.0e-10;
-        param.convergenceCriterium[3] = 1.0e-10;
-
-        param.L = 1.0;
-        param.CFL = 0.5;
-
-        param.verbose = false;
-        param.fluxOutput = false;
-        param.resOutput = false;
-
-        // ========================================================================
-
-        FluidParameter fluidParam;
-
-        int    nx = 32;
-        int    ny = 32;//nyList[j];
-
-        double Ra = 10000.0;
-
-        double TReference = 300.0;
-        double TTop   = TReference - 100.0;
-        double TBot   = TReference + 100.0;
-        double g      = 10.0;
-
-        fluidParam.K = 1;
-        fluidParam.nu = sqrt( (g * H*H*H)/Ra * (TBot - TTop)/TReference );
-        fluidParam.R = 200.0;
-        fluidParam.Force.x = 0.0;
-        fluidParam.Force.y = -g;
-        fluidParam.BoussinesqForce.x = 0.0;
-        fluidParam.BoussinesqForce.y = 0.0;
-        fluidParam.rhoReference = 1.0;
-
-        double lambdaReference = 1.0 / (2.0 * fluidParam.R * TReference);
-        double lambda[] = { 1.0 / (2.0 * fluidParam.R * TBot), 1.0 / (2.0 * fluidParam.R * TTop) };
-        double rho[]    = { fluidParam.rhoReference * lambda[0]/lambdaReference, fluidParam.rhoReference * lambda[1]/lambdaReference };
-        double U[] = { 0.0, 0.0 };
-        double V[] = { 0.0, 0.0 };
-
-        // ========================================================================
-
-        GKSMesh* mesh = new GKSMesh(param, fluidParam);
-
-        // Define Boundary Conditions
-        //    -----------
-        //    |    3    |
-        //    | 0     2 |
-        //    |    1    |
-        //    -----------
-        mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0   );
-        mesh->addBoundaryCondition(3, 0, 0, 0,  0.0, 0.0, 0.0, lambda[0]);
-        mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0   );
-        mesh->addBoundaryCondition(3, 0, 0, 0,  0.0, 0.0, 0.0, lambda[1]);
-
-        Interface::setInterpolationOrder(1);
-        
-        // Generate Mesh
-        //mesh->generateRectMesh(compressible, W, H, nx, ny);
-        mesh->generateRectMesh(compressible, W, H, nx, ny);
-
-         // Initialize Values
-        mesh->initMeshConstant(1.0, 0.0, 0.0, 0.5*(lambda[0] + lambda[1]));
-        //mesh->initMeshLinear(rho, U, V, lambda);
-        //mesh->initMeshParabularVelocity(1.0, u0, 0.0, lambda);
-
-        */
-
-        // ================================================================================================================================================
-        // ================================================================================================================================================
-        // ================================================================================================================================================
-        // ================================================================================================================================================
-        // ================================================================================================================================================
+        // ============================================================================================================
+        // ============================================================================================================
+        // ============================================================================================================
 
         //cout << mesh->toString();
 
         //mesh->writeMeshAsText("out/Mesh.txt");
 
-        mesh->writeVTKFile("out/InitialState.vtk");
-        mesh->writeVTKFileFlux("out/InitialStateFlux.vtk");
+        //mesh->writeVTKFile("out/InitialState.vtk");
+        //mesh->writeVTKFileFlux("out/InitialStateFlux.vtk");
         //mesh->writeGambitNeutralFile("out/SineDistortedMesh.neu");
 
+        // ====================================================================
+        // ====================================================================
+        //              Run the actual simulation
+        // ====================================================================
+        // ====================================================================
         mesh->iterate();
+        // ====================================================================
+        // ====================================================================
+
+        // ====================================================================
+        //              Output several files
+        // ====================================================================
+
 
         mesh->writeTimeSteps("out/timeSteps.dat");
         mesh->writeTime("out/time.dat");
+        mesh->writeResultFields("out/ResultFields.dat");
+        mesh->writeOverviewFile("out/OverviewFile.dat");
+        mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
 
         // ========== Poiseuille Convergence Study ============================
-        ostringstream filename;
-        filename << "out/" << ny;
-        mesh->writeVelocityProfile(            ( filename.str() + "/VelocityProfile.dat" )    , 0.25);
-        mesh->writeResultFields(               ( filename.str() + "/ResultFields.dat" )            );
-        mesh->writeConvergenceHistory(         ( filename.str() + "/ConvergenceHistory.dat" )      );
-        mesh->writeOverviewFile(               ( filename.str() + "/OverviewFile.dat" )            );
-        mesh->writeVTKFile(                    ( filename.str() + "/ResultFields.vtk" )            );
+        //ostringstream filename;
+        //filename << "out/" << ny;
+        //mesh->writeVelocityProfile(            ( filename.str() + "/VelocityProfile.dat" )    , 0.25);
+        //mesh->writeResultFields(               ( filename.str() + "/ResultFields.dat" )            );
+        //mesh->writeConvergenceHistory(         ( filename.str() + "/ConvergenceHistory.dat" )      );
+        //mesh->writeOverviewFile(               ( filename.str() + "/OverviewFile.dat" )            );
+        //mesh->writeVTKFile(                    ( filename.str() + "/ResultFields.vtk" )            );
         // ====================================================================
 
         // ========== Thermal Couette Convergence Study =======================
@@ -591,9 +200,9 @@ int main(int argc, char* argv[])
         // ====================================================================
         
         // ====================================================================
-        mesh->writeResultFields("out/ResultFields.dat");
-        mesh->writeOverviewFile("out/OverviewFile.dat");
-        mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
+        //mesh->writeResultFields("out/ResultFields.dat");
+        //mesh->writeOverviewFile("out/OverviewFile.dat");
+        //mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
         ////mesh->writePressureGradientProfile("out/PressureGradientProfile.dat", 0.5);
         ////mesh->writeVelocityProfile("out/VelocityProfile.dat", 0.5);
         //mesh->writeTemperatureProfile("out/TemperatureProfile.dat", 0.5);
@@ -605,5 +214,6 @@ int main(int argc, char* argv[])
         // ====================================================================
 
         //system("pause");
+        delete mesh;
     }
 }

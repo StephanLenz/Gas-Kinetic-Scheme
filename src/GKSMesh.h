@@ -1,3 +1,19 @@
+// ============================================================================
+//
+//                      Compressible Thermal GKS
+//
+//      Developed by Stephan Lenz (stephan.lenz@tu-bs.de)
+//
+// ============================================================================
+//
+//      GKSMesh.h
+//
+//      Function:
+//          Generation Storage of mesh
+//          Control of simulation
+//          File Output
+//
+// ============================================================================
 
 #ifndef GKSMESH_H
 #define GKSMESH_H
@@ -13,24 +29,37 @@
 
 using namespace std;
 
-using namespace std;
-
 class GKSMesh
 {
+// ====================================================================================================================
+// ====================================================================================================================
+//                      Attributes
+// ====================================================================================================================
+// ====================================================================================================================
 private:
-    vector<float2*>     NodeList;
-	vector<Cell*>		CellList;
-	vector<Interface*>	InterfaceList;
+
+    // ========================================================================
+    //              Mesh definition
+    // ========================================================================
+    vector<float2*>     NodeList;           // List of Pointers to nodes
+	vector<Cell*>		CellList;           // List of Pointers to cells
+	vector<Interface*>	InterfaceList;      // List of Pointers to interfaces
 
     vector<BoundaryCondition*> BoundaryConditionList;
     vector<InterfaceBC*> InterfaceBoundaryConditionsList;
 
-    Parameters param;
+	double lengthX;		// dimension of the domain in x direction
+	double lengthY;     // dimension of the domain in y direction
+    
+    // ========================================================================
+    //              Fluid Parameters
+    // ========================================================================
     FluidParameter fluidParam;
-
-	double lengthX;		
-	double lengthY;
-
+    
+    // ========================================================================
+    //              Simulation Parameters/Data
+    // ========================================================================
+    Parameters param;
     double dt;
     vector<double> dtList;
     double time;
@@ -42,6 +71,11 @@ private:
 
     long long computationTime;
 
+// ====================================================================================================================
+// ====================================================================================================================
+//                      Methods
+// ====================================================================================================================
+// ====================================================================================================================
 public:
 	GKSMesh();
 
@@ -51,15 +85,19 @@ public:
 
     void generateRectMeshGraded(InterfaceType type, double lengthX, double lengthY, int nx, int ny, double gradingX, double gradingY);
 
-	void initMeshConstant(double rho, double u, double v, double T);
+    void addBoundaryCondition(  BoundaryConditionType type, double rho, double U, double V, double T);
 
-	void initMeshLinearTemperature(double rho, double u, double v, double * T);
+    void addInterfaceBoundaryCondition(double wallVelocity);
+
+    // ========================================================================
+    //              Initialization methods
+    // ========================================================================
+
+	void initMeshConstant(double rho, double u, double v, double T);
 
     void initMeshLinear(double * rho, double * u, double * v, double * lambda);
 
     void initMeshLinearHorizontal(double * rho, double * u, double * v, double * lambda);
-
-    void initMeshLinearDensity(double* rho, double u, double v, double T);
 
     void initMeshParabularVelocity(double rho, double u, double v, double T);
 
@@ -67,24 +105,32 @@ public:
 
     void initMeshAtmospheric(double rho, double u, double v, double lambda, double g);
 
+    // ========================================================================
+    //              Simulation Control
+    // ========================================================================
 
-    void addBoundaryCondition(  BoundaryConditionType type,
-                                double rho, double U, double V, double T);
-
-    void addInterfaceBoundaryCondition(double wallVelocity);
-
-    void applyBoundaryCondition();
-
-    void applyForcing();
-
-    void computeGlobalTimestep();
-
-    ConservedVariable getMaxGlobalResidual();
-    ConservedVariable getL2GlobalResidual();
+    void iterate();
 
     void timeStep();
 
-    void iterate();
+    void computeGlobalTimestep();
+
+    void applyForcing();
+
+    void applyBoundaryCondition();
+
+    void computeLeastSquareGradients();
+
+    void computeFluxes();
+
+    void updateCells();
+
+    // ========================================================================
+    //              Data Analysis
+    // ========================================================================
+
+    ConservedVariable getMaxGlobalResidual();
+    ConservedVariable getL2GlobalResidual();
 
     double getMaxVelocity();
 
@@ -93,43 +139,34 @@ public:
 
     bool isConverged(ConservedVariable residual);
 
-	string toString();
-    string cellValuesToString();
+    // ========================================================================
+    //              methods for file output
+    // ========================================================================
 
     void writeOutputFiles();
 
     void writeOverviewFile(string filename);
 
-	void writeVTKFile(string filename, bool data = true, bool BC = false);
-
-    void writeVTKFileFlux(string filename, bool data = true, bool BC = false);
-
     void writeTimeSteps(string filename);
 
     void writeTime(string filename);
 
-    void writeVelocityProfile(string filename, double x);
+    void writeConvergenceHistory(string filename);
+
+	void writeVTKFile(string filename, bool data = true, bool BC = false);
+
+    void writeVTKFileFlux(string filename, bool data = true, bool BC = false);
 
     void writeResultFields(string filename);
 
     void writeResultBoundaryFluxes(string filename);
 
-    void writeTemperatureProfile(string filename, double x);
-
-    void writeMeshAsText(string filename);
-
-    void writeVelocityU(string filename);
-
-    void writeVelocityV(string filename);
-
-    void writeTemperature(string filename);
-
-    void writeDensity(string filename);
-
-    void writeConvergenceHistory(string filename);
-
     void writeGambitNeutralFile(string filename);
+    
 
+    // ========================================================================
+    //              private methods for VTK output
+    // ========================================================================
 private:
 
     void writeCellGeometry(ofstream& file);

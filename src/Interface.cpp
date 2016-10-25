@@ -6,7 +6,7 @@
 #include "Types.h"
 #include <sstream>
 
-int Interface::interpolationOrder = 3;
+int Interface::interpolationOrder = 1;
 unsigned long int Interface::numberOfCells = 1;
 
 Interface::Interface()

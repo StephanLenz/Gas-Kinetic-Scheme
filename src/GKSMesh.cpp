@@ -1,3 +1,20 @@
+// ============================================================================
+//
+//                      Compressible Thermal GKS
+//
+//      Developed by Stephan Lenz (stephan.lenz@tu-bs.de)
+//
+// ============================================================================
+//
+//      GKSMesh.cpp
+//
+//      Function:
+//          Generation Storage of mesh
+//          Control of simulation
+//          Data Analysis
+//          File Output
+//
+// ============================================================================
 
 #include "GKSMesh.h"
 #include "Cell.h"
@@ -7,7 +24,7 @@
 #include <fstream>
 #include <iostream>
 #include <iomanip>
-#include <algorithm>    //min()
+#include <algorithm>    // min()
 #include <chrono>
 
 # define M_PI           3.14159265358979323846  /* pi */
@@ -25,24 +42,70 @@ GKSMesh::GKSMesh(Parameters param, FluidParameter fluidParam)
     this->iter = 0;
 }
 
-
+// ============================================================================
+//              deletes all dynamically allocated memory
+// ============================================================================
 GKSMesh::~GKSMesh()
 {
+    // ========================================================================
+    //              delete Node Memory
+    // ========================================================================
+    for( int i = 0; i < this->NodeList.size(); i++ )
+        delete this->NodeList[i];
+    
+    // ========================================================================
+    //              delete Cell Memory
+    // ========================================================================
+    for( int i = 0; i < this->CellList.size(); i++ )
+        delete this->CellList[i];
+    
+    // ========================================================================
+    //              delete Node Memory
+    // ========================================================================
+    for( int i = 0; i < this->InterfaceList.size(); i++ )
+        delete this->InterfaceList[i];
 }
 
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+//
+//                          Mesh generation
+//
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+
+// ============================================================================
+//      This method generates a structured mesh on a rectangular domain.
+//      
+//      Parameters:
+//          type:       either compressible or incompressible
+//          lengthX:    length of the domain in x-direction
+//          lengthY:    length of the domain in y-direction
+//          nx:         number of cells in x-direction
+//          ny:         number of cells in y-direction
+//          gradingX:   ratio of the inner cells to the outer cells in x direction
+//          gradingY:   ratio of the inner cells to the outer cells in y direction
+//          
+// ============================================================================
 void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double lengthY, int nx, int ny, double gradingX, double gradingY)
 {
 
     this->lengthX = lengthX;
     this->lengthY = lengthY;
 
-    // make nx and ny an even number
+    // make nx and ny an even number for two sided grading
     nx = 2 * (nx/2);
     ny = 2 * (ny/2);
     
+    // compute expansion coefficients eta for cell size (dx_n+1 = eta * dx_n)
     double etaX = pow( gradingX, 1.0 / (nx/2 - 1) );
     double etaY = pow( gradingY, 1.0 / (ny/2 - 1) );
 
+    // ========================================================================
+    //      compute size of the inner cells by solution of partial geometric series
+    // ========================================================================
     double dx0;
     if( fabs(etaX - 1.0) > 1.0e-12 )
         dx0 = 0.5*this->lengthX * (1-etaX)/(1-pow(etaX, nx/2));
@@ -54,18 +117,11 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
         dy0 = 0.5*this->lengthY * (1-etaY)/(1-pow(etaY, ny/2));
     else
         dy0 = this->lengthY / double(ny);
-
-    // ========== Test ==========
-    //etaY = 0.5;
-    //dy0 =  this->lengthY * (1-etaY)/(1-pow(etaY, ny));
-    // ==========================
+    // ========================================================================
 
     //=========================================================================
+    //		Computate the cell sizes
     //=========================================================================
-    //		Computation of the coordinates and spacings
-    //=========================================================================
-    //=========================================================================
-
     double* CellSpacingsX = new double[nx];
     for(int i = 0; i < nx/2; i++)
     {
@@ -73,26 +129,17 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
         CellSpacingsX[nx/2 + i    ] = dx0 * pow( etaX, i);
     }
 
-    // ========== Test ==========
-    //CellSpacingsX[0] = dx0;
-    // ==========================
-
     double* CellSpacingsY = new double[ny];
     for(int i = 0; i < ny/2; i++)
     {
         CellSpacingsY[ny/2 - i - 1] = dy0 * pow( etaY, i);
         CellSpacingsY[ny/2 + i    ] = dy0 * pow( etaY, i);
     }
-
-    // ========== Test ==========
-    //for(int i = 0; i < ny; i++)
-    //{
-    //    CellSpacingsY[ny - i - 1] = dy0 * pow( etaY, i);
-    //}
-    // ==========================
-    
     // ========================================================================
     
+    //=========================================================================
+    //		Computate the node coordinates
+    //=========================================================================
     double* NodesX = new double[nx+1]; 
     double* NodesY = new double[ny+1];
 
@@ -114,9 +161,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
 	//		Node generation
 	//=========================================================================
 	//=========================================================================
-    double heightDiff = 0.5;
-
-    int currentID = 1;
+    int currentNodeID = 1;
 
     for (int i = 0; i < ny + 1; i++)       // Y-Direction
 	{
@@ -124,15 +169,22 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
 		{
             // ===== No Distortion =====================
             float2* tmpNode = new float2( NodesX[j], NodesY[i] );
+            
+            tmpNode->ID = currentNodeID++;
+
+            // ================================================================
+            //          in this section several mesh distortions can be
+            //          applied to the Mesh
+            // ================================================================
 
             // ===== Parallelogram =====================
-            //float2* tmpNode = new float2( NodesX[j], NodesY[i] + NodesX[j] / this->lengthX * heightDiff );
+            //tmpNode->y += NodesX[j] / this->lengthX * 0.5;
 
             // ===== internal x-Distortion =============
-            //float2* tmpNode = new float2( NodesX[j] - 2.0 * (NodesY[i] - this->lengthY)*NodesY[i]*(NodesX[j] - this->lengthX)*NodesX[j], NodesY[i] );
+            //tmpNode->x += - 2.0 * (NodesY[i] - this->lengthY)*NodesY[i]*(NodesX[j] - this->lengthX)*NodesX[j];
 
             // ===== x-Distortion (parallel) ===========
-            //float2* tmpNode = new float2( NodesX[j] - 0.4 * this->lengthX * sin( NodesX[j] / this->lengthX * M_PI ), NodesY[i] );
+            //tmpNode->x += - 0.4 * this->lengthX * sin( NodesX[j] / this->lengthX * M_PI );
 
             // ===== internal y-Distortion =============
             //tmpNode->y -= - 2.0 * (NodesX[j] - this->lengthX)*NodesX[j]*(NodesY[i] - this->lengthY)*NodesY[i];
@@ -145,7 +197,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             //tmpNode->y += - 0.4 * this->lengthY * sin( NodesY[i] / this->lengthY * M_PI );
 
             // ===== internal parabular Distortion =====
-            //float2* tmpNode = new float2( NodesX[j], NodesY[i] - 0.25 * (NodesX[j] - this->lengthX)*NodesX[j] * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY ) );
+            //tmpNode->y += - 0.25 * (NodesX[j] - this->lengthX)*NodesX[j] * sin( (NodesY[i] - 0.5*this->lengthY) * 2.0 * M_PI/this->lengthY );
 
             // ===== internal sine Distortion (x) ======
             //tmpNode->x -=  0.05 * sin( NodesY[i] * 2.0 * M_PI/this->lengthY ) * sin( (NodesX[j] - 0.5*this->lengthX) * 2.0 * M_PI/this->lengthX );
@@ -155,8 +207,6 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
 
             // ===== internal linear Distortion ========
             //if( i != 0 && i != ny && j != 0 && j != nx ) tmpNode->y += 0.1;
-            
-            tmpNode->ID = currentID++;
 
 			this->NodeList.push_back(tmpNode);
 		}
@@ -165,11 +215,10 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
     
 	//=========================================================================
 	//=========================================================================
-	//		Node Rotation
+	//		Node Rotation - can be used to rotate the whole mesh
 	//=========================================================================
 	//=========================================================================
-
-    double angle = 0.0;//0.25*M_PI;
+    double angle = 0.0;         // rotation angle in arc
 
     for (vector<float2*>::iterator i = NodeList.begin(); i != NodeList.end(); ++i)
 	{
@@ -196,7 +245,8 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             tmpNodes[3] = this->NodeList[(i+1)*(nx+1) + j + 0]; // top left
 
 			Cell* tmpCell = new Cell(type, tmpNodes, NULL, this->fluidParam);
-			// add interface to list
+
+			// add pointer of the cell to CellList
 			this->CellList.push_back(tmpCell);
 		}
 	}
@@ -207,7 +257,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
 	//                      F interface generation
 	//=========================================================================
 	//=========================================================================
-    for (int i = 0; i < ny; i++)       // Y-Direction
+    for (int i = 0; i < ny; i++)            // Y-Direction
     {
         for (int j = 0; j < nx + 1; j++)    // X-Direction
         {
@@ -218,6 +268,11 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             Cell* negCell = NULL;
             Cell* posCell = NULL;
 
+            // ================================================================
+            // find adjacent cells for this interface
+            //      in case of periodic boundaries this is the cell on the 
+            //      opposite side of the domain
+            // ================================================================
             if( j != 0  ) 
                 negCell = this->CellList[i*nx + (j  - 1)];
             else if( this->BoundaryConditionList[0]->getType() == periodic || this->BoundaryConditionList[0]->getType() == periodicGhost )
@@ -227,7 +282,12 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
                 posCell = this->CellList[i*nx + (j  - 0)];
             else if( this->BoundaryConditionList[2]->getType() == periodic || this->BoundaryConditionList[2]->getType() == periodicGhost )       
                 posCell = this->CellList[i*nx + (0  - 0)];
-
+            
+            // ================================================================
+            //      in case of periodic boundaries without ghost cells, the
+            //      interface does not need to know wether it is on the
+            //      boundary or not
+            // ================================================================
             BoundaryCondition* currentBC = NULL;
             if( j == 0  && this->BoundaryConditionList[0]->getType() != periodic )
                 currentBC = this->BoundaryConditionList[0];
@@ -235,6 +295,10 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             if( j == nx && this->BoundaryConditionList[2]->getType() != periodic )
                 currentBC = this->BoundaryConditionList[2];
             
+            // ================================================================
+            //      these flags tell, if this interface shall be added to the 
+            //      pos/neg cells or not
+            // ================================================================
             bool posAdd = (j != nx);
             bool negAdd = (j != 0) ;
 
@@ -251,7 +315,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
 	//                      G interface generation
 	//=========================================================================
 	//=========================================================================
-	for (int i = 0; i < ny + 1; i++)        // Y-Direction
+	for (int i = 0; i < ny + 1; i++)   // Y-Direction
 	{
 		for (int j = 0; j < nx; j++)   // X-Direction
 		{
@@ -262,6 +326,11 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             Cell* negCell = NULL;
             Cell* posCell = NULL;
 
+            // ================================================================
+            // find adjacent cells for this interface
+            //      in case of periodic boundaries this is the cell on the 
+            //      opposite side of the domain
+            // ================================================================
             if( i != 0  ) 
                 negCell = this->CellList[(i -1)*nx + j];
             else if( this->BoundaryConditionList[1]->getType() == periodic || this->BoundaryConditionList[1]->getType() == periodicGhost )
@@ -271,7 +340,12 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
                 posCell = this->CellList[(i -0)*nx + j];
             else if( this->BoundaryConditionList[3]->getType() == periodic || this->BoundaryConditionList[3]->getType() == periodicGhost )       
                 posCell = this->CellList[(0 -0)*nx + j];
-
+            
+            // ================================================================
+            //      in case of periodic boundaries without ghost cells, the
+            //      interface does not need to know wether it is on the
+            //      boundary or not
+            // ================================================================
             BoundaryCondition* currentBC = NULL;
             if( i == 0  && this->BoundaryConditionList[1]->getType() != periodic ) 
                 currentBC = this->BoundaryConditionList[1];
@@ -279,6 +353,10 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             if( i == ny && this->BoundaryConditionList[3]->getType() != periodic ) 
                 currentBC = this->BoundaryConditionList[3];
             
+            // ================================================================
+            //      these flags tell, if this interface shall be added to the 
+            //      pos/neg cells or not
+            // ================================================================
             bool posAdd = (i != ny);
             bool negAdd = (i != 0) ;
 
@@ -293,6 +371,8 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
 	//=========================================================================
 	//=========================================================================
 	//						create Ghostcells
+    //                          Ghost cells are created for all Interfaces
+    //                          that have a boundary condition pointer
 	//=========================================================================
 	//=========================================================================
     vector<Interface*> tmpInterfaceList;
@@ -310,20 +390,19 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             if( (*i)->getBoundaryCondition()->getType() == periodicGhost)
             {
                 periodicCell = (*i)->getPeriodicCell();
-                
-                float2  normal = (*i)->getScaledNormal();
-                tmpNodes[0] = new float2( tmpNodes[1]->x + 2.0*normal.x, tmpNodes[1]->y + 2.0*normal.y );
-                tmpNodes[3] = new float2( tmpNodes[2]->x + 2.0*normal.x, tmpNodes[2]->y + 2.0*normal.y );
             }
-            else
-            {
-                float2  normal = (*i)->getScaledNormal();
-                tmpNodes[0] = new float2( tmpNodes[1]->x + 2.0*normal.x, tmpNodes[1]->y + 2.0*normal.y );
-                tmpNodes[3] = new float2( tmpNodes[2]->x + 2.0*normal.x, tmpNodes[2]->y + 2.0*normal.y );
-            }
+            
+            // ================================================================
+            //      create the new nodes such, that the cell center of the 
+            //      ghost cell has the same distance to the interface as the 
+            //      cell center of the adjacent cell in the domain
+            // ================================================================
+            float2  normal = (*i)->getScaledNormal();
+            tmpNodes[0] = new float2( tmpNodes[1]->x + 2.0*normal.x, tmpNodes[1]->y + 2.0*normal.y );
+            tmpNodes[3] = new float2( tmpNodes[2]->x + 2.0*normal.x, tmpNodes[2]->y + 2.0*normal.y );
 
-            tmpNodes[0]->ID = 9999999; // 9.999.99
-            tmpNodes[3]->ID = 9999999; // 9.999.99
+            tmpNodes[0]->ID = 9999999; // 9.999.999
+            tmpNodes[3]->ID = 9999999; // 9.999.999
 
             this->NodeList.push_back(tmpNodes[0]);
             this->NodeList.push_back(tmpNodes[3]);
@@ -333,6 +412,12 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             tmpCell->addInterface(*i);
             (*i)->addCell(tmpCell);
 
+            // ================================================================
+            //      In the case of periodic boundaries with ghost cells, the 
+            //      ghost cell is connected to its counterpart in the domain
+            //      on the opposite side of the domain by an interface. This
+            //      Interface is created here.
+            // ================================================================
             if( (*i)->getBoundaryCondition()->getType() == periodicGhost)
             {
                 float2* tmpNodesInterface[2];
@@ -386,42 +471,77 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
 	return;
 }
 
-void GKSMesh::initMeshConstant(double rho, double u, double v, double T)
+// ============================================================================
+//      This method adds a Boundary Condition to the mesh. This must be done
+//      before the mesh generation.
+//
+//      Parameters:
+//          type:   wall, isothermalWall, periodic, periodicGhost
+//          rho:    density on the boundary         (currently not used)
+//          U:      x-velocity on the boundary      (only used for wall and isothermalWall)
+//          V:      y-velocity on the boundary      (only used for wall and isothermalWall)
+//          T:      Temperature on the boundary     (only used for isothermalWall)
+// ============================================================================
+void GKSMesh::addBoundaryCondition( BoundaryConditionType type, double rho, double U, double V, double T)
+{
+    BoundaryCondition* tmp = new BoundaryCondition( type, rho, U, V, T);
+    BoundaryConditionList.push_back(tmp);
+}
+
+// ============================================================================
+//      Interface Boundary Conditions are currently not supported
+// ============================================================================
+void GKSMesh::addInterfaceBoundaryCondition(double wallVelocity)
+{
+    InterfaceBC* tmp = new InterfaceBC(wallVelocity);
+    this->InterfaceBoundaryConditionsList.push_back(tmp);
+}
+
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+//
+//                          Mesh initialization
+//
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+
+// ============================================================================
+//      This method initializes the mesh with constant value every where.
+//
+//      Parameters:
+//          rho:    density
+//          U:      x-velocity
+//          V:      Y-velocity
+//          T:      Temperature
+// ============================================================================
+void GKSMesh::initMeshConstant(double rho, double U, double V, double T)
 {
 	for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
 	{
-		(*i)->setValues(rho, u, v, T);
+		(*i)->setValues(rho, U, V, T);
 	}
 }
 
-void GKSMesh::initMeshLinearTemperature(double rho, double u, double v, double* T)
+// ============================================================================
+//      This method initializes the mesh with linear distribution in
+//      y-direction.
+//          Value definition, Z = (rho,U,V,T)
+//             ------------
+//             |   Z[1]   |
+//             |          |
+//             |   Z[0]   |
+//             ------------
+//
+//      Parameters:
+//          rho:    density
+//          U:      x-velocity
+//          V:      Y-velocity
+//          T:      Temperature
+// ============================================================================
+void GKSMesh::initMeshLinear(double* rho, double* U, double* V, double* lambda)
 {
-	// Temprature definition
-	//    ------------
-	//    |   T[1]   |
-	//    |          |
-	//    |   T[0]   |
-	//    ------------
-	double interpolatedT;
-	float2 center;
-	for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
-	{
-		center = (*i)->getCenter();
-
-        interpolatedT = T[0] + center.y*(T[1] - T[0]) / this->lengthY;
-
-		(*i)->setValues(rho, u, v, interpolatedT);
-	}
-}
-
-void GKSMesh::initMeshLinear(double* rho, double* u, double* v, double* lambda)
-{
-	// Temprature definition
-	//    ------------
-	//    |   Z[1]   |
-	//    |          |
-	//    |   Z[0]   |
-	//    ------------
 	double interpolatedRho, interpolatedU, interpolatedV, interpolatedLambda;
 	float2 center;
 	for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
@@ -429,23 +549,32 @@ void GKSMesh::initMeshLinear(double* rho, double* u, double* v, double* lambda)
 		center = (*i)->getCenter();
 
         interpolatedRho    = rho[0]    + center.y*(rho[1]    - rho[0])    / this->lengthY;
-        interpolatedU      = u[0]      + center.y*(u[1]      - u[0])      / this->lengthY;
-        interpolatedV      = v[0]      + center.y*(v[1]      - v[0])      / this->lengthY;
-        //interpolatedLambda = lambda[0] + center.y*(lambda[1] - lambda[0]) / this->lengthY;
+        interpolatedU      = U[0]      + center.y*(U[1]      - U[0])      / this->lengthY;
+        interpolatedV      = V[0]      + center.y*(V[1]      - V[0])      / this->lengthY;
         interpolatedLambda = ( lambda[0] ) / ( 1.0 + center.y/this->lengthY * ( lambda[0]/lambda[1] - 1.0 ) );
 
 		(*i)->setValues(interpolatedRho, interpolatedU, interpolatedV, interpolatedLambda);
 	}
 }
 
-void GKSMesh::initMeshLinearHorizontal(double * rho, double * u, double * v, double * lambda)
-{
-	// Temprature definition
-	//    --------------
-	//    |            |
-	//    | Z[0]  Z[1] |
-	//    |            |
-	//    --------------
+// ============================================================================
+//      This method initializes the mesh with linear distribution in
+//      x-direction.
+//          Value definition, Z = (rho,U,V,T)
+//             --------------
+//             |            |
+//             | Z[0]  Z[1] |
+//             |            |
+//             --------------
+//
+//      Parameters:
+//          rho:    density
+//          U:      x-velocity
+//          V:      Y-velocity
+//          T:      Temperature
+// ============================================================================
+void GKSMesh::initMeshLinearHorizontal(double * rho, double * U, double * V, double * lambda)
+{  
 	double interpolatedRho, interpolatedU, interpolatedV, interpolatedLambda;
 	float2 center;
 	for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
@@ -453,38 +582,25 @@ void GKSMesh::initMeshLinearHorizontal(double * rho, double * u, double * v, dou
 		center = (*i)->getCenter();
 
         interpolatedRho    = rho[0]    + center.x*(rho[1]    - rho[0])    / this->lengthX;
-        interpolatedU      = u[0]      + center.x*(u[1]      - u[0])      / this->lengthX;
-        interpolatedV      = v[0]      + center.x*(v[1]      - v[0])      / this->lengthX;
-        //interpolatedLambda = lambda[0] + center.x*(lambda[1] - lambda[0]) / this->lengthX;
+        interpolatedU      = U[0]      + center.x*(U[1]      - U[0])      / this->lengthX;
+        interpolatedV      = V[0]      + center.x*(V[1]      - V[0])      / this->lengthX;
         interpolatedLambda = ( lambda[0] ) / ( 1.0 + center.x/this->lengthX * ( lambda[0]/lambda[1] - 1.0 ) );
 
 		(*i)->setValues(interpolatedRho, interpolatedU, interpolatedV, interpolatedLambda);
 	}
 }
 
-void GKSMesh::initMeshLinearDensity(double * rho, double u, double v, double T)
-{
-    // Densitsy definition
-    //    ------------
-    //    |  rho[1]  |
-    //    |          |
-    //    | rhoT[0]  |
-    //    ------------
-    double interpolatedRho;
-    float2 center;
-    for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
-    {
-        center = (*i)->getCenter();
-
-        interpolatedRho = rho[0] + center.y*(rho[1] - rho[0]) / this->lengthY;
-        //double interpolatedLambda = rho[0] + center.y*( rho[1] - rho[0] ) / this->lengthY;
-
-        //( *i )->setValues(interpolatedRho, u, v, interpolatedLambda);
-        (*i)->setValues(interpolatedRho, u, v, T);
-    }
-}
-
-void GKSMesh::initMeshParabularVelocity(double rho, double u, double v, double T)
+// ============================================================================
+//      This method initializes the mesh with parabolic x-velocity with U in 
+//      the middle and 0 at top and bottom. The other quantities are constant.
+//
+//      Parameters:
+//          rho:    density
+//          U:      x-velocity
+//          V:      Y-velocity
+//          T:      Temperature
+// ============================================================================
+void GKSMesh::initMeshParabularVelocity(double rho, double U, double V, double T)
 {    
     double uValue;
     float2 center;
@@ -492,12 +608,23 @@ void GKSMesh::initMeshParabularVelocity(double rho, double u, double v, double T
     {
         center = (*i)->getCenter();
 
-        uValue = 4.0 * u * ( center.y - center.y*center.y );
+        uValue = 4.0 * U * ( center.y - center.y*center.y );
 
-        (*i)->setValues(rho, uValue, v, T);
+        (*i)->setValues(rho, uValue, V, T);
     }
 }
 
+
+// ============================================================================
+//      This method initializes the mesh with sinusodial x-velocity with U 
+//      being the maximal x velocity. The other quantities are constant.
+//
+//      Parameters:
+//          rho:    density
+//          U:      x-velocity
+//          V:      Y-velocity
+//          T:      Temperature
+// ============================================================================
 void GKSMesh::initMeshSineVelocity(double rho, double u, double v, double T)
 {    
     double uValue;
@@ -512,14 +639,24 @@ void GKSMesh::initMeshSineVelocity(double rho, double u, double v, double T)
     }
 }
 
+// ============================================================================
+//      This method initializes the mesh with Such that it is stable under
+//      constant external forcing (gravity).
+//          Density definition
+//             -----------
+//             |         |
+//             |         |
+//             |   rho   |
+//             -----------
+//
+//      Parameters:
+//          rho:    density at the bottom
+//          U:      x-velocity
+//          V:      Y-velocity
+//          T:      Temperature
+// ============================================================================
 void GKSMesh::initMeshAtmospheric(double rho, double u, double v, double lambda, double g)
 {
-	// Temprature definition
-	//    ------------
-	//    |   Z[1]   |
-	//    |          |
-	//    |   Z[0]   |
-	//    ------------
 	double interpolatedRho;
 	float2 center;
 	for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
@@ -532,29 +669,143 @@ void GKSMesh::initMeshAtmospheric(double rho, double u, double v, double lambda,
 	}
 }
 
-void GKSMesh::addBoundaryCondition( BoundaryConditionType type, 
-                                    double rho, double U, double V, double T)
-{
-    BoundaryCondition* tmp = new BoundaryCondition( type, rho, U, V, T);
-    BoundaryConditionList.push_back(tmp);
-}
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+//
+//                          Simulation Control
+//
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
 
-void GKSMesh::addInterfaceBoundaryCondition(double wallVelocity)
+// ============================================================================
+//      This method perform the iteration and controls the solution process. 
+//      It also call the file output and checks the convergence.
+// ============================================================================
+void GKSMesh::iterate()
 {
-    InterfaceBC* tmp = new InterfaceBC(wallVelocity);
-    this->InterfaceBoundaryConditionsList.push_back(tmp);
-}
+    this->iter = 0;
+    this->time = 0.0;
 
-void GKSMesh::applyBoundaryCondition()
-{
-    #pragma omp parallel for
-    for ( int i = 0; i < CellList.size(); i++ )
+    this->timeList.push_back(this->time);
+
+    this->writeOutputFiles();
+
+    chrono::high_resolution_clock::time_point startTime = chrono::high_resolution_clock::now();
+
+    // ========================================================================
+    // ========================================================================
+    //              Time Loop
+    // ========================================================================
+    // ========================================================================
+    while (this->iter < this->param.numberOfIterations)
     {
-        if ( CellList[i]->isGhostCell() )
-            CellList[i]->applyBoundaryCondition();
+        // ====================================================================
+        this->iter++;
+        // ====================================================================
+
+        // ====================================================================
+        //          Perform one timestep
+        // ====================================================================
+        this->timeStep();
+        // ====================================================================
+
+        this->time += this->dt;
+        
+        // ====================================================================
+        if ( this->iter % this->param.outputInterval == 0 )
+        {
+            this->dtList.push_back(this->dt);
+            this->timeList.push_back(this->time);
+
+            ConservedVariable residual = this->getL2GlobalResidual();
+
+            cout << "t = " << this->time << "  \t|  timestep: " << this->iter << endl;
+            cout << "r_rho = "  << residual.rho  << "\t ";
+            cout << "r_rhoU = " << residual.rhoU << "\t ";
+            cout << "r_rhoV = " << residual.rhoV << "\t ";
+            cout << "r_rhoE = " << residual.rhoE << "\t ";
+            cout << endl;
+
+            this->convergenceHistory.push_back(residual);
+
+            if ( this->isConverged(residual) )
+            {
+                cout << endl << " ========== Simulation converged! ==========" << endl;
+                cout << "Remaining residual change less than " << this->param.convergenceCriterium << endl;
+                cout << "Timesteps: " << this->iter << endl;
+                cout << "Time: " << this->time << endl;
+
+                this->writeOutputFiles();
+
+                break;
+            }
+        }
+        // ====================================================================
+
+        // ====================================================================
+        if (this->iter % this->param.outputIntervalVTK == 0)
+        {
+            this->writeOutputFiles();
+        }
+        // ====================================================================
     }
+    // ========================================================================
+    // ========================================================================
+    //              End of Time Loop
+    // ========================================================================
+    // ========================================================================
+    
+    chrono::high_resolution_clock::time_point endTime = chrono::high_resolution_clock::now();
+    this->computationTime = chrono::duration_cast<chrono::seconds>( endTime - startTime ).count();
+
+    cout << "Time to Solution: " << this->computationTime << " s" << endl;
 }
 
+// ============================================================================
+//      This method performes on time step of the GKS.
+//      All computation is taking place with in this method.
+// ============================================================================
+void GKSMesh::timeStep()
+{
+    this->computeGlobalTimestep();
+
+    this->applyForcing();
+
+    this->applyBoundaryCondition();
+
+    this->computeLeastSquareGradients();
+
+    this->applyBoundaryCondition();
+
+    this->computeFluxes();
+
+    this->updateCells();
+
+    this->applyBoundaryCondition();
+}
+
+// ============================================================================
+//      This method computes the global CFL time step by finding the minimum
+//      of all local time steps and multiplying it with the CFL number.
+// ============================================================================
+void GKSMesh::computeGlobalTimestep()
+{
+    this->dt = 1.0e99;
+    for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
+    {
+        if (!((*i)->isGhostCell()))
+        {
+            this->dt = min( (*i)->getLocalTimestep(), this->dt );
+        }
+    }
+    this->dt *= this->param.CFL;
+}
+
+// ============================================================================
+//      This method applies the forcing to all cells
+// ============================================================================
 void GKSMesh::applyForcing()
 {
     #pragma omp parallel for
@@ -565,20 +816,74 @@ void GKSMesh::applyForcing()
     }
 }
 
-void GKSMesh::computeGlobalTimestep()
+// ============================================================================
+//      This method sets the values of the ghost cells
+// ============================================================================
+void GKSMesh::applyBoundaryCondition()
 {
-    this->dt = 1.0e99;
-    for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
+    #pragma omp parallel for
+    for ( int i = 0; i < CellList.size(); i++ )
     {
-        if (!((*i)->isGhostCell()))
-        {
-            this->dt = min( (*i)->getLocalTimestep(), this->dt );
-        }
-        int j = 0;
+        if ( CellList[i]->isGhostCell() )
+            CellList[i]->applyBoundaryCondition();
     }
-    this->dt *= this->param.CFL;
 }
 
+// ============================================================================
+//      This method computes the gradients of the conserved variables in the 
+//      Cells with the least suqare method. These gradients are not used, if
+//      Finite differences are applied at the Interfaces.
+// ============================================================================
+void GKSMesh::computeLeastSquareGradients()
+{
+    #pragma omp parallel for
+    for ( int i = 0; i < CellList.size(); i++ )
+    {
+        // TODO: Right now the Gradients in the periodic ghost cells are 
+        // computed by finite differences and not by least square
+        //if ( !CellList[i]->isGhostCell() )
+            CellList[i]->computeGradients();
+    }
+}
+
+// ============================================================================
+//      This method computes the fluxes over all Interfaces
+// ============================================================================
+void GKSMesh::computeFluxes()
+{
+    #pragma omp parallel for
+    for ( int i = 0; i < InterfaceList.size(); i++ )
+    {
+        InterfaceList[i]->computeFlux(this->dt);
+    }
+}
+
+// ============================================================================
+//      This method updates the cell averaged conserved variables from the fluxes.
+// ============================================================================
+void GKSMesh::updateCells()
+{
+    #pragma omp parallel for
+    for ( int i = 0; i < CellList.size(); i++ )
+    {
+        if ( !CellList[i]->isGhostCell() )
+            CellList[i]->update(this->dt);
+    }
+}
+
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+//
+//                          Data Analysis
+//
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+
+// ============================================================================
+//      This method returns the maximum absolute residual change per time step.
+// ============================================================================
 ConservedVariable GKSMesh::getMaxGlobalResidual()
 {
     ConservedVariable residual;
@@ -601,6 +906,9 @@ ConservedVariable GKSMesh::getMaxGlobalResidual()
     return residual;
 }
 
+// ============================================================================
+//      This method returns the relative L2 norm of the residual change per time step.
+// ============================================================================
 ConservedVariable GKSMesh::getL2GlobalResidual()
 {
     ConservedVariable residual;
@@ -640,132 +948,9 @@ ConservedVariable GKSMesh::getL2GlobalResidual()
     return residual;
 }
 
-void GKSMesh::timeStep()
-{
-    this->iter++;
-
-    // ========================================================================
-
-    this->computeGlobalTimestep();
-
-    // ========================================================================
-
-    this->applyForcing();
-
-    // ========================================================================
-
-    this->applyBoundaryCondition();
-
-    // ========================================================================
-
-    #pragma omp parallel for
-    for ( int i = 0; i < CellList.size(); i++ )
-    {
-        // TODO: Right now the Gradients in the periodic ghost cells are 
-        // computed by finite differences and not by least square
-        //if ( !CellList[i]->isGhostCell() )
-            CellList[i]->computeGradients();
-    }
-
-    // ========================================================================
-
-    this->applyBoundaryCondition();
-
-    // ========================================================================
-
-    #pragma omp parallel for
-    for ( int i = 0; i < InterfaceList.size(); i++ )
-    {
-        InterfaceList[i]->computeFlux(this->dt);
-    }
-
-    // ========================================================================
-
-    #pragma omp parallel for
-    for ( int i = 0; i < CellList.size(); i++ )
-    {
-        if ( !CellList[i]->isGhostCell() )
-            CellList[i]->update(this->dt);
-    }
-
-    // ========================================================================
-
-    this->applyBoundaryCondition();
-
-    // ========================================================================
-
-}
-
-void GKSMesh::iterate()
-{
-    this->time = 0.0;
-    this->timeList.push_back(this->time);
-
-    this->applyBoundaryCondition();
-
-    this->writeOutputFiles();
-
-    chrono::high_resolution_clock::time_point startTime = chrono::high_resolution_clock::now();
-
-    // ========================================================================
-    // ========================================================================
-    // ========================================================================
-    while (this->iter < this->param.numberOfIterations)
-    {
-        // ====================================================================
-
-        this->timeStep();
-
-        this->time += this->dt;
-        
-        // ====================================================================
-
-        if ( this->iter % this->param.outputInterval == 0 )
-        {
-            this->dtList.push_back(this->dt);
-            this->timeList.push_back(this->time);
-
-            ConservedVariable residual = this->getL2GlobalResidual();
-
-            cout << "t = " << this->time << "  \t|  timestep: " << this->iter << endl;
-            cout << "r_rho = "  << residual.rho  << "\t ";
-            cout << "r_rhoU = " << residual.rhoU << "\t ";
-            cout << "r_rhoV = " << residual.rhoV << "\t ";
-            cout << "r_rhoE = " << residual.rhoE << "\t ";
-            cout << endl;
-
-            this->convergenceHistory.push_back(residual);
-
-            if ( this->isConverged(residual) )
-            {
-                cout << endl << " ========== Simulation converged! ==========" << endl;
-                cout << "Remaining residual change less than " << this->param.convergenceCriterium << endl;
-                cout << "Timesteps: " << this->iter << endl;
-                cout << "Time: " << this->time << endl;
-
-                this->writeOutputFiles();
-
-                break;
-            }
-
-        }
-        // ========================================================================
-        if (this->iter % this->param.outputIntervalVTK == 0)
-        {
-            this->writeOutputFiles();
-        }
-        // ========================================================================
-    }
-    // ========================================================================
-    // ========================================================================
-    // ========================================================================
-    
-    chrono::high_resolution_clock::time_point endTime = chrono::high_resolution_clock::now();
-    this->computationTime = chrono::duration_cast<chrono::seconds>( endTime - startTime ).count();
-
-    cout << "Time to Solution: " << this->computationTime << " s" << endl;
-}
-
+// ============================================================================
+//      This method returns the maximal velocity in the domain.
+// ============================================================================
 double GKSMesh::getMaxVelocity()
 {
     double maxVelocity = 0.0;
@@ -785,11 +970,18 @@ double GKSMesh::getMaxVelocity()
     return maxVelocity;
 }
 
+// ============================================================================
+//      This method returns the maximal Reynolds number in the domain.
+// ============================================================================
 double GKSMesh::getMaxRe()
 {
     return  this->getMaxVelocity()*this->param.L / this->fluidParam.nu;
 }
 
+
+// ============================================================================
+//      This method returns the maximal Ma number in the domain.
+// ============================================================================
 double GKSMesh::getMaxMa()
 {
     double maxMa = 0.0;    
@@ -812,6 +1004,11 @@ double GKSMesh::getMaxMa()
     return maxMa;
 }
 
+
+// ============================================================================
+//      This method returns wether the residual changes are below the defined
+//      thresholds.
+// ============================================================================
 bool GKSMesh::isConverged(ConservedVariable residual)
 {
     bool flag = true;
@@ -824,31 +1021,20 @@ bool GKSMesh::isConverged(ConservedVariable residual)
     return flag;
 }
 
-string GKSMesh::toString()
-{
-	ostringstream tmp;
-	tmp << "The Mesh has following interfaces:\n";
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+//
+//                          File Output
+//
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
 
-	for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
-	{
-        //if( ! (*i)->isGhostInterface() )
-		tmp << (*i)->toString();
-	}
 
-	return tmp.str();
-}
-
-string GKSMesh::cellValuesToString()
-{
-    ostringstream tmp;
-    for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
-    {
-        if( ! (*i)->isGhostCell()  )
-            tmp << (*i)->valuesToString() << "\n";
-    }
-    return tmp.str();
-}
-
+// ============================================================================
+//      This method writes VTK and .dat files of cells and interfaces
+// ============================================================================
 void GKSMesh::writeOutputFiles()
 {
     ostringstream filename;
@@ -877,6 +1063,12 @@ void GKSMesh::writeOutputFiles()
     }
 }
 
+// ============================================================================
+//      This method writes a file with an overview of the simulation
+//
+//      Parameters:
+//          filename:   filename
+// ============================================================================
 void GKSMesh::writeOverviewFile(string filename)
 {
     cout << "Wrinting file " << filename << " ... ";
@@ -943,6 +1135,99 @@ void GKSMesh::writeOverviewFile(string filename)
     cout << "done!" << endl;
 }
 
+// ============================================================================
+//      This method writes the time step size at the output intervals to a file.
+//
+//      Parameters:
+//          filename:   filename
+// ============================================================================
+void GKSMesh::writeTimeSteps(string filename)
+{
+    cout << "Wrinting file " << filename << " ... ";
+    // open file stream
+    ofstream file;
+    file.precision(15);
+    file.open(filename.c_str());
+
+    if (!file.is_open()) {
+        cout << " File cound not be opened.\n\nERROR!\n\n\n";
+        return;
+    }
+
+    for (vector<double>::iterator i = this->dtList.begin(); i != this->dtList.end(); ++i)
+        file << (*i) << "\n";
+
+    file.close();
+
+    cout << "done!" << endl;
+}
+
+// ============================================================================
+//      This method writes the times of the output intervals to a file.
+//
+//      Parameters:
+//          filename:   filename
+// ============================================================================
+void GKSMesh::writeTime(string filename)
+{
+    cout << "Wrinting file " << filename << " ... ";
+    // open file stream
+    ofstream file;
+    file.precision(15);
+    file.open(filename.c_str());
+
+    if (!file.is_open()) {
+        cout << " File cound not be opened.\n\nERROR!\n\n\n";
+        return;
+    }
+
+    for (vector<double>::iterator i = this->timeList.begin(); i != this->timeList.end(); ++i)
+        file << (*i) << "\n";
+
+    file.close();
+
+    cout << "done!" << endl;
+}
+
+// ============================================================================
+//      This method writes the time evolution of the residual changes to a file.
+//
+//      Parameters:
+//          filename:   filename
+// ============================================================================
+void GKSMesh::writeConvergenceHistory(string filename)
+{
+    cout << "Wrinting file " << filename << " ... ";
+    // open file stream
+    ofstream file;
+    file.precision(15);
+    file.open(filename.c_str());
+
+    if ( !file.is_open() ) {
+        cout << " File cound not be opened.\n\nERROR!\n\n\n";
+        return;
+    }
+
+    for ( int i = 0; i < this->convergenceHistory.size(); i++ )
+    {
+        file << convergenceHistory[i].rho  << "\t";
+        file << convergenceHistory[i].rhoU << "\t";
+        file << convergenceHistory[i].rhoV << "\t";
+        file << convergenceHistory[i].rhoE << "\t";
+        file << endl;
+    }
+
+    file.close();
+
+    cout << "done!" << endl;
+}
+
+// ============================================================================
+//      This method writes the current field data per cell to a VTK file.
+//
+//      Parameters:
+//          filename:   filename
+// ============================================================================
 void GKSMesh::writeVTKFile(string filename, bool data, bool BC)
 {
     cout << "Wrinting file " << filename << " ... ";
@@ -965,6 +1250,12 @@ void GKSMesh::writeVTKFile(string filename, bool data, bool BC)
     cout << "done!" << endl;
 }
 
+// ============================================================================
+//      This method writes the current field data per interface to a VTK file.
+//
+//      Parameters:
+//          filename:   filename
+// ============================================================================
 void GKSMesh::writeVTKFileFlux(string filename, bool data, bool BC)
 {
     cout << "Wrinting file " << filename << " ... ";
@@ -987,91 +1278,28 @@ void GKSMesh::writeVTKFileFlux(string filename, bool data, bool BC)
     cout << "done!" << endl;
 }
 
-void GKSMesh::writeTimeSteps(string filename)
-{
-    cout << "Wrinting file " << filename << " ... ";
-    // open file stream
-    ofstream file;
-    file.precision(15);
-    file.open(filename.c_str());
-
-    if (!file.is_open()) {
-        cout << " File cound not be opened.\n\nERROR!\n\n\n";
-        return;
-    }
-
-    for (vector<double>::iterator i = this->dtList.begin(); i != this->dtList.end(); ++i)
-        file << (*i) << "\n";
-
-    file.close();
-
-    cout << "done!" << endl;
-}
-
-void GKSMesh::writeTime(string filename)
-{
-    cout << "Wrinting file " << filename << " ... ";
-    // open file stream
-    ofstream file;
-    file.precision(15);
-    file.open(filename.c_str());
-
-    if (!file.is_open()) {
-        cout << " File cound not be opened.\n\nERROR!\n\n\n";
-        return;
-    }
-
-    for (vector<double>::iterator i = this->timeList.begin(); i != this->timeList.end(); ++i)
-        file << (*i) << "\n";
-
-    file.close();
-
-    cout << "done!" << endl;
-}
-
-void GKSMesh::writeVelocityProfile(string filename, double x)
-{
-
-    cout << "Wrinting file " << filename << " ... ";
-    // open file stream
-    ofstream file;
-    file.precision(15);
-    file.open(filename.c_str());
-
-    if (!file.is_open()) {
-        cout << " File cound not be opened.\n\nERROR!\n\n\n";
-        return;
-    }
-
-    for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
-    {
-        if ( !( *i )->isGhostCell() )
-        {
-            double xMax = -1e99;
-            double xMin =  1e99;
-            for(int j = 0; j < 4; j++)
-            {
-                if( ( *i )->getNode(j).x > xMax) xMax = ( *i )->getNode(j).x;
-                if( ( *i )->getNode(j).x < xMin) xMin = ( *i )->getNode(j).x;
-            }
-
-            // check wether the profile location x is located in this cell
-            if ( x <= xMax && x >= xMin )
-            {
-                file << ( *i )->getCenter().y << " " << ( *i )->getPrim().U << " " << ( *i )->getPrim().rho << "\n";
-            }
-        }
-    }
-
-    file.close();
-
-    cout << "done!" << endl;
-
-}
-
+// ============================================================================
+//      This method writes the cell data of the current time step into a text
+//      file for postprocessing for example in Matlab or Gnuplot. 
+//
+//      The order of the entries is:
+//          1: CellCenter X
+//          2: CellCenter Y
+//          3: rho
+//          4: U
+//          5: V
+//          6: T
+//          7: Ghost Cell
+//          8: rhoU
+//          9: rhoV
+//         10: rhoE
+//         11: Cell Volume
+//
+//      Parameters:
+//          filename:   filename
+// ============================================================================
 void GKSMesh::writeResultFields(string filename)
 {
-
     cout << "Wrinting file " << filename << " ... ";
     // open file stream
     ofstream file;
@@ -1102,12 +1330,29 @@ void GKSMesh::writeResultFields(string filename)
     file.close();
 
     cout << "done!" << endl;
-
 }
 
+// ============================================================================
+//      This method writes the FluxDensities of the boundary interfaces into a
+//      test file for postprocessing for example in Matlab or Gnuplot.
+//
+//      The order of the entries is:
+//          1: InterfaceCenter X
+//          2: InterfaceCenter Y
+//          3: Normal X
+//          4: Normal Y
+//          5: F_rho
+//          6: F_rhoU
+//          7: F_rhoV
+//          8: F_rhoE
+//          9: F_sign
+//         10: Interface Area
+//
+//      Parameters:
+//          filename:   filename
+// ============================================================================
 void GKSMesh::writeResultBoundaryFluxes(string filename)
 {
-
     cout << "Wrinting file " << filename << " ... ";
     // open file stream
     ofstream file;
@@ -1142,196 +1387,13 @@ void GKSMesh::writeResultBoundaryFluxes(string filename)
     cout << "done!" << endl;
 }
 
-void GKSMesh::writeTemperatureProfile(string filename, double x)
-{
-
-    cout << "Wrinting file " << filename << " ... ";
-    // open file stream
-    ofstream file;
-    file.precision(15);
-    file.open(filename.c_str());
-
-    if (!file.is_open()) {
-        cout << " File cound not be opened.\n\nERROR!\n\n\n";
-        return;
-    }
-
-    for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
-    {
-        if ( !( *i )->isGhostCell() )
-        {
-            double xMax = -1e99;
-            double xMin =  1e99;
-            for(int j = 0; j < 4; j++)
-            {
-                if( ( *i )->getNode(j).x > xMax) xMax = ( *i )->getNode(j).x;
-                if( ( *i )->getNode(j).x < xMin) xMin = ( *i )->getNode(j).x;
-            }
-
-            // check wether the profile location x is located in this cell
-            if ( x <= xMax && x >= xMin )
-            {
-                file << ( *i )->getCenter().y << " " << 1.0 / ( 2.0 * this->fluidParam.R * ( *i )->getPrim().L ) << "\n";
-            }
-        }
-    }
-
-    file.close();
-
-    cout << "done!" << endl;
-}
-
-void GKSMesh::writeMeshAsText(string filename)
-{
-    cout << "Wrinting file " << filename << " ... ";
-    // open file stream
-    ofstream file;
-    file.open(filename.c_str());
-
-    if ( !file.is_open() ) {
-        cout << " File cound not be opened.\n\nERROR!\n\n\n";
-        return;
-    }
-
-    file << " ========== Cells: ========== \n\n";
-
-    for ( vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i )
-    {
-        file << (*i)->toString();
-        if ( ( *i )->isGhostCell() )
-            file << ", Ghostcell";
-        file << "\n";
-    }
-
-    file << "\n\n ========== Interfaces: ========== \n\n";
-
-    for ( vector<Interface*>::iterator i = this->InterfaceList.begin(); i != this->InterfaceList.end(); ++i )
-    {
-        file << ( *i )->toString();
-    }
-
-    file.close();
-}
-
-void GKSMesh::writeVelocityU(string filename)
-{
-    cout << "Wrinting file " << filename << " ... ";
-    // open file stream
-    ofstream file;
-    file.open(filename.c_str());
-
-    if ( !file.is_open() ) {
-        cout << " File cound not be opened.\n\nERROR!\n\n\n";
-        return;
-    }
-
-    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
-    {
-        //if ( !( *i )->isGhostCell() )
-            file << ( *i )->getPrim().U << endl;
-    }
-
-    file.close();
-
-    cout << "done!" << endl;
-}
-
-void GKSMesh::writeVelocityV(string filename)
-{
-    cout << "Wrinting file " << filename << " ... ";
-    // open file stream
-    ofstream file;
-    file.open(filename.c_str());
-
-    if ( !file.is_open() ) {
-        cout << " File cound not be opened.\n\nERROR!\n\n\n";
-        return;
-    }
-
-    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
-    {
-        //if( !(*i)->isGhostCell() )
-            file << ( *i )->getPrim().V << endl;
-    }
-
-    file.close();
-
-    cout << "done!" << endl;
-}
-
-void GKSMesh::writeTemperature(string filename)
-{
-    cout << "Wrinting file " << filename << " ... ";
-    // open file stream
-    ofstream file;
-    file.open(filename.c_str());
-
-    if ( !file.is_open() ) {
-        cout << " File cound not be opened.\n\nERROR!\n\n\n";
-        return;
-    }
-
-    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
-    {
-        //if( !(*i)->isGhostCell() )
-            file << 1.0 / (2.0 * this->fluidParam.R * ( *i )->getPrim().L ) << endl;
-    }
-
-    file.close();
-
-    cout << "done!" << endl;
-}
-
-void GKSMesh::writeDensity(string filename)
-{
-    cout << "Wrinting file " << filename << " ... ";
-    // open file stream
-    ofstream file;
-    file.open(filename.c_str());
-
-    if ( !file.is_open() ) {
-        cout << " File cound not be opened.\n\nERROR!\n\n\n";
-        return;
-    }
-
-    for ( vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i )
-    {
-        //if( !(*i)->isGhostCell() )
-            file << ( *i )->getPrim().rho << endl;
-    }
-
-    file.close();
-
-    cout << "done!" << endl;
-}
-
-void GKSMesh::writeConvergenceHistory(string filename)
-{
-    cout << "Wrinting file " << filename << " ... ";
-    // open file stream
-    ofstream file;
-    file.precision(15);
-    file.open(filename.c_str());
-
-    if ( !file.is_open() ) {
-        cout << " File cound not be opened.\n\nERROR!\n\n\n";
-        return;
-    }
-
-    for ( int i = 0; i < this->convergenceHistory.size(); i++ )
-    {
-        file << convergenceHistory[i].rho  << "\t";
-        file << convergenceHistory[i].rhoU << "\t";
-        file << convergenceHistory[i].rhoV << "\t";
-        file << convergenceHistory[i].rhoE << "\t";
-        file << endl;
-    }
-
-    file.close();
-
-    cout << "done!" << endl;
-}
-
+// ============================================================================
+//      This method export the mesh geometry into the Gambit neutral mesh
+//      format for usage in other solvers.
+//
+//      Parameters:
+//          filename:   filename
+// ============================================================================
 void GKSMesh::writeGambitNeutralFile(string filename)
 {
     cout << "Wrinting file " << filename << " ... ";
@@ -1523,6 +1585,13 @@ void GKSMesh::writeGambitNeutralFile(string filename)
 
 }
 
+// ============================================================================
+//      This private method writes the Cell geometry of the mesh into the 
+//      specified File in the VTK format including the file header.
+//
+//      Parameters:
+//          file:   destination file
+// ============================================================================
 void GKSMesh::writeCellGeometry(ofstream& file)
 {
     
@@ -1567,9 +1636,15 @@ void GKSMesh::writeCellGeometry(ofstream& file)
     }
 }
 
+// ============================================================================
+//      This private method writes the Interface geometry of the mesh into the 
+//      specified File in the VTK format including the file header.
+//
+//      Parameters:
+//          file:   destination file
+// ============================================================================
 void GKSMesh::writeInterfaceGeometry(ofstream& file)
 {
-
     // write VTK Header
     file << "# vtk DataFile Version 1.0\n";
     file << "by Stephan Lenz\n";
@@ -1599,6 +1674,13 @@ void GKSMesh::writeInterfaceGeometry(ofstream& file)
     }
 }
 
+// ============================================================================
+//      This private method writes the Cell data into the 
+//      specified File in the VTK format.
+//
+//      Parameters:
+//          file:   destination file
+// ============================================================================
 void GKSMesh::writeCellData(ofstream& file)
 {
     int numberOfFields = 14;
@@ -1794,6 +1876,13 @@ void GKSMesh::writeCellData(ofstream& file)
     // ================================================================================================================
 }
 
+// ============================================================================
+//      This private method writes the Interface data into the 
+//      specified File in the VTK format.
+//
+//      Parameters:
+//          file:   destination file
+// ============================================================================
 void GKSMesh::writeInterfaceData(ofstream & file)
 {
     // write cell data ( ID and stress )
@@ -1803,28 +1892,24 @@ void GKSMesh::writeInterfaceData(ofstream & file)
     file << "F_rho 1 " << this->InterfaceList.size() << " double\n";
     for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
     {
-        //file << (*i)->getTimeIntegratedFlux().rho << endl;
         file << ( *i )->getFluxDensity().rho << endl;
     }
 
     file << "F_rhoU 1 " << this->InterfaceList.size() << " double\n";
     for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
     {
-        //file << (*i)->getTimeIntegratedFlux().rhoU << endl;
         file << ( *i )->getFluxDensity().rhoU << endl;
     }
 
     file << "F_rhoV 1 " << this->InterfaceList.size() << " double\n";
     for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
     {
-        //file << (*i)->getTimeIntegratedFlux().rhoV << endl;
         file << ( *i )->getFluxDensity().rhoV << endl;
     }
 
     file << "F_rhoE 1 " << this->InterfaceList.size() << " double\n";
     for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
     {
-        //file << (*i)->getTimeIntegratedFlux().rhoE << endl;
         file << ( *i )->getFluxDensity().rhoE << endl;
     }
 
@@ -1880,3 +1965,9 @@ void GKSMesh::writeInterfaceData(ofstream & file)
     }
 }
 
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
