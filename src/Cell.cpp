@@ -1,3 +1,21 @@
+// ============================================================================
+//
+//                      Compressible Thermal GKS
+//
+//      Developed by Stephan Lenz (stephan.lenz@tu-bs.de)
+//
+// ============================================================================
+//
+//      Cell.h
+//
+//      Function:
+//          Storage of cell data
+//          Implementation of cell related computations
+//              Update of Conserved Variables
+//              Forcing
+//              Timestep computations
+//
+// ============================================================================
 
 #include "Cell.h"
 #include "Interface.h"
@@ -16,6 +34,19 @@ Cell::Cell()
     memset(InterfaceList, NULL, 4 * sizeof(Interface*));
 }
 
+// ============================================================================
+//      This constructor initializes the Cell.
+//      It also computes:
+//          Centroid
+//          Volume
+//
+//      Parameters:
+//          interfaceType:  compressible / incompressible
+//          nodes:          pointer to an array with pointers to the four nodes
+//                          of the cell order counter clockwise
+//          BC:             Boundary Condition Pointer
+//          fluidParam:     FluidParameter Object
+// ============================================================================
 Cell::Cell(InterfaceType interfaceType, float2** nodes, BoundaryCondition* BC, FluidParameter fluidParam)
 {
     // ========================================================================
@@ -101,6 +132,207 @@ Cell::~Cell()
 {
 }
 
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+//
+//                          Computation Methods
+//
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+
+// ============================================================================
+//      This method returns the local timestep computed by an CFL like condition
+// ============================================================================
+double Cell::getLocalTimestep()
+{
+    PrimitiveVariable prim = this->getPrim();
+
+    double U_max = sqrt(prim.U*prim.U + prim.V*prim.V);
+    double c_s   = sqrt( 1.0 / ( 2.0*prim.L ) );           // c_s = sqrt(RT) = c_s = sqrt(1/2lambda)
+
+    double localTimestep = minDx / ( U_max + c_s + 2.0*this->fluidParam.nu / minDx );
+    
+    return localTimestep;
+}
+
+// ============================================================================
+//      This method applies the forcing to the cell and therefore increases
+//      the momentum.
+//
+//      Parameters:
+//          dt:   global time step
+// ============================================================================
+void Cell::applyForcing(double dt)
+{
+    float2 Force;
+    
+    // ========================================================================
+    //                  Compute Primitive Variables (esp. Temp before forcing)
+    // ========================================================================
+    PrimitiveVariable prim = this->getPrim();
+
+    // ========================================================================
+    //                  Compute Volumeforce from acceleration
+    // ========================================================================
+    Force.x = this->fluidParam.Force.x              *   this->cons[0]
+            + this->fluidParam.BoussinesqForce.x    * ( this->cons[0] - this->fluidParam.rhoReference );
+    Force.y = this->fluidParam.Force.y              *   this->cons[0]
+            + this->fluidParam.BoussinesqForce.y    * ( this->cons[0] - this->fluidParam.rhoReference );
+    // ========================================================================
+    
+    // ========================================================================
+    //                  Apply Forcing to momentum components
+    // ========================================================================
+    this->cons[1] += dt * Force.x;
+    this->cons[2] += dt * Force.y;
+    // ========================================================================
+
+    // ========== some Tests ==================================================
+    double xForce = dt * Force.x;
+    double yForce = dt * Force.y;
+
+    int breakpoint = 0;
+    // ========================================================================
+
+    // ========================================================================
+    //                  compute new total Energy with increased momentum
+    // ========================================================================
+    this->cons[3] = prim.rho * (this->fluidParam.K + 2.0) / (4.0*prim.L)
+                  + 0.5 * ( this->cons[1] * this->cons[1] 
+                          + this->cons[2] * this->cons[2]
+                          ) / prim.rho;
+    // ========================================================================
+}
+
+// ============================================================================
+//      This method computes the primitive varables in the ghost cells 
+//      according to the boundary conditions.
+//      Afterwards the primitive variables are transformed to conserved
+//      variables.
+// ============================================================================
+void Cell::applyBoundaryCondition()
+{
+    PrimitiveVariable primNeighbor = this->findNeighborInDomain()->getPrim();
+    PrimitiveVariable prim;
+
+    switch ( this->BoundaryContitionPointer->getType() )
+    {
+        // ====================================================================
+        case wall:
+        {
+            PrimitiveVariable boundaryValue = this->BoundaryContitionPointer->getValue();
+
+            prim.rho = primNeighbor.rho;
+            prim.U   = 2.0*boundaryValue.U - primNeighbor.U;
+            prim.V   = 2.0*boundaryValue.V - primNeighbor.V;
+            prim.L   = primNeighbor.L;
+
+            break;
+        }
+        // ====================================================================
+        case isothermalWall:
+        {
+            PrimitiveVariable boundaryValue = this->BoundaryContitionPointer->getValue();
+
+            prim.rho = primNeighbor.rho * ( 2.0*boundaryValue.L - primNeighbor.L ) / primNeighbor.L;
+            prim.U   = 2.0*boundaryValue.U - primNeighbor.U;
+            prim.V   = 2.0*boundaryValue.V - primNeighbor.V;
+            prim.L   = 2.0*boundaryValue.L - primNeighbor.L;
+                
+            break;
+        }
+        // ====================================================================
+        case periodicGhost:
+        {
+            prim = this->InterfaceList[1]->getNeigborCell(this)->getPrim();
+            this->gradientX = this->InterfaceList[1]->getNeigborCell(this)->getGradientX();
+            this->gradientY = this->InterfaceList[1]->getNeigborCell(this)->getGradientY();
+        }
+        // ====================================================================
+    }
+    
+    this->computeCons(prim);
+}
+
+// ============================================================================
+//      This method computes the conserved variables in this cell from the 
+//      struct of primitive variables given as a parameter.
+//
+//      Parameters:
+//          prim:   struct of primitive Variables
+// ============================================================================
+void Cell::computeCons(PrimitiveVariable prim)
+{
+    this->cons[0] = prim.rho;
+    this->cons[1] = prim.rho * prim.U; 
+    this->cons[2] = prim.rho * prim.V;
+    this->cons[3] = prim.rho * (this->fluidParam.K + 2.0) / (4.0*prim.L)
+                  + 0.5 * ( this->cons[1] * this->cons[1] 
+                          + this->cons[2] * this->cons[2]
+                          )/prim.rho;
+}
+
+// ============================================================================
+//      This method computes the gradients of the conserved variables per
+//      Cell by the Least square Methods as described in Blazek (Comp. Fluid
+//      Dynamics: Principles and Applications)
+//      
+//      Since the Ghost cells have only one neighbor, the Gradient is computed 
+//      by finite difference as a direction derivative
+// ============================================================================
+void Cell::computeLeastSquareGradients()
+{
+    if( this->isGhostCell() )
+    {
+        // loop over conserved variables
+        for(int i = 0; i < 4; i++)
+        {
+            double dx = this->InterfaceList[0]->getNeigborCell(this)->getCenter().x - this->center.x;
+            double dy = this->InterfaceList[0]->getNeigborCell(this)->getCenter().y - this->center.y;
+
+            double dW = ((double*)&this->InterfaceList[0]->getNeigborCell(this)->getCons())[i] - this->cons[i];
+
+            ((double*)&this->gradientX)[i] = dW / (dx*dx + dy*dy) * dx;
+            ((double*)&this->gradientY)[i] = dW / (dx*dx + dy*dy) * dy;
+        }
+        return;
+    }
+
+    // loop over conserved variables
+    for(int i = 0; i < 4; i++)
+    {
+        ((double*)&this->gradientX)[i] = 0.0;
+        ((double*)&this->gradientY)[i] = 0.0;
+
+        // loop over 4 adjacent cells
+        for(int j = 0; j < 4; j++)
+        {
+            double dx = this->InterfaceList[j]->getNeigborCell(this)->getCenter().x - this->center.x;
+            double dy = this->InterfaceList[j]->getNeigborCell(this)->getCenter().y - this->center.y;
+            double weight = 1.0 / sqrt( dx*dx + dy*dy );
+            dx *= weight;
+            dy *= weight;
+
+            double dW = weight * ( ((double*)&this->InterfaceList[j]->getNeigborCell(this)->getCons())[i] - this->cons[i] );
+
+            double w1 = dx / (r11*r11) - r12/r11 * ( dy - r12/r11 * dx ) / (r22*r22);
+            double w2 =                            ( dy - r12/r11 * dx ) / (r22*r22);
+
+            ((double*)&this->gradientX)[i] += w1 * dW;
+            ((double*)&this->gradientY)[i] += w2 * dW;
+        }
+    }
+}
+
+// ============================================================================
+//      This method updates the conserved variables in the cell.
+//      It also computes the absolute residual change in the cell.
+//
+//      Parameters:
+//          dt:   global time step
+// ============================================================================
 void Cell::update(double dt)
 {
     // ========================================================================
@@ -129,6 +361,24 @@ void Cell::update(double dt)
                      + this->InterfaceList[2]->getFluxSign(this) * this->InterfaceList[2]->getTimeIntegratedFlux().rhoE
                      + this->InterfaceList[3]->getFluxSign(this) * this->InterfaceList[3]->getTimeIntegratedFlux().rhoE
                      ) / this->volume;
+    // ========================================================================
+
+    // ========================================================================
+    //                        Compute Residual and store new values
+    // ========================================================================
+    this->residual.rho  = fabs(this->cons[0] - this->cons_old[0]);
+    this->residual.rhoU = fabs(this->cons[1] - this->cons_old[1]);
+    this->residual.rhoV = fabs(this->cons[2] - this->cons_old[2]);
+    this->residual.rhoE = fabs(this->cons[3] - this->cons_old[3]);
+
+    if( this->ID == 1 )
+        int breakPoint = 0;
+
+    // store values of this time step for residual computation in the next one
+    this->cons_old[0] = this->cons[0];
+    this->cons_old[1] = this->cons[1];
+    this->cons_old[2] = this->cons[2];
+    this->cons_old[3] = this->cons[3];
     // ========================================================================
 
     // ========================================================================
@@ -170,7 +420,7 @@ void Cell::update(double dt)
                      + Sign3 * this->InterfaceList[3]->getTimeIntegratedFlux().rhoE
                      ) / this->volume;
 
-    //// ========================================================================
+    // ========================================================================
 
     ConservedVariable update_1;
 
@@ -250,50 +500,13 @@ void Cell::update(double dt)
                        + Sign3 * this->InterfaceList[3]->getTimeIntegratedFlux_3().rhoE
                      ) / this->volume;
 
-    //ConservedVariable update_test;
-
-    //update_test.rho  = update_1.rho  + update_2.rho  + update_3.rho;
-    //update_test.rhoU = update_1.rhoU + update_2.rhoU + update_3.rhoU;
-    //update_test.rhoV = update_1.rhoV + update_2.rhoV + update_3.rhoV;
-    //update_test.rhoE = update_1.rhoE + update_2.rhoE + update_3.rhoE;
-
-    //if(update_test.rho  < 1.0e-10 && fabs(this->cons[0] - this->cons_old[0]) < 1.0e-10) update_test.rho  = 0.0;
-    //if(update_test.rhoU < 1.0e-10 && fabs(this->cons[1] - this->cons_old[1]) < 1.0e-10) update_test.rhoU = 0.0;
-    //if(update_test.rhoV < 1.0e-10 && fabs(this->cons[2] - this->cons_old[2]) < 1.0e-10) update_test.rhoV = 0.0;
-    //if(update_test.rhoE < 1.0e-10 && fabs(this->cons[3] - this->cons_old[3]) < 1.0e-10) update_test.rhoE = 0.0;
-
     // ========================================================================
-
-    //this->cons[0] += this->updateVal.rho  / this->volume;
-    //this->cons[1] += this->updateVal.rhoU / this->volume;
-    //this->cons[2] += this->updateVal.rhoV / this->volume;
-    //this->cons[3] += this->updateVal.rhoE / this->volume;
-
-    //int l = 0;
 
     this->updateVal.rho  = update.rho ;
     this->updateVal.rhoU = update.rhoU;
     this->updateVal.rhoV = update.rhoV;
     this->updateVal.rhoE = update.rhoE;
 
-    // ========================================================================
-
-    // ========================================================================
-    //                        Compute Residual and store new values
-    // ========================================================================
-    this->residual.rho  = fabs(this->cons[0] - this->cons_old[0]);
-    this->residual.rhoU = fabs(this->cons[1] - this->cons_old[1]);
-    this->residual.rhoV = fabs(this->cons[2] - this->cons_old[2]);
-    this->residual.rhoE = fabs(this->cons[3] - this->cons_old[3]);
-
-    if( this->ID == 1 )
-        int breakPoint = 0;
-
-    // store values of this time step for residual computation in the next one
-    this->cons_old[0] = this->cons[0];
-    this->cons_old[1] = this->cons[1];
-    this->cons_old[2] = this->cons[2];
-    this->cons_old[3] = this->cons[3];
     // ========================================================================
 
     // ========================================================================
@@ -306,101 +519,34 @@ void Cell::update(double dt)
     //file << scientific << setw(25) << setfill(' ') << update_2.rhoV;
     //file << scientific << setw(25) << setfill(' ') << update_3.rhoV << endl;
     // ========================================================================
-
 }
 
-void Cell::applyBoundaryCondition()
-{
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+//
+//                          initialization Methods
+//
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
 
-    PrimitiveVariable primNeighbor = this->findNeighborInDomain()->getPrim();
-    PrimitiveVariable prim;
-
-    switch ( this->BoundaryContitionPointer->getType() )
-    {
-        // ====================================================================
-        case wall:
-        {
-            PrimitiveVariable boundaryValue = this->BoundaryContitionPointer->getValue();
-
-            prim.rho = primNeighbor.rho;
-            prim.U   = 2.0*boundaryValue.U - primNeighbor.U;
-            prim.V   = 2.0*boundaryValue.V - primNeighbor.V;
-            prim.L   = primNeighbor.L;
-
-            break;
-        }
-        // ====================================================================
-        case isothermalWall:
-        {
-            PrimitiveVariable boundaryValue = this->BoundaryContitionPointer->getValue();
-
-            prim.rho = primNeighbor.rho * ( 2.0*boundaryValue.L - primNeighbor.L ) / primNeighbor.L;
-            prim.U   = 2.0*boundaryValue.U - primNeighbor.U;
-            prim.V   = 2.0*boundaryValue.V - primNeighbor.V;
-            prim.L   = 2.0*boundaryValue.L - primNeighbor.L;
-                
-            break;
-        }
-        // ====================================================================
-        case periodicGhost:
-        {
-            prim = this->InterfaceList[1]->getNeigborCell(this)->getPrim();
-            this->gradientX = this->InterfaceList[1]->getNeigborCell(this)->getGradientX();
-            this->gradientY = this->InterfaceList[1]->getNeigborCell(this)->getGradientY();
-        }
-    }
-    
-    this->computeCons(prim);
-}
-
-void Cell::applyForcing(double dt)
-{
-    float2 Force;
-    
-    // ========================================================================
-    //                  Compute Primitive Variables (esp. Temp before forcing)
-    // ========================================================================
-    PrimitiveVariable prim = this->getPrim();
-
-    // ========================================================================
-    //                  Compute Volumeforce from acceleration
-    // ========================================================================
-    Force.x = this->fluidParam.Force.x              *   this->cons[0]
-            + this->fluidParam.BoussinesqForce.x    * ( this->cons[0] - this->fluidParam.rhoReference );
-    Force.y = this->fluidParam.Force.y              *   this->cons[0]
-            + this->fluidParam.BoussinesqForce.y    * ( this->cons[0] - this->fluidParam.rhoReference );
-    // ========================================================================
-    
-    // ========================================================================
-    //                  Apply Forcing to momentum components
-    // ========================================================================
-    this->cons[1] += dt * Force.x;
-    this->cons[2] += dt * Force.y;
-    // ========================================================================
-
-    // ========== some Tests ==================================================
-    double xForce = dt * Force.x;
-    double yForce = dt * Force.y;
-
-    int breakpoint = 0;
-    // ========================================================================
-
-    // ========================================================================
-    //                  compute new Energy with increased momentum
-    // ========================================================================
-    this->cons[3] = prim.rho * (this->fluidParam.K + 2.0) / (4.0*prim.L)
-                  + 0.5 * ( this->cons[1] * this->cons[1] 
-                          + this->cons[2] * this->cons[2]
-                          ) / prim.rho;
-    // ========================================================================
-    
-}
-
+// ============================================================================
+//      This method add one interface to the cell and increases the interface
+//      counter for this cell.
+//
+//      Parameters:
+//          newInterface:   Pointer to the Interface to be added
+// ============================================================================
 void Cell::addInterface(Interface* newInterface)
 {
 	this->InterfaceList[this->nInterfaces++] = newInterface;
 }
 
+// ============================================================================
+//      This method computes the minimal distance in the cell. this value is
+//      needed for the timestep computation.
+// ============================================================================
 void Cell::computeMinDx()
 {
     // ========================================================================
@@ -421,76 +567,14 @@ void Cell::computeMinDx()
             }
         }
     }
-    int i = 0;
+
+    int breakPoint = 0;
 }
 
-void Cell::setValues(double rho, double u, double v, double L)
-{
-    PrimitiveVariable prim;
-	prim.rho = rho;
-	prim.U   = u;
-	prim.V   = v;
-	prim.L   = L;
-
-    this->computeCons(prim);
-
-    this->cons_old[0] = this->cons[0];
-    this->cons_old[1] = this->cons[1];
-    this->cons_old[2] = this->cons[2];
-    this->cons_old[3] = this->cons[3];
-}
-
-void Cell::computeCons(PrimitiveVariable prim)
-{
-    this->cons[0] = prim.rho;
-    this->cons[1] = prim.rho * prim.U; 
-    this->cons[2] = prim.rho * prim.V;
-    // inverse of eq. in GKS Book page 79 at the bottom
-    this->cons[3] = prim.rho * (this->fluidParam.K + 2.0) / (4.0*prim.L)
-                  + 0.5 * ( this->cons[1] * this->cons[1] 
-                          + this->cons[2] * this->cons[2]
-                          )/prim.rho;
-}
-
-double Cell::getLocalTimestep()
-{
-    PrimitiveVariable prim = this->getPrim();
-
-    double U_max = sqrt(prim.U*prim.U + prim.V*prim.V);
-    double c_s   = sqrt( 1.0 / ( 2.0*prim.L ) );                      // c_s = sqrt(RT) = c_s = sqrt(1/2lambda)
-
-    double localTimestep = minDx / ( U_max + c_s + 2.0*this->fluidParam.nu / minDx );
-
-    // ========================================================================
-    
-    return localTimestep;
-}
-
-void Cell::addFlux(double * Flux, double sign, Interface* origin)
-{
-    int  j = 0;
-    bool flag = false;
-
-    // Check wether the interface is part of the cells InterfaceList
-    // In case of periodic boundaries five interfaces point to one cell
-    for(int i = 0; i < 4; ++i)
-    {
-        flag = flag || this->InterfaceList[i] == origin;
-    }
-    
-    if(flag)
-    {
-        this->updateVal.rho  += sign * Flux[0];
-        this->updateVal.rhoU += sign * Flux[1];
-        this->updateVal.rhoV += sign * Flux[2];
-        this->updateVal.rhoE += sign * Flux[3];
-
-        int i = 0;
-    }
-
-    int i = 0;
-}
-
+// ============================================================================
+//      This method computes the least square coefficients for this cell
+//      according to Blazek (Comp. Fluid Dynamics: Principles and Applications)
+// ============================================================================
 void Cell::computeLeastSquareCoefficients()
 {
     this->r11 = 0.0;
@@ -515,132 +599,84 @@ void Cell::computeLeastSquareCoefficients()
     this->r22 = sqrt(this->r22 - r12*r12);
 }
 
-void Cell::computeGradients()
+// ============================================================================
+//      This method computes the conserved variables according to the
+//      primitive Variables passed as parameters.
+//      It also assignes the old conserved variables
+//
+//      Parameters:
+//          rho:        Density
+//          U:          x-velocity
+//          V:          y-velocity
+//          L:          Lambda = 1/2RT
+// ============================================================================
+void Cell::setValues(double rho, double U, double V, double L)
 {
-    if( this->isGhostCell() )
-    {
-        // loop over conserved variables
-        for(int i = 0; i < 4; i++)
-        {
-            double dx = this->InterfaceList[0]->getNeigborCell(this)->getCenter().x - this->center.x;
-            double dy = this->InterfaceList[0]->getNeigborCell(this)->getCenter().y - this->center.y;
+    PrimitiveVariable prim;
+	prim.rho = rho;
+	prim.U   = U;
+	prim.V   = V;
+	prim.L   = L;
 
-            double dW = ((double*)&this->InterfaceList[0]->getNeigborCell(this)->getCons())[i] - this->cons[i];
+    this->computeCons(prim);
 
-            ((double*)&this->gradientX)[i] = dW / (dx*dx + dy*dy) * dx;
-            ((double*)&this->gradientY)[i] = dW / (dx*dx + dy*dy) * dy;
-        }
-        return;
-    }
-
-    // loop over conserved variables
-    for(int i = 0; i < 4; i++)
-    {
-        ((double*)&this->gradientX)[i] = 0.0;
-        ((double*)&this->gradientY)[i] = 0.0;
-
-        // loop over 4 adjacent cells
-        for(int j = 0; j < 4; j++)
-        {
-            double dx = this->InterfaceList[j]->getNeigborCell(this)->getCenter().x - this->center.x;
-            double dy = this->InterfaceList[j]->getNeigborCell(this)->getCenter().y - this->center.y;
-            double weight = 1.0 / sqrt( dx*dx + dy*dy );
-            dx *= weight;
-            dy *= weight;
-
-            double dW = weight * ( ((double*)&this->InterfaceList[j]->getNeigborCell(this)->getCons())[i] - this->cons[i] );
-
-            double w1 = dx / (r11*r11) - r12/r11 * ( dy - r12/r11 * dx ) / (r22*r22);
-            double w2 =                            ( dy - r12/r11 * dx ) / (r22*r22);
-
-            ((double*)&this->gradientX)[i] += w1 * dW;
-            ((double*)&this->gradientY)[i] += w2 * dW;
-        }
-    }
+    this->cons_old[0] = this->cons[0];
+    this->cons_old[1] = this->cons[1];
+    this->cons_old[2] = this->cons[2];
+    this->cons_old[3] = this->cons[3];
 }
 
-float2 Cell::getCenter()
-{
-	return this->center;
-}
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+//
+//                          get Methods
+//
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
 
-float2 Cell::getNode(int i)
-{
-    return *this->nodes[i];
-}
+// ====================================================================================================================
+//
+//                          get Connectivity
+//
+// ====================================================================================================================
 
+// ============================================================================
+//      This method returns the Cell ID.
+// ============================================================================
 unsigned long int Cell::getID()
 {
     return this->ID;
 }
 
-double Cell::getVolume()
+// ============================================================================
+//      This method returns the location of the i-th node of the cell.
+//
+//      Parameters:
+//          i:   the local id of the node to be returned
+// ============================================================================
+float2 Cell::getNode(int i)
 {
-    return this->volume;
+    return *this->nodes[i];
 }
 
-PrimitiveVariable Cell::getPrim()
-{
-    PrimitiveVariable prim;
-    prim.rho = this->cons[0];
-    prim.U   = this->cons[1] / this->cons[0];
-    prim.V   = this->cons[2] / this->cons[0];
-
-    if( this->interfaceType == incompressible )
-        prim.L = 3.0 / 2.0;
-    else
-        // eq. in GKS Book page 79 at the bottom
-        prim.L = (this->fluidParam.K + 2.0)*this->cons[0]
-                      / ( 4.0 * ( this->cons[3] - 0.5*(this->cons[1]* this->cons[1] + this->cons[2] * this->cons[2])/this->cons[0] ) );
-
-    return prim;
-}
-
-ConservedVariable Cell::getCons()
-{
-    ConservedVariable tmp;
-    tmp.rho  = this->cons[0];
-    tmp.rhoU = this->cons[1];
-    tmp.rhoV = this->cons[2];
-    tmp.rhoE = this->cons[3];
-    return tmp;
-}
-
-ConservedVariable Cell::getLocalResidual()
-{
-    return this->residual;
-}
-
-ConservedVariable Cell::getUpdate()
-{
-    return this->updateVal;
-}
-
-ConservedVariable Cell::getGradientX()
-{
-    return this->gradientX;
-}
-
-ConservedVariable Cell::getGradientY()
-{
-    return this->gradientY;
-}
-
+// ============================================================================
+//      This method returns a pointer to the adjacent cell connected by the 
+//      i-th interface
+//
+//      Parameters:
+//          i:   The local id of the interface that connects the returned cell.
+// ============================================================================
 Cell * Cell::getNeighborCell(int i)
 {
     return this->InterfaceList[i]->getNeigborCell(this);
 }
 
-Cell * Cell::getOpposingCell(Interface * askingInterface)
-{
-    int j = 0;
-    for ( int i = 0; i < 4; i++ )
-        if ( askingInterface == this->InterfaceList[i] )
-            j = i;
-
-    return this->getNeighborCell( (j+2) % 4 );
-}
-
+// ============================================================================
+//      This method is designed for ghost cells. In case of a ghost cell it
+//      it returns the corresponding cell in the domain.
+// ============================================================================
 Cell * Cell::findNeighborInDomain()
 {
     Cell* neighborCell = NULL;
@@ -655,6 +691,10 @@ Cell * Cell::findNeighborInDomain()
     return neighborCell;
 }
 
+// ============================================================================
+//      This method returns a vector from the cell center to the center of the
+//      i-th interface.
+// ============================================================================
 float2 Cell::getConnectivity(int i)
 {
     if( this->InterfaceList[i] == NULL) return float2(0.0, 0.0);
@@ -664,17 +704,138 @@ float2 Cell::getConnectivity(int i)
     return vector;
 }
 
+// ============================================================================
+//      This method returns wether the cell is a ghost cells or not.
+//      This decision is done on basis ofthe boundary condition pointer.
+//      Only shost cells have a pointer to a boundary condition.
+// ============================================================================
 bool Cell::isGhostCell()
 {
     return BoundaryContitionPointer != NULL;
 }
 
+// ====================================================================================================================
+//
+//                          get Geometry
+//
+// ====================================================================================================================
+
+// ============================================================================
+//      This method returns the cell volume.
+// ============================================================================
+double Cell::getVolume()
+{
+    return this->volume;
+}
+
+// ============================================================================
+//      This method returns the cell center.
+// ============================================================================
+float2 Cell::getCenter()
+{
+	return this->center;
+}
+
+// ============================================================================
+//      This method returns the distance from the cell center of this cell
+//      to the point passed as parameter.
+//
+//      Parameters:
+//          point:   Point to which the distance is computed
+// ============================================================================
 double Cell::distance(float2 point)
 {
     return sqrt( ( this->center.x - point.x )*( this->center.x - point.x )
                + ( this->center.y - point.y )*( this->center.y - point.y ) );
 }
 
+// ====================================================================================================================
+//
+//                          get Data
+//
+// ====================================================================================================================
+
+// ============================================================================
+//      This method returns the primitve variabeles in this cell.
+//      In case of incompressible Interfaces lambda = 1.5 is returned.
+// ============================================================================
+PrimitiveVariable Cell::getPrim()
+{
+    PrimitiveVariable prim;
+    prim.rho = this->cons[0];
+    prim.U   = this->cons[1] / this->cons[0];
+    prim.V   = this->cons[2] / this->cons[0];
+
+    if( this->interfaceType == incompressible )
+        prim.L = 3.0 / 2.0;
+    else
+        prim.L = (this->fluidParam.K + 2.0)*this->cons[0]
+                      / ( 4.0 * ( this->cons[3] - 0.5*(this->cons[1] * this->cons[1] 
+                                                     + this->cons[2] * this->cons[2])/this->cons[0] ) );
+
+    return prim;
+}
+
+// ============================================================================
+//      This method returns the conserved variables in this cell
+// ============================================================================
+ConservedVariable Cell::getCons()
+{
+    ConservedVariable tmp;
+    tmp.rho  = this->cons[0];
+    tmp.rhoU = this->cons[1];
+    tmp.rhoV = this->cons[2];
+    tmp.rhoE = this->cons[3];
+    return tmp;
+}
+
+// ============================================================================
+//      This method returns the local absolute residual change.
+// ============================================================================
+ConservedVariable Cell::getLocalResidual()
+{
+    return this->residual;
+}
+
+// ============================================================================
+//      This method returns the update of conserved variables in this time step.
+// ============================================================================
+ConservedVariable Cell::getUpdate()
+{
+    return this->updateVal;
+}
+
+// ============================================================================
+//      This method returns the X-Component of the Gradients of the conserved
+//      Variables.
+// ============================================================================
+ConservedVariable Cell::getGradientX()
+{
+    return this->gradientX;
+}
+
+// ============================================================================
+//      This method returns the Y-Component of the Gradients of the conserved
+//      Variables.
+// ============================================================================
+ConservedVariable Cell::getGradientY()
+{
+    return this->gradientY;
+}
+
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+//
+//                          output Methods
+//
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+
+// ============================================================================
+//      This method returns a short string with information on the Cell.
+// ============================================================================
 string Cell::toString()
 {
 	ostringstream tmp;
@@ -687,6 +848,10 @@ string Cell::toString()
 	return tmp.str();
 }
 
+// ============================================================================
+//      This method returns the a string with short information on the cell
+//      and includes the primitive variables in this cell.
+// ============================================================================
 string Cell::valuesToString()
 {
     PrimitiveVariable prim = this->getPrim();
@@ -697,6 +862,10 @@ string Cell::valuesToString()
     return tmp.str();
 }
 
+// ============================================================================
+//      This method returns a string with the coordinates of the nodes 
+//      defining the cell.
+// ============================================================================
 string Cell::writeNodes()
 {
 	ostringstream tmp;
@@ -707,3 +876,10 @@ string Cell::writeNodes()
     }
 	return tmp.str();
 }
+
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================

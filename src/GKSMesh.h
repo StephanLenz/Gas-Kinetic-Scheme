@@ -6,11 +6,12 @@
 //
 // ============================================================================
 //
-//      GKSMesh.h
+//      GKSMesh.cpp
 //
 //      Function:
-//          Generation Storage of mesh
+//          Generation and Storage of mesh
 //          Control of simulation
+//          Data Analysis
 //          File Output
 //
 // ============================================================================
@@ -162,7 +163,6 @@ public:
     void writeResultBoundaryFluxes(string filename);
 
     void writeGambitNeutralFile(string filename);
-    
 
     // ========================================================================
     //              private methods for VTK output

@@ -9,7 +9,7 @@
 //      GKSMesh.cpp
 //
 //      Function:
-//          Generation Storage of mesh
+//          Generation and Storage of mesh
 //          Control of simulation
 //          Data Analysis
 //          File Output
@@ -842,7 +842,7 @@ void GKSMesh::computeLeastSquareGradients()
         // TODO: Right now the Gradients in the periodic ghost cells are 
         // computed by finite differences and not by least square
         //if ( !CellList[i]->isGhostCell() )
-            CellList[i]->computeGradients();
+            CellList[i]->computeLeastSquareGradients();
     }
 }
 

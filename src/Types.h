@@ -46,9 +46,9 @@ struct FluidParameter
 
 struct Parameters
 {
-	unsigned int numberOfIterations;
-    unsigned int outputInterval;
-    unsigned int outputIntervalVTK;
+	unsigned long int numberOfIterations;
+    unsigned long int outputInterval;
+    unsigned long int outputIntervalVTK;
 
     double convergenceCriterium[4];
     
