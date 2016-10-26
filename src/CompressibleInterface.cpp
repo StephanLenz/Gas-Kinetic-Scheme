@@ -17,6 +17,22 @@ CompressibleInterface::~CompressibleInterface()
 {
 }
 
+// ============================================================================
+//      This method computes time derivative of the conservative variables
+//      from the compatibility comndition.
+//
+//      Parameters:
+//          prim:       primitive variables
+//          MomentU:    Array with the moments of the equilibrium distribution
+//                      with respect to u
+//          MomentV:    Array with the moments of the equilibrium distribution
+//                      with respect to v
+//          MomentXi:   Array with the moments of the equilibrium distribution
+//                      with respect to xi
+//          a:          normal expansion coefficients
+//          b:          tangential expansion coefficients
+//          timeGrad:   output parameter for the time derivative
+// ============================================================================
 void CompressibleInterface::computeTimeDerivative(double * prim, double * MomentU, double * MomentV, double * MomentXi,
                                       double* a, double* b, double * timeGrad)
 {
@@ -99,6 +115,24 @@ void CompressibleInterface::computeTimeDerivative(double * prim, double * Moment
 
 }
 
+// ============================================================================
+//      This method computes the time integrated flux over this interface
+//
+//      Parameters:
+//          MomentU:            Array with the moments of the equilibrium 
+//                              distribution with respect to u
+//          MomentV:            Array with the moments of the equilibrium 
+//                              distribution with respect to v
+//          MomentXi:           Array with the moments of the equilibrium 
+//                              distribution with respect to xi
+//          a:                  normal expansion coefficients
+//          b:                  tangential expansion coefficients
+//          A:                  temporal expansion coefficient
+//          timeCoefficients:   coefficients of the Flux parts after time
+//                              integration
+//          prim:               primitive variables
+//          tau:                relaxation time
+// ============================================================================
 void CompressibleInterface::assembleFlux(double * MomentU, double * MomentV, double * MomentXi, double * a, double * b, double * A, double * timeCoefficients, double* prim, double tau)
 {
     double Flux_1[4];
@@ -338,3 +372,10 @@ void CompressibleInterface::computeMicroSlope(double * prim, double * macroSlope
 
     microSlope[0] = macroSlope[0] - prim[1] * microSlope[1] - prim[2] * microSlope[2] - 0.5 * E* microSlope[3];
 }
+
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================

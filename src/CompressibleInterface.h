@@ -1,3 +1,21 @@
+// ============================================================================
+//
+//                      Compressible Thermal GKS
+//
+//      Developed by Stephan Lenz (stephan.lenz@tu-bs.de)
+//
+// ============================================================================
+//
+//      CompressibleInterface.h
+//
+//          This class implements the GKS specific flux computations.
+//
+//      Function:
+//          Storage of Interface data
+//          Implementation of Interface related computations
+//              Flux computation 
+//
+// ============================================================================
 
 #ifndef COMPRESSIBLEINTERFACE_H
 #define COMPRESSIBLEINTERFACE_H

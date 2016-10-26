@@ -1,4 +1,23 @@
-
+// ============================================================================
+//
+//                      Compressible Thermal GKS
+//
+//      Developed by Stephan Lenz (stephan.lenz@tu-bs.de)
+//
+// ============================================================================
+//
+//      Interface.h
+//
+//          This class in an abstract baseclass for compressible and
+//          incompressible Interfaces. It implements all methods that do not
+//          depend on the type of interface.
+//
+//      Function:
+//          Storage of Interface data
+//          Implementation of Interface related computations
+//              Flux computation 
+//
+// ============================================================================
 
 #include "Interface.h"
 #include "IncompressibleInterface.h"
@@ -13,6 +32,28 @@ Interface::Interface()
 {
 }
 
+// ============================================================================
+//      This constructor initializes the Interface.
+//      It also computes:
+//          Center
+//          Area
+//          Normal
+//          Distance to pos and neg Cell
+//
+//      Parameters:
+//          negCell:            Pointer to the adjacent cell in neg direction
+//          posCell:            Pointer to the adjacent cell in pos direction
+//          negAdd:             true if this interface should be introduced to 
+//                              the neg Cell
+//          posAdd:             true if this interface should be introduced to
+//                              the pos Cell
+//          nodes:              pointer to an array containing pointers to the
+//                              two nodes defining this interface
+//          fluidParam:         FluidParameter Object
+//          BC:                 Pointer to Boundary Condition Object
+//          periodicLengthX:    length of the domain in X direction
+//          periodicLengthY:    length of the domain in Y direction
+// ============================================================================
 Interface::Interface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC, double periodicLengthX, double periodicLengthY)
 {
     this->ID = Interface::numberOfCells++;
@@ -68,9 +109,16 @@ Interface::Interface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, flo
     // ========================================================================
     
     // ========================================================================
-    //                  compute distances
+    //                  compute distances from Interface center to Cell center
     // ========================================================================
-    // Ghostcells have the same distance as their pendants in the domain
+    // This Method is called before the creation of the ghostcells. Ghost cells
+    // have the same distance as their pendants in the domain.
+    //
+    // In the case of periodic boundaries, the pure distance would not be
+    // correct. Therefore if the interface has a neighbor cell that should
+    // not be added (because it lies on the opposite side of the domain), the 
+    // distance is computed as the complemantary distance.
+    // ========================================================================
     if(negCell != NULL){
         if(negAdd) this->negDistance =                   this->distance( this->negCell->getCenter() );
         else       this->negDistance = periodicLengthX - this->distance( this->negCell->getCenter() );
@@ -82,7 +130,7 @@ Interface::Interface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, flo
         else       this->posDistance = periodicLengthX - this->distance( this->posCell->getCenter() );
     }else{
         this->posDistance = this->distance( this->negCell->getCenter() );
-}
+    }
     // ========================================================================
     
     // ========================================================================
@@ -102,6 +150,9 @@ Interface::~Interface()
 
 // ============================================================================
 //                     Interface Factory
+//
+//          This method should be used to create polymorphic Interfaces.
+//
 // ============================================================================
 Interface * Interface::createInterface(InterfaceType type, Cell * negCell, Cell * posCell, bool negAdd, bool posAdd, 
                                        float2** nodes, FluidParameter fluidParam, BoundaryCondition * BC, double periodicLengthX, double periodicLengthY)
@@ -116,215 +167,36 @@ Interface * Interface::createInterface(InterfaceType type, Cell * negCell, Cell 
     return tmp;
 }
 
-void Interface::computeFlux(double dt)
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+//
+//                          Computation Methods
+//
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+
+// ============================================================================
+//      This method is currently not used
+// ============================================================================
+void Interface::setInterpolationOrder(int arg)
 {
-    this->computeInternalFlux(dt);
+    interpolationOrder = arg;
 }
 
-void Interface::computeInternalFlux(double dt)
+// ============================================================================
+//      This method is currently not used
+// ============================================================================
+int Interface::getInterpolationOrder()
 {
-    const int NUMBER_OF_MOMENTS = 7;
-
-    double prim[4];
-    double primTest[4] = {0.0, 0.0, 0.0, 0.0};
-
-    double normalGradCons[4];
-    double normalGradConsTest[4];
-
-    double tangentialGradCons[4] = {0.0, 0.0, 0.0, 0.0};
-
-    double timeGrad[4];
-
-    double a[4];
-    double b[4] = {0.0, 0.0, 0.0, 0.0};
-    double A[4];
-
-    double MomentU[NUMBER_OF_MOMENTS];
-    double MomentV[NUMBER_OF_MOMENTS];
-    double MomentXi[NUMBER_OF_MOMENTS];
-
-    // ========================================================================
-    // interpolated primary variables at the interface
-    //this->interpolatePrim(prim);
-    this->reconstructPrimPiecewiseConstant(prim);
-    this->reconstructPrimPiecewiseConstant(primTest);
-    //this->reconstructPrimPiecewiseLinear(prim);
-
-    // spacial gradients of the conservative varibles
-    this->differentiateConsNormal(normalGradCons, prim);
-    this->differentiateConsNormal(normalGradConsTest, prim);
-    //this->differentiateConsNormalThreePoint(normalGradCons, prim);
-    //this->differentiateConsLeastSquare(normalGradCons, tangentialGradCons, prim);
-    // ========================================================================
-    
-    // ========================================================================
-    //          Some Tests
-    // ========================================================================
-    PrimitiveVariable posPrim = this->posCell->getPrim();
-    PrimitiveVariable negPrim = this->negCell->getPrim();
-
-    //if( fabs(this->normal.x - 1.0) > 1.0e-12 )
-    if(this->ID == 9)
-        int breakPoint = 0;
-
-    this->transformGlobal2Local( (double*)&posPrim );
-    this->transformGlobal2Local( (double*)&negPrim );
-    // ========================================================================
-    
-    // ========================================================================
-    // Momentum Transformation in local coordinate system
-    // ========================================================================
-    transformGlobal2Local(prim);
-    transformGlobal2Local(normalGradCons);
-    transformGlobal2Local(tangentialGradCons);
-    // ========================================================================
-    
-    // ========================================================================
-    // spacial micro slopes a = a1 + a2 u + a3 v + 0.5 a4 (u^2 + v^2 + xi^2)
-    // ========================================================================
-    this->computeMicroSlope(prim, normalGradCons, a);
-    this->computeMicroSlope(prim, tangentialGradCons, b);
-    // ========================================================================
-
-    // ========================================================================
-    this->computeMoments(prim, MomentU, MomentV, MomentXi, NUMBER_OF_MOMENTS);
-    // ========================================================================
-
-    // ========================================================================
-    // temporal micro slopes A = A1 + A2 u + A3 v + 0.5 A4 (u^2 + v^2 + xi^2)
-    // ========================================================================
-    this->computeTimeDerivative(prim, MomentU, MomentV, MomentXi, a, b, timeGrad);
-
-    this->computeMicroSlope(prim, timeGrad, A);
-    // ========================================================================
-
-    // ========================================================================
-    // Formular as in the Rayleigh-Bernard-Paper (Xu, Lui, 1999)
-    // ========================================================================
-    double tau = 2.0*prim[3] * this->fluidParam.nu;
-    // ========================================================================
-    
-    // ========================================================================
-    // time integration Coefficients
-    // ========================================================================
-    double timeCoefficients[3] = { dt, -tau*dt, 0.5*dt*dt - tau*dt };
-    // ========================================================================
-
-    // ========================================================================
-    // compute mass and momentum fluxes
-    // ========================================================================
-    this->assembleFlux(MomentU, MomentV, MomentXi, a, b, A, timeCoefficients, prim, tau);
-    // ========================================================================
-
-    if(this->ID == 9)
-        int breakPoint = 1;
-    
-    transformLocal2Global(this->timeIntegratedFlux);
-    transformLocal2Global(this->timeIntegratedFlux_1);
-    transformLocal2Global(this->timeIntegratedFlux_2);
-    transformLocal2Global(this->timeIntegratedFlux_3);
-    transformLocal2Global(this->FluxDensity);
-    
-    // ========================================================================
-    // add Flux values to cell updates
-    // ========================================================================
-    //this->posCell->addFlux(this->timeIntegratedFlux,  1.0, this);
-    //this->negCell->addFlux(this->timeIntegratedFlux, -1.0, this);
-    // ========================================================================
-
-    //if( fabs(this->normal.x - 1.0) > 1.0e-12 )
-    if(this->ID == 9)
-        int breakPoint = 1;
+    return interpolationOrder;
 }
 
-Cell * Interface::getNeigborCell(Cell * askingCell)
-{
-    if (posCell == askingCell)
-        return negCell;
-    else
-        return posCell;
-}
-
-Cell * Interface::getCellInDomain()
-{
-    if( !this->isBoundaryInterface() )
-        return NULL;
-    if ( !posCell->isGhostCell() )
-        return posCell;
-    if ( !negCell->isGhostCell() )
-        return negCell;
-}
-
-ConservedVariable Interface::getTimeIntegratedFlux()
-{
-    ConservedVariable tmp;
-    tmp.rho  = this->timeIntegratedFlux[0];
-    tmp.rhoU = this->timeIntegratedFlux[1];
-    tmp.rhoV = this->timeIntegratedFlux[2];
-    tmp.rhoE = this->timeIntegratedFlux[3];
-    return tmp;
-}
-
-ConservedVariable Interface::getTimeIntegratedFlux_1()
-{
-    ConservedVariable tmp;
-    tmp.rho  = this->timeIntegratedFlux_1[0];
-    tmp.rhoU = this->timeIntegratedFlux_1[1];
-    tmp.rhoV = this->timeIntegratedFlux_1[2];
-    tmp.rhoE = this->timeIntegratedFlux_1[3];
-    return tmp;
-}
-
-ConservedVariable Interface::getTimeIntegratedFlux_2()
-{
-    ConservedVariable tmp;
-    tmp.rho  = this->timeIntegratedFlux_2[0];
-    tmp.rhoU = this->timeIntegratedFlux_2[1];
-    tmp.rhoV = this->timeIntegratedFlux_2[2];
-    tmp.rhoE = this->timeIntegratedFlux_2[3];
-    return tmp;
-}
-
-ConservedVariable Interface::getTimeIntegratedFlux_3()
-{
-    ConservedVariable tmp;
-    tmp.rho  = this->timeIntegratedFlux_3[0];
-    tmp.rhoU = this->timeIntegratedFlux_3[1];
-    tmp.rhoV = this->timeIntegratedFlux_3[2];
-    tmp.rhoE = this->timeIntegratedFlux_3[3];
-    return tmp;
-}
-
-ConservedVariable Interface::getFluxDensity()
-{
-    ConservedVariable tmp;
-    tmp.rho =  this->FluxDensity[0];
-    tmp.rhoU = this->FluxDensity[1];
-    tmp.rhoV = this->FluxDensity[2];
-    tmp.rhoE = this->FluxDensity[3];
-    return tmp;
-}
-
-double Interface::getFluxSign(Cell * askingCell)
-{
-    double sign = ( askingCell->getCenter().x - this->center.x ) * this->normal.x
-                + ( askingCell->getCenter().y - this->center.y ) * this->normal.y ;
-
-    return sign/fabs(sign);
-}
-
-bool Interface::isGhostInterface()
-{
-    if (this->isBoundaryInterface()) return false;
-
-    return this->posCell->isGhostCell() && this->negCell->isGhostCell();
-}
-
-bool Interface::isBoundaryInterface()
-{
-    return this->BoundaryConditionPointer != NULL;
-}
-
+// ============================================================================
+//      This method adds a connectivity from an interface to a cell on the 
+//      side of the interface that is not yet occupied.
+// ============================================================================
 void Interface::addCell(Cell * newCell)
 {
     if(this->posCell == NULL)
@@ -339,124 +211,43 @@ void Interface::addCell(Cell * newCell)
     }
 }
 
-Cell * Interface::getPeriodicCell()
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+//
+//                          Computation Methods
+//
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+
+// ============================================================================
+//      This method is the public interface to start the computation of the
+//      Fluxes.
+//
+//      Parameters:
+//          dt:   time step
+// ============================================================================
+void Interface::computeFlux(double dt)
 {
-    Cell* tmp = NULL;
-
-    if( fabs( posDistance - this->distance( this->posCell->getCenter() ) ) > 1.0e-12  )
-    {
-        tmp = posCell;
-        posCell = NULL;
-    }
-
-    if( fabs( negDistance - this->distance( this->negCell->getCenter() ) ) > 1.0e-12  )
-    {
-        tmp = negCell;
-        negCell = NULL;
-    }
-
-    return tmp;
+    this->computeInternalFlux(dt);
 }
 
-float2 * Interface::getNode(int i)
-{
-    return this->nodes[i];
-}
+// ====================================================================================================================
+//
+//                          Reconstruction of primitive variables
+//
+// ====================================================================================================================
 
-float2 Interface::getNormal()
-{
-    return normal;
-}
-
-float2 Interface::getCenter()
-{
-    return this->center;
-}
-
-float2 Interface::getScaledNormal()
-{
-    if(this->posCell == NULL)
-        return float2(   this->normal.x * this->distance(negCell->getCenter()),   this->normal.y * this->distance(negCell->getCenter()) );
-    else
-        return float2( - this->normal.x * this->distance(posCell->getCenter()), - this->normal.y * this->distance(posCell->getCenter()) );
-}
-
-double Interface::getArea()
-{
-    return this->area;
-}
-
-BoundaryCondition * Interface::getBoundaryCondition()
-{
-    return this->BoundaryConditionPointer;
-}
-
-float2 Interface::getPosConnectivity()
-{
-    float2 vector;
-    vector.x = this->posCell->getCenter().x - this->center.x;
-    vector.y = this->posCell->getCenter().y - this->center.y;
-    return vector;
-}
-
-float2 Interface::getNegConnectivity()
-{
-    float2 vector;
-    vector.x = this->negCell->getCenter().x - this->center.x;
-    vector.y = this->negCell->getCenter().y - this->center.y;
-    return vector;
-}
-
-string Interface::toString()
-{
-	ostringstream tmp;
-    if (this->isBoundaryInterface())
-    {
-        tmp << "Boundary Interface at: \n";
-        tmp << "(" << this->center.x << "," << this->center.y << ") \n";
-        tmp << "Connected Cell: \n";
-        if (negCell == NULL) 
-            tmp << this->posCell->toString() << "\n";
-        else
-            tmp << this->negCell->toString() << "\n";
-        tmp << "\n";
-    }
-    else
-    {
-        tmp << "Interface at: \n";
-        tmp << "(" << this->center.x << "," << this->center.y << ") \n";
-        tmp << "Connected Cell: \n";
-        tmp << this->negCell->toString() << "\n";
-        tmp << this->posCell->toString() << "\n";
-        if (this->isGhostInterface())
-            tmp << "GhostInterface\n";
-        tmp << "\n";
-    }
-	return tmp.str();
-}
-
-string Interface::writeCenter()
-{
-    ostringstream tmp;
-    tmp << this->center.x << " " << this->center.y << " 0.0\n";
-    return tmp.str();
-}
-
-void Interface::setInterpolationOrder(int arg)
-{
-    interpolationOrder = arg;
-}
-
-int Interface::getInterpolationOrder()
-{
-    return interpolationOrder;
-}
-
+// ============================================================================
+//      This method computes the Values of the primary variables at the 
+//      interface with linear interpolation
+//
+//      Parameters:
+//          prim:   output parameter for the reconstructed primitive variables
+// ============================================================================
 void Interface::interpolatePrim(double * prim)
 {
-    // This method computes the Values of the primary variables at the interface
-    // with linear interpolation
-
     double distance = this->posDistance + this->negDistance;
 
     prim[0] = ( this->negCell->getPrim().rho * this->posDistance
@@ -479,6 +270,13 @@ void Interface::interpolatePrim(double * prim)
         int i = 0;
 }
 
+// ============================================================================
+//      This method computes the Values of the primary variables at the 
+//      interface with pice wise constant reconstruction and averaging.
+//
+//      Parameters:
+//          prim:   output parameter for the reconstructed primitive variables
+// ============================================================================
 void Interface::reconstructPrimPiecewiseConstant(double * prim)
 {
     // This method computes the Values of the primary variables at the interface
@@ -502,6 +300,14 @@ void Interface::reconstructPrimPiecewiseConstant(double * prim)
         int i = 0;
 }
 
+// ============================================================================
+//      This method computes the Values of the primary variables at the 
+//      interface with picewise linear reconstruction based on the cell wise
+//      gradients (computed by the least square approach) and averaging.
+//
+//      Parameters:
+//          prim:   output parameter for the reconstructed primitive variables
+// ============================================================================
 void Interface::reconstructPrimPiecewiseLinear(double * prim)
 {
     ConservedVariable negGradientX = this->negCell->getGradientX();
@@ -541,16 +347,23 @@ void Interface::reconstructPrimPiecewiseLinear(double * prim)
     int i = 0;
 }
 
+// ====================================================================================================================
+//
+//                          Differentiation of conserved variables
+//
+// ====================================================================================================================
+
+// ============================================================================
+//      This method computes the normal derivatives of the conservative
+//      Variables.
+//      The derivatives are computed by two point central finite differences.
+//
+//      Parameters:
+//          normalGradCons:   output parameters for the derivative
+//          prim:             array of primitive variables
+// ============================================================================
 void Interface::differentiateConsNormal(double* normalGradCons, double* prim)
 {
-    // This method computes the spacial derivatives of the conservative Variables.
-    // The derivatives are computed by central finite differences.
-
-    // ========================================================================
-    // normal direction
-    // ========================================================================
-
-    // compute the distance between the adjacent cell centers
     double distance = this->posDistance + this->negDistance;
 
     normalGradCons[0] = ( this->posCell->getCons().rho  - this->negCell->getCons().rho )  / ( distance * prim[0] );
@@ -562,17 +375,19 @@ void Interface::differentiateConsNormal(double* normalGradCons, double* prim)
     normalGradCons[3] = ( this->posCell->getCons().rhoE - this->negCell->getCons().rhoE ) / ( distance * prim[0] );
 }
 
+// ============================================================================
+//      This method computes the normal derivatives of the conservative
+//      Variables.
+//      The derivatives are computed by three point central finite differences.
+//      The values on the interface are assumed to be the average bet pos and 
+//      neg side
+//
+//      Parameters:
+//          normalGradCons:   output parameters for the derivative
+//          prim:             array of primitive variables
+// ============================================================================
 void Interface::differentiateConsNormalThreePoint(double* normalGradCons, double * prim)
 {
-    // This method computes the spacial derivatives of the conservative Variables.
-    // The derivatives are computed by three point finite differences.
-    // the values on the interface are assumed to be the average bet pos and neg side
-
-    // ========================================================================
-    // normal direction
-    // ========================================================================
-
-    // compute the distance factor 
     double distanceFacctor = 0.5 * ( this->posDistance * this->posDistance + this->negDistance * this->negDistance ) 
                                  / ( this->posDistance * this->negDistance * ( this->posDistance + this->negDistance ) );
 
@@ -585,9 +400,18 @@ void Interface::differentiateConsNormalThreePoint(double* normalGradCons, double
     normalGradCons[3] = distanceFacctor * ( this->posCell->getCons().rhoE - this->negCell->getCons().rhoE ) / ( prim[0] );
 }
 
+// ============================================================================
+//      This method computes the gradient of the conservative
+//      Variables.
+//      The derivatives are computed by averaging with decoupling correction.
+//
+//      Parameters:
+//          normalGradCons:         output parameters for the normal derivative
+//          tangentialGradCons:     output parameters for the tangential derivative
+//          prim:                   array of primitive variables
+// ============================================================================
 void Interface::differentiateConsLeastSquare(double* normalGradCons, double* tangentialGradCons, double* prim)
 {
-    
     // ========================================================================
     // Interpolate Gradients
     // ========================================================================
@@ -651,56 +475,152 @@ void Interface::differentiateConsLeastSquare(double* normalGradCons, double* tan
     tangentialGradCons[3] = ( - this->normal.y * interpolatedGradientX.rhoE + this->normal.x * interpolatedGradientY.rhoE ) / prim[0];
     // ========================================================================
 
-    int i = 0;
+    int breakPoint = 0;
 }
 
-void Interface::transformGlobal2Local(double * vec)
+// ====================================================================================================================
+//
+//                          Flux computation
+//
+// ====================================================================================================================
+
+// ============================================================================
+//      This method computes the Fluxes over an Interface
+//
+//      Parameters:
+//          dt:   time step
+// ============================================================================
+void Interface::computeInternalFlux(double dt)
 {
-    // euclidian components in global coordinatesystem
-    double u0 = vec[1];
-    double v0 = vec[2];
+    const int NUMBER_OF_MOMENTS = 7;
 
-    // transformation in local coordinatesystem
-    // n = (n1,n2)
-    // t = (-n2,n1)
-    // vL = [n t]^T * v0
-    vec[1] =   this->normal.x * u0 + this->normal.y * v0;
-    vec[2] = - this->normal.y * u0 + this->normal.x * v0;
+    double prim[4];
+    double primTest[4] = {0.0, 0.0, 0.0, 0.0};
+
+    double normalGradCons[4];
+    double normalGradConsTest[4];
+
+    double tangentialGradCons[4] = {0.0, 0.0, 0.0, 0.0};
+
+    double timeGrad[4];
+
+    double a[4];
+    double b[4] = {0.0, 0.0, 0.0, 0.0};
+    double A[4];
+
+    double MomentU[NUMBER_OF_MOMENTS];
+    double MomentV[NUMBER_OF_MOMENTS];
+    double MomentXi[NUMBER_OF_MOMENTS];
+
+    // ========================================================================
+    //          interpolated primitive variables at the interface
+    // ========================================================================
+    //this->interpolatePrim(prim);
+    this->reconstructPrimPiecewiseConstant(prim);
+    this->reconstructPrimPiecewiseConstant(primTest);
+    //this->reconstructPrimPiecewiseLinear(prim);
+    // ========================================================================
+    
+    // ========================================================================
+    //          compute spacial gradients of the conservative varibles
+    // ========================================================================
+    this->differentiateConsNormal(normalGradCons, prim);
+    this->differentiateConsNormal(normalGradConsTest, prim);
+    //this->differentiateConsNormalThreePoint(normalGradCons, prim);
+    //this->differentiateConsLeastSquare(normalGradCons, tangentialGradCons, prim);
+    // ========================================================================
+    
+    // ========================================================================
+    //          Some Tests
+    // ========================================================================
+    PrimitiveVariable posPrim = this->posCell->getPrim();
+    PrimitiveVariable negPrim = this->negCell->getPrim();
+
+    //if( fabs(this->normal.x - 1.0) > 1.0e-12 )
+    if(this->ID == 9)
+        int breakPoint = 0;
+
+    this->transformGlobal2Local( (double*)&posPrim );
+    this->transformGlobal2Local( (double*)&negPrim );
+    // ========================================================================
+    
+    // ========================================================================
+    //          Momentum Transformation in local coordinate system
+    // ========================================================================
+    transformGlobal2Local(prim);
+    transformGlobal2Local(normalGradCons);
+    transformGlobal2Local(tangentialGradCons);
+    // ========================================================================
+    
+    // ========================================================================
+    //          compute spacial micro slopes
+    //              a = a1 + a2 u + a3 v + 0.5 a4 (u^2 + v^2 + xi^2)
+    // ========================================================================
+    this->computeMicroSlope(prim, normalGradCons, a);
+    this->computeMicroSlope(prim, tangentialGradCons, b);
+    // ========================================================================
+    
+    // ========================================================================
+    //          comoute moments of the equilibrium distribution
+    // ========================================================================
+    this->computeMoments(prim, MomentU, MomentV, MomentXi, NUMBER_OF_MOMENTS);
+    // ========================================================================
+
+    // ========================================================================
+    //          compute time derivative and temporal micro slopes
+    //              A = A1 + A2 u + A3 v + 0.5 A4 (u^2 + v^2 + xi^2)
+    // ========================================================================
+    this->computeTimeDerivative(prim, MomentU, MomentV, MomentXi, a, b, timeGrad);
+
+    this->computeMicroSlope(prim, timeGrad, A);
+    // ========================================================================
+
+    // ========================================================================
+    // Relaxation time as in the Rayleigh-Bernard-Paper (Xu, Lui, 1999)
+    // ========================================================================
+    double tau = 2.0*prim[3] * this->fluidParam.nu;
+    // ========================================================================
+    
+    // ========================================================================
+    //          compute time integration Coefficients
+    // ========================================================================
+    double timeCoefficients[3] = { dt, -tau*dt, 0.5*dt*dt - tau*dt };
+    // ========================================================================
+
+    // ========================================================================
+    //          compute mass and momentum fluxes
+    // ========================================================================
+    this->assembleFlux(MomentU, MomentV, MomentXi, a, b, A, timeCoefficients, prim, tau);
+    // ========================================================================
+
+    if(this->ID == 9)
+        int breakPoint = 1;
+    
+    // ========================================================================
+    //          transform momentum Flux components back to global system
+    // ========================================================================
+    transformLocal2Global(this->timeIntegratedFlux);
+    transformLocal2Global(this->timeIntegratedFlux_1);
+    transformLocal2Global(this->timeIntegratedFlux_2);
+    transformLocal2Global(this->timeIntegratedFlux_3);
+    transformLocal2Global(this->FluxDensity);
+    // ========================================================================
+    
+    if(this->ID == 9)
+        int breakPoint = 1;
 }
 
-void Interface::transformLocal2Global(double * vec)
-{
-    // euclidian components in local coordinatesystem
-    double un = vec[1];
-    double vt = vec[2];
-
-    // transformation in global coordinatesystem
-    // n = (n1,n2)
-    // t = (-n2,n1)
-    // vL = [n t] * v0
-    vec[1] = this->normal.x * un - this->normal.y * vt;
-    vec[2] = this->normal.y * un + this->normal.x * vt;
-}
-
-PrimitiveVariable Interface::cons2Prim(ConservedVariable cons)
-{
-    PrimitiveVariable prim;
-    prim.rho = cons.rho;
-    prim.U   = cons.rhoU / cons.rho;
-    prim.V   = cons.rhoV / cons.rho;
-
-    prim.L = ( this->fluidParam.K + 2.0 ) * cons.rho / ( 4.0 * ( cons.rhoE - 0.5 * ( cons.rhoU * cons.rhoU + cons.rhoV * cons.rhoV ) / cons.rho ) );
-
-    return prim;
-}
-
-double Interface::distance(float2 point)
-{
-    // Compute the projected distance of a point on the normal of the interface
-    return fabs( ( this->center.x - point.x )*( this->normal.x )
-               + ( this->center.y - point.y )*( this->normal.y ) );
-}
-
+// ============================================================================
+//      This method computes the moments of the equilibrium distribution.
+//      The formulas can be found in (Xu, 2001).
+//
+//      Parameters:
+//          prim:           input parameter for primitive variables
+//          MomentU:        output parameter for the moments with respect to u
+//          MomentV:        output parameter for the moments with respect to v
+//          MomentXi:       output parameter for the moments with respect to xi
+//          numberMoments:  input parameter for how many moments shall be computed
+// ============================================================================
 void Interface::computeMoments(double * prim, double * MomentU, double* MomentV, double * MomentXi, int numberMoments)
 {
     //==================== U Moments ==========================================
@@ -725,3 +645,397 @@ void Interface::computeMoments(double * prim, double * MomentU, double* MomentV,
     MomentXi[6] = ( 1.0*this->fluidParam.K + 4.0 ) / ( 2.0 * prim[3] ) * MomentXi[4];
 }
 
+// ====================================================================================================================
+//
+//                          Data Manipulation
+//
+// ====================================================================================================================
+
+// ============================================================================
+//      This method transforms the second and third element in vec (vec[1] and
+//      vec[2]) into the local frame of reference.
+//      This is done by projection onto normal and tangential vectors.
+//
+//      Parameters:
+//          vec:   array in which the second and third element are transformed
+// ============================================================================
+void Interface::transformGlobal2Local(double * vec)
+{
+    // euclidian components in global coordinatesystem
+    double u0 = vec[1];
+    double v0 = vec[2];
+
+    // transformation in local coordinatesystem
+    // n = (n1,n2)
+    // t = (-n2,n1)
+    // vL = [n t]^T * v0
+    vec[1] =   this->normal.x * u0 + this->normal.y * v0;
+    vec[2] = - this->normal.y * u0 + this->normal.x * v0;
+}
+
+// ============================================================================
+//      This method transforms the second and third element in vec (vec[1] and
+//      vec[2]) into the global frame of reference.
+//      This is done by the tanspoed projection onto normal and tangential
+//      vectors.
+//
+//      Parameters:
+//          vec:   array in which the second and third element are transformed
+// ============================================================================
+void Interface::transformLocal2Global(double * vec)
+{
+    // euclidian components in local coordinatesystem
+    double un = vec[1];
+    double vt = vec[2];
+
+    // transformation in global coordinatesystem
+    // n = (n1,n2)
+    // t = (-n2,n1)
+    // vL = [n t] * v0
+    vec[1] = this->normal.x * un - this->normal.y * vt;
+    vec[2] = this->normal.y * un + this->normal.x * vt;
+}
+
+// ============================================================================
+//      This method returns a set of primitive variables equivalent to the
+//      conservative variables in cons.
+//
+//      Parameters:
+//          cons:   conserved variable
+// ============================================================================
+PrimitiveVariable Interface::cons2Prim(ConservedVariable cons)
+{
+    PrimitiveVariable prim;
+    prim.rho = cons.rho;
+    prim.U   = cons.rhoU / cons.rho;
+    prim.V   = cons.rhoV / cons.rho;
+
+    prim.L = ( this->fluidParam.K + 2.0 ) * cons.rho / ( 4.0 * ( cons.rhoE - 0.5 * ( cons.rhoU * cons.rhoU + cons.rhoV * cons.rhoV ) / cons.rho ) );
+
+    return prim;
+}
+
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+//
+//                          get Methods
+//
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+
+// ====================================================================================================================
+//
+//                          get Connectivity
+//
+// ====================================================================================================================
+
+// ============================================================================
+//      This method returns the i-th node of the interface
+// ============================================================================
+float2 * Interface::getNode(int i)
+{
+    return this->nodes[i];
+}
+
+// ============================================================================
+//      This method returns the opposite cell of the asking cell at this 
+//      interface.
+// ============================================================================
+Cell * Interface::getNeigborCell(Cell * askingCell)
+{
+    if (posCell == askingCell)
+        return negCell;
+    else
+        return posCell;
+}
+
+// ============================================================================
+//      This method is intended for boundary interfaces to get the cell that 
+//      is in the domain.
+// ============================================================================
+Cell * Interface::getCellInDomain()
+{
+    if( !this->isBoundaryInterface() )
+        return NULL;
+    if ( !posCell->isGhostCell() )
+        return posCell;
+    if ( !negCell->isGhostCell() )
+        return negCell;
+}
+
+// ============================================================================
+//      This method is intended for periodic boundary interfaces. It gets the
+//      corresponding cell the opposite side of the domain.
+// ============================================================================
+Cell * Interface::getPeriodicCell()
+{
+    Cell* tmp = NULL;
+
+    if( fabs( posDistance - this->distance( this->posCell->getCenter() ) ) > 1.0e-12  )
+    {
+        tmp = posCell;
+        posCell = NULL;
+    }
+
+    if( fabs( negDistance - this->distance( this->negCell->getCenter() ) ) > 1.0e-12  )
+    {
+        tmp = negCell;
+        negCell = NULL;
+    }
+
+    return tmp;
+}
+
+// ============================================================================
+//      This method returns a vector from the interface center to the center
+//      of the adjacent cell on the positive side.
+// ============================================================================
+float2 Interface::getPosConnectivity()
+{
+    float2 vector;
+    vector.x = this->posCell->getCenter().x - this->center.x;
+    vector.y = this->posCell->getCenter().y - this->center.y;
+    return vector;
+}
+
+// ============================================================================
+//      This method returns a vector from the interface center to the center
+//      of the adjacent cell on the negative side.
+// ============================================================================
+float2 Interface::getNegConnectivity()
+{
+    float2 vector;
+    vector.x = this->negCell->getCenter().x - this->center.x;
+    vector.y = this->negCell->getCenter().y - this->center.y;
+    return vector;
+}
+
+// ============================================================================
+//      This method returns a pointer to the boundary condition of this 
+//      interface.
+// ============================================================================
+BoundaryCondition * Interface::getBoundaryCondition()
+{
+    return this->BoundaryConditionPointer;
+}
+
+// ============================================================================
+//      This method returns, wheter this interface connects two ghostcells.
+// ============================================================================
+bool Interface::isGhostInterface()
+{
+    if (this->isBoundaryInterface()) return false;
+
+    return this->posCell->isGhostCell() && this->negCell->isGhostCell();
+}
+
+// ============================================================================
+//      This method returns, wheter this interface is a boundary itnerface.
+//      It does not recognize periodic boundaries without ghost cells.
+// ============================================================================
+bool Interface::isBoundaryInterface()
+{
+    return this->BoundaryConditionPointer != NULL;
+}
+
+// ====================================================================================================================
+//
+//                          get Geometry
+//
+// ====================================================================================================================
+
+// ============================================================================
+//      This method returns the normal vector of the interface.
+// ============================================================================
+float2 Interface::getNormal()
+{
+    return normal;
+}
+
+// ============================================================================
+//      This method returns the center of this interface.
+// ============================================================================
+float2 Interface::getCenter()
+{
+    return this->center;
+}
+
+// ============================================================================
+//      This method is inteded for the construction of ghost cells. it returns
+//      a normal vector pointing out of the domain with a length that is equal
+//      to the distance between the interface center and the adjacent cell
+//      Center in the domain.
+// ============================================================================
+float2 Interface::getScaledNormal()
+{
+    if(this->posCell == NULL)
+        return float2(   this->normal.x * this->distance(negCell->getCenter()),   this->normal.y * this->distance(negCell->getCenter()) );
+    else
+        return float2( - this->normal.x * this->distance(posCell->getCenter()), - this->normal.y * this->distance(posCell->getCenter()) );
+}
+
+// ============================================================================
+//      This method returns the interface area.
+// ============================================================================
+double Interface::getArea()
+{
+    return this->area;
+}
+
+// ============================================================================
+//      This method projects the vector from the interface center to some point
+//      and returns its length.
+// ============================================================================
+double Interface::distance(float2 point)
+{
+    // Compute the projected distance of a point on the normal of the interface
+    return fabs( ( this->center.x - point.x )*( this->normal.x )
+               + ( this->center.y - point.y )*( this->normal.y ) );
+}
+
+// ====================================================================================================================
+//
+//                          get Data
+//
+// ====================================================================================================================
+
+// ============================================================================
+//      This method returns the time integrated Flux over this interface.
+// ============================================================================
+ConservedVariable Interface::getTimeIntegratedFlux()
+{
+    ConservedVariable tmp;
+    tmp.rho  = this->timeIntegratedFlux[0];
+    tmp.rhoU = this->timeIntegratedFlux[1];
+    tmp.rhoV = this->timeIntegratedFlux[2];
+    tmp.rhoE = this->timeIntegratedFlux[3];
+    return tmp;
+}
+
+// ============================================================================
+//      This method returns the time integrated Flux over this interface,
+//      that is related to convetive transport.
+// ============================================================================
+ConservedVariable Interface::getTimeIntegratedFlux_1()
+{
+    ConservedVariable tmp;
+    tmp.rho  = this->timeIntegratedFlux_1[0];
+    tmp.rhoU = this->timeIntegratedFlux_1[1];
+    tmp.rhoV = this->timeIntegratedFlux_1[2];
+    tmp.rhoE = this->timeIntegratedFlux_1[3];
+    return tmp;
+}
+
+// ============================================================================
+//      This method returns the time integrated Flux over this interface,
+//      that is related transport due to spacial gradients.
+// ============================================================================
+ConservedVariable Interface::getTimeIntegratedFlux_2()
+{
+    ConservedVariable tmp;
+    tmp.rho  = this->timeIntegratedFlux_2[0];
+    tmp.rhoU = this->timeIntegratedFlux_2[1];
+    tmp.rhoV = this->timeIntegratedFlux_2[2];
+    tmp.rhoE = this->timeIntegratedFlux_2[3];
+    return tmp;
+}
+
+// ============================================================================
+//      This method returns the time integrated Flux over this interface,
+//      that is related transport due to temporal gradients.
+// ============================================================================
+ConservedVariable Interface::getTimeIntegratedFlux_3()
+{
+    ConservedVariable tmp;
+    tmp.rho  = this->timeIntegratedFlux_3[0];
+    tmp.rhoU = this->timeIntegratedFlux_3[1];
+    tmp.rhoV = this->timeIntegratedFlux_3[2];
+    tmp.rhoE = this->timeIntegratedFlux_3[3];
+    return tmp;
+}
+
+// ============================================================================
+//      This method returns the Flux density over this interface.
+// ============================================================================
+ConservedVariable Interface::getFluxDensity()
+{
+    ConservedVariable tmp;
+    tmp.rho =  this->FluxDensity[0];
+    tmp.rhoU = this->FluxDensity[1];
+    tmp.rhoV = this->FluxDensity[2];
+    tmp.rhoE = this->FluxDensity[3];
+    return tmp;
+}
+
+// ============================================================================
+//      This method returns 1.0 or -1.0 depending on whether the asking cell
+//      is on the positive or negative side of the interface
+// ============================================================================
+double Interface::getFluxSign(Cell * askingCell)
+{
+    double sign = ( askingCell->getCenter().x - this->center.x ) * this->normal.x
+                + ( askingCell->getCenter().y - this->center.y ) * this->normal.y ;
+
+    return sign/fabs(sign);
+}
+
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+//
+//                          output Methods
+//
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+
+// ============================================================================
+//      This method returns a string containing some information on this 
+//      interface.
+// ============================================================================
+string Interface::toString()
+{
+	ostringstream tmp;
+    if (this->isBoundaryInterface())
+    {
+        tmp << "Boundary Interface at: \n";
+        tmp << "(" << this->center.x << "," << this->center.y << ") \n";
+        tmp << "Connected Cell: \n";
+        if (negCell == NULL) 
+            tmp << this->posCell->toString() << "\n";
+        else
+            tmp << this->negCell->toString() << "\n";
+        tmp << "\n";
+    }
+    else
+    {
+        tmp << "Interface at: \n";
+        tmp << "(" << this->center.x << "," << this->center.y << ") \n";
+        tmp << "Connected Cell: \n";
+        tmp << this->negCell->toString() << "\n";
+        tmp << this->posCell->toString() << "\n";
+        if (this->isGhostInterface())
+            tmp << "GhostInterface\n";
+        tmp << "\n";
+    }
+	return tmp.str();
+}
+
+// ============================================================================
+//      This method writes the interface Center to a string.
+// ============================================================================
+string Interface::writeCenter()
+{
+    ostringstream tmp;
+    tmp << this->center.x << " " << this->center.y << " 0.0\n";
+    return tmp.str();
+}
+
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
+// ====================================================================================================================
