@@ -48,7 +48,7 @@ private:
     // ========================================================================
     //          Connectivity as Pointers
     // ========================================================================
-    float2* nodes[4];
+    Node* nodes[4];
     int nInterfaces;
 	Interface* InterfaceList[4];
     BoundaryCondition* BoundaryContitionPointer;
@@ -56,7 +56,7 @@ private:
     // ========================================================================
     //          Geometrical Information
     // ========================================================================
-	float2 center;
+	Node center;
     double volume;
     double minDx;
 
@@ -83,7 +83,7 @@ public:
 
 	Cell();
 
-	Cell(InterfaceType interfacetype, float2** nodes, BoundaryCondition* BC, FluidParameter fluidParam);
+	Cell(InterfaceType interfacetype, Node** nodes, BoundaryCondition* BC, FluidParameter fluidParam);
 
 	~Cell();
 
@@ -114,6 +114,8 @@ public:
     void computeLeastSquareCoefficients();
 
 	void setValues(double rho, double u, double v, double T);
+
+    void setCons( ConservedVariable cons);
     
     // ========================================================================
     //              get Methods
@@ -123,29 +125,37 @@ public:
 
     unsigned long int getID();
 
-    float2 getNode(int i);
+    Node getNode(int i);
+
+    Interface* getInterface(int i);
 
     Cell* getNeighborCell(int i);
 
     Cell* findNeighborInDomain();
 
-    float2 getConnectivity(int i);
+    Node getConnectivity(int i);
 
     bool isGhostCell();
+
+    BoundaryCondition* getBoundaryConditionPointer();
     
     // ============ get Geometry ==============================================
 
     double getVolume();
 
-	float2 getCenter();
+	Node getCenter();
 
-    double distance(float2 point);
+    double getMinDx();
+
+    double distance(Node point);
     
     // ============ get Data ==================================================
 
     PrimitiveVariable getPrim();
 
     ConservedVariable getCons();
+
+    ConservedVariable getConsOld();
 
     ConservedVariable getLocalResidual();
 

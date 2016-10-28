@@ -12,6 +12,7 @@
 //
 // ============================================================================
 
+#include "GKSSolver.h"
 #include "GKSMesh.h"
 #include "BoundaryCondition.h"
 #include <iostream>
@@ -57,9 +58,9 @@ int main(int argc, char* argv[])
 
         Parameters param;
 
-        param.numberOfIterations = 20000000000;         // maximal number of Iterations
-        param.outputIntervalVTK = 10000;                 // Output interval for VTK Files (and .dat files)
-        param.outputInterval = 10000;                    // Output interval for Output on the screen
+        param.numberOfIterations = 500000000;         // maximal number of Iterations
+        param.outputIntervalVTK = 100000000;                 // Output interval for VTK Files (and .dat files)
+        param.outputInterval = 100000;                    // Output interval for Output on the screen
 
         // Abortion criteria for the different conserved variables
         // These are thresholds for relative residual changes
@@ -88,7 +89,7 @@ int main(int argc, char* argv[])
         FluidParameter fluidParam;
 
         int    nx = 2;          // number of cells in x direction
-        int    ny = 32;         // number of cells in y direction
+        int    ny = 128;         // number of cells in y direction
         double Re = 4.0;        // Reynolds number
         double u0 = 0.1;        // Velocits in the mid of the channel
         param.L = 1.0;          // reference length for Re number
@@ -124,7 +125,7 @@ int main(int argc, char* argv[])
         mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, lambda);
 
         // Generate the Mesh
-        mesh->generateRectMeshGraded(compressible, W, H, nx, ny, 1.0, 0.1);
+        mesh->generateRectMeshGraded(compressible, W, H, nx, ny, 1.0, 1.0);
 
         // Set initial condition
         mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
@@ -156,20 +157,31 @@ int main(int argc, char* argv[])
         //              Run the actual simulation
         // ====================================================================
         // ====================================================================
-        mesh->iterate();
+        //mesh->iterate();
         // ====================================================================
         // ====================================================================
+
+        GKSSolver* solver = new GKSSolver(param, fluidParam);
+
+        solver->readMeshFromMeshObject(*mesh);
+
+        //mesh->iterate();
+        solver->iterate();
+
+        solver->writeDataToMeshObject(*mesh);
+
+        mesh->writeVTKFile( "out/solver.vtk" );
 
         // ====================================================================
         //              Output several files
         // ====================================================================
 
 
-        mesh->writeTimeSteps("out/timeSteps.dat");
-        mesh->writeTime("out/time.dat");
-        mesh->writeResultFields("out/ResultFields.dat");
-        mesh->writeOverviewFile("out/OverviewFile.dat");
-        mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
+        //mesh->writeTimeSteps("out/timeSteps.dat");
+        //mesh->writeTime("out/time.dat");
+        //mesh->writeResultFields("out/ResultFields.dat");
+        //mesh->writeOverviewFile("out/OverviewFile.dat");
+        //mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
 
         // ========== Poiseuille Convergence Study ============================
         //ostringstream filename;
@@ -215,5 +227,6 @@ int main(int argc, char* argv[])
 
         //system("pause");
         delete mesh;
+        delete solver;
     }
 }

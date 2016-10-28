@@ -120,6 +120,7 @@
     <ClCompile Include="src\Cell.cpp" />
     <ClCompile Include="src\GKSMesh.cpp" />
     <ClCompile Include="src\CompressibleInterface.cpp" />
+    <ClCompile Include="src\GKSSolver.cpp" />
     <ClCompile Include="src\IncompressibleInterface.cpp" />
     <ClCompile Include="src\Interface.cpp" />
     <ClCompile Include="src\InterfaceBC.cpp" />
@@ -130,6 +131,7 @@
     <ClInclude Include="src\Cell.h" />
     <ClInclude Include="src\GKSMesh.h" />
     <ClInclude Include="src\CompressibleInterface.h" />
+    <ClInclude Include="src\GKSSolver.h" />
     <ClInclude Include="src\IncompressibleInterface.h" />
     <ClInclude Include="src\Interface.h" />
     <ClInclude Include="src\InterfaceBC.h" />

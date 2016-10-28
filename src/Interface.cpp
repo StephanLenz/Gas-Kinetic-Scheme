@@ -54,7 +54,7 @@ Interface::Interface()
 //          periodicLengthX:    length of the domain in X direction
 //          periodicLengthY:    length of the domain in Y direction
 // ============================================================================
-Interface::Interface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC, double periodicLengthX, double periodicLengthY)
+Interface::Interface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, Node** nodes, FluidParameter fluidParam, BoundaryCondition* BC, double periodicLengthX, double periodicLengthY)
 {
     this->ID = Interface::numberOfCells++;
 
@@ -155,7 +155,7 @@ Interface::~Interface()
 //
 // ============================================================================
 Interface * Interface::createInterface(InterfaceType type, Cell * negCell, Cell * posCell, bool negAdd, bool posAdd, 
-                                       float2** nodes, FluidParameter fluidParam, BoundaryCondition * BC, double periodicLengthX, double periodicLengthY)
+                                       Node** nodes, FluidParameter fluidParam, BoundaryCondition * BC, double periodicLengthX, double periodicLengthY)
 {
     Interface* tmp = NULL;
 
@@ -420,15 +420,25 @@ void Interface::differentiateConsLeastSquare(double* normalGradCons, double* tan
     ConservedVariable interpolatedGradientX;
     ConservedVariable interpolatedGradientY;
 
-    interpolatedGradientX.rho  = ( this->posCell->getGradientX().rho  * this->negDistance + this->negCell->getGradientX().rho  * this->posDistance ) / ( distance );
-    interpolatedGradientX.rhoU = ( this->posCell->getGradientX().rhoU * this->negDistance + this->negCell->getGradientX().rhoU * this->posDistance ) / ( distance );
-    interpolatedGradientX.rhoV = ( this->posCell->getGradientX().rhoV * this->negDistance + this->negCell->getGradientX().rhoV * this->posDistance ) / ( distance );
-    interpolatedGradientX.rhoE = ( this->posCell->getGradientX().rhoE * this->negDistance + this->negCell->getGradientX().rhoE * this->posDistance ) / ( distance );
+    //interpolatedGradientX.rho  = ( this->posCell->getGradientX().rho  * this->negDistance + this->negCell->getGradientX().rho  * this->posDistance ) / ( distance );
+    //interpolatedGradientX.rhoU = ( this->posCell->getGradientX().rhoU * this->negDistance + this->negCell->getGradientX().rhoU * this->posDistance ) / ( distance );
+    //interpolatedGradientX.rhoV = ( this->posCell->getGradientX().rhoV * this->negDistance + this->negCell->getGradientX().rhoV * this->posDistance ) / ( distance );
+    //interpolatedGradientX.rhoE = ( this->posCell->getGradientX().rhoE * this->negDistance + this->negCell->getGradientX().rhoE * this->posDistance ) / ( distance );
 
-    interpolatedGradientY.rho  = ( this->posCell->getGradientY().rho  * this->negDistance + this->negCell->getGradientY().rho  * this->posDistance ) / ( distance );
-    interpolatedGradientY.rhoU = ( this->posCell->getGradientY().rhoU * this->negDistance + this->negCell->getGradientY().rhoU * this->posDistance ) / ( distance );
-    interpolatedGradientY.rhoV = ( this->posCell->getGradientY().rhoV * this->negDistance + this->negCell->getGradientY().rhoV * this->posDistance ) / ( distance );
-    interpolatedGradientY.rhoE = ( this->posCell->getGradientY().rhoE * this->negDistance + this->negCell->getGradientY().rhoE * this->posDistance ) / ( distance );
+    //interpolatedGradientY.rho  = ( this->posCell->getGradientY().rho  * this->negDistance + this->negCell->getGradientY().rho  * this->posDistance ) / ( distance );
+    //interpolatedGradientY.rhoU = ( this->posCell->getGradientY().rhoU * this->negDistance + this->negCell->getGradientY().rhoU * this->posDistance ) / ( distance );
+    //interpolatedGradientY.rhoV = ( this->posCell->getGradientY().rhoV * this->negDistance + this->negCell->getGradientY().rhoV * this->posDistance ) / ( distance );
+    //interpolatedGradientY.rhoE = ( this->posCell->getGradientY().rhoE * this->negDistance + this->negCell->getGradientY().rhoE * this->posDistance ) / ( distance );
+
+    interpolatedGradientX.rho  = 0.5 * ( this->posCell->getGradientX().rho  + this->negCell->getGradientX().rho  );
+    interpolatedGradientX.rhoU = 0.5 * ( this->posCell->getGradientX().rhoU + this->negCell->getGradientX().rhoU );
+    interpolatedGradientX.rhoV = 0.5 * ( this->posCell->getGradientX().rhoV + this->negCell->getGradientX().rhoV );
+    interpolatedGradientX.rhoE = 0.5 * ( this->posCell->getGradientX().rhoE + this->negCell->getGradientX().rhoE );
+    
+    interpolatedGradientY.rho  = 0.5 * ( this->posCell->getGradientY().rho  + this->negCell->getGradientY().rho  );
+    interpolatedGradientY.rhoU = 0.5 * ( this->posCell->getGradientY().rhoU + this->negCell->getGradientY().rhoU );
+    interpolatedGradientY.rhoV = 0.5 * ( this->posCell->getGradientY().rhoV + this->negCell->getGradientY().rhoV );
+    interpolatedGradientY.rhoE = 0.5 * ( this->posCell->getGradientY().rhoE + this->negCell->getGradientY().rhoE );
     // ========================================================================
     
     // ========================================================================
@@ -731,12 +741,23 @@ PrimitiveVariable Interface::cons2Prim(ConservedVariable cons)
 //
 // ====================================================================================================================
 
+idType Interface::getID()
+{
+    return this->ID;
+}
+
 // ============================================================================
 //      This method returns the i-th node of the interface
 // ============================================================================
-float2 * Interface::getNode(int i)
+Node * Interface::getNode(int i)
 {
     return this->nodes[i];
+}
+
+Cell * Interface::getCell(idType i)
+{
+    if(i == 0) return this->posCell;
+    else       return this->negCell;
 }
 
 // ============================================================================
@@ -792,9 +813,9 @@ Cell * Interface::getPeriodicCell()
 //      This method returns a vector from the interface center to the center
 //      of the adjacent cell on the positive side.
 // ============================================================================
-float2 Interface::getPosConnectivity()
+Node Interface::getPosConnectivity()
 {
-    float2 vector;
+    Node vector;
     vector.x = this->posCell->getCenter().x - this->center.x;
     vector.y = this->posCell->getCenter().y - this->center.y;
     return vector;
@@ -804,9 +825,9 @@ float2 Interface::getPosConnectivity()
 //      This method returns a vector from the interface center to the center
 //      of the adjacent cell on the negative side.
 // ============================================================================
-float2 Interface::getNegConnectivity()
+Node Interface::getNegConnectivity()
 {
-    float2 vector;
+    Node vector;
     vector.x = this->negCell->getCenter().x - this->center.x;
     vector.y = this->negCell->getCenter().y - this->center.y;
     return vector;
@@ -849,7 +870,7 @@ bool Interface::isBoundaryInterface()
 // ============================================================================
 //      This method returns the normal vector of the interface.
 // ============================================================================
-float2 Interface::getNormal()
+Node Interface::getNormal()
 {
     return normal;
 }
@@ -857,7 +878,7 @@ float2 Interface::getNormal()
 // ============================================================================
 //      This method returns the center of this interface.
 // ============================================================================
-float2 Interface::getCenter()
+Node Interface::getCenter()
 {
     return this->center;
 }
@@ -868,12 +889,12 @@ float2 Interface::getCenter()
 //      to the distance between the interface center and the adjacent cell
 //      Center in the domain.
 // ============================================================================
-float2 Interface::getScaledNormal()
+Node Interface::getScaledNormal()
 {
     if(this->posCell == NULL)
-        return float2(   this->normal.x * this->distance(negCell->getCenter()),   this->normal.y * this->distance(negCell->getCenter()) );
+        return Node(   this->normal.x * this->distance(negCell->getCenter()),   this->normal.y * this->distance(negCell->getCenter()) );
     else
-        return float2( - this->normal.x * this->distance(posCell->getCenter()), - this->normal.y * this->distance(posCell->getCenter()) );
+        return Node( - this->normal.x * this->distance(posCell->getCenter()), - this->normal.y * this->distance(posCell->getCenter()) );
 }
 
 // ============================================================================
@@ -884,11 +905,17 @@ double Interface::getArea()
     return this->area;
 }
 
+double Interface::getDistance2CellCenter(idType i)
+{
+    if(i == 0) return this->posDistance;
+    else       return this->negDistance;
+}
+
 // ============================================================================
 //      This method projects the vector from the interface center to some point
 //      and returns its length.
 // ============================================================================
-double Interface::distance(float2 point)
+double Interface::distance(Node point)
 {
     // Compute the projected distance of a point on the normal of the interface
     return fabs( ( this->center.x - point.x )*( this->normal.x )

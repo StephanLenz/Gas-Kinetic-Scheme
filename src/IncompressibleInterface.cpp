@@ -8,7 +8,7 @@ IncompressibleInterface::IncompressibleInterface()
 {
 }
 
-IncompressibleInterface::IncompressibleInterface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC, double periodicLengthX, double periodicLengthY)
+IncompressibleInterface::IncompressibleInterface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, Node** nodes, FluidParameter fluidParam, BoundaryCondition* BC, double periodicLengthX, double periodicLengthY)
     : Interface(negCell, posCell, negAdd, posAdd, nodes, fluidParam, BC, periodicLengthX, periodicLengthY)
 {
 }

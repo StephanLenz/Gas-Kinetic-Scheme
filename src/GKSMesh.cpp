@@ -168,7 +168,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
 		for (int j = 0; j < nx + 1; j++)   // X-Direction
 		{
             // ===== No Distortion =====================
-            float2* tmpNode = new float2( NodesX[j], NodesY[i] );
+            Node* tmpNode = new Node( NodesX[j], NodesY[i] );
             
             tmpNode->ID = currentNodeID++;
 
@@ -220,7 +220,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
 	//=========================================================================
     double angle = 0.0;         // rotation angle in arc
 
-    for (vector<float2*>::iterator i = NodeList.begin(); i != NodeList.end(); ++i)
+    for (vector<Node*>::iterator i = NodeList.begin(); i != NodeList.end(); ++i)
 	{
         double x = (*i)->x;
         double y = (*i)->y;
@@ -238,7 +238,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
 	{
 		for (int j = 0; j < nx; j++)   // X-Direction
 		{
-            float2* tmpNodes[4];
+            Node* tmpNodes[4];
             tmpNodes[0] = this->NodeList[(i+0)*(nx+1) + j + 0]; // bottom left
             tmpNodes[1] = this->NodeList[(i+0)*(nx+1) + j + 1]; // bottom right
             tmpNodes[2] = this->NodeList[(i+1)*(nx+1) + j + 1]; // top right
@@ -261,7 +261,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
     {
         for (int j = 0; j < nx + 1; j++)    // X-Direction
         {
-            float2* tmpNodes[2];
+            Node* tmpNodes[2];
             tmpNodes[0] = this->NodeList[(i+1)*(nx+1) + j]; // top
             tmpNodes[1] = this->NodeList[(i+0)*(nx+1) + j]; // bottom
 
@@ -319,7 +319,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
 	{
 		for (int j = 0; j < nx; j++)   // X-Direction
 		{
-            float2* tmpNodes[2];
+            Node* tmpNodes[2];
             tmpNodes[0] = this->NodeList[i*(nx+1) + (j+0)]; // left
             tmpNodes[1] = this->NodeList[i*(nx+1) + (j+1)]; // right
 
@@ -382,7 +382,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
         if( (*i)->isBoundaryInterface() )
         {
             Cell* periodicCell = NULL;
-            float2* tmpNodes[4];
+            Node* tmpNodes[4];
             
             tmpNodes[1] = (*i)->getNode(0);
             tmpNodes[2] = (*i)->getNode(1);
@@ -397,12 +397,12 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             //      ghost cell has the same distance to the interface as the 
             //      cell center of the adjacent cell in the domain
             // ================================================================
-            float2  normal = (*i)->getScaledNormal();
-            tmpNodes[0] = new float2( tmpNodes[1]->x + 2.0*normal.x, tmpNodes[1]->y + 2.0*normal.y );
-            tmpNodes[3] = new float2( tmpNodes[2]->x + 2.0*normal.x, tmpNodes[2]->y + 2.0*normal.y );
+            Node  normal = (*i)->getScaledNormal();
+            tmpNodes[0] = new Node( tmpNodes[1]->x + 2.0*normal.x, tmpNodes[1]->y + 2.0*normal.y );
+            tmpNodes[3] = new Node( tmpNodes[2]->x + 2.0*normal.x, tmpNodes[2]->y + 2.0*normal.y );
 
-            tmpNodes[0]->ID = 9999999; // 9.999.999
-            tmpNodes[3]->ID = 9999999; // 9.999.999
+            tmpNodes[0]->ID = currentNodeID++;
+            tmpNodes[3]->ID = currentNodeID++;
 
             this->NodeList.push_back(tmpNodes[0]);
             this->NodeList.push_back(tmpNodes[3]);
@@ -420,7 +420,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             // ================================================================
             if( (*i)->getBoundaryCondition()->getType() == periodicGhost)
             {
-                float2* tmpNodesInterface[2];
+                Node* tmpNodesInterface[2];
                 tmpNodesInterface[0] = tmpNodes[0];
                 tmpNodesInterface[1] = tmpNodes[3];
 
@@ -543,7 +543,7 @@ void GKSMesh::initMeshConstant(double rho, double U, double V, double T)
 void GKSMesh::initMeshLinear(double* rho, double* U, double* V, double* lambda)
 {
 	double interpolatedRho, interpolatedU, interpolatedV, interpolatedLambda;
-	float2 center;
+	Node center;
 	for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
 	{
 		center = (*i)->getCenter();
@@ -576,7 +576,7 @@ void GKSMesh::initMeshLinear(double* rho, double* U, double* V, double* lambda)
 void GKSMesh::initMeshLinearHorizontal(double * rho, double * U, double * V, double * lambda)
 {  
 	double interpolatedRho, interpolatedU, interpolatedV, interpolatedLambda;
-	float2 center;
+	Node center;
 	for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
 	{
 		center = (*i)->getCenter();
@@ -603,7 +603,7 @@ void GKSMesh::initMeshLinearHorizontal(double * rho, double * U, double * V, dou
 void GKSMesh::initMeshParabularVelocity(double rho, double U, double V, double T)
 {    
     double uValue;
-    float2 center;
+    Node center;
     for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
     {
         center = (*i)->getCenter();
@@ -628,7 +628,7 @@ void GKSMesh::initMeshParabularVelocity(double rho, double U, double V, double T
 void GKSMesh::initMeshSineVelocity(double rho, double u, double v, double T)
 {    
     double uValue;
-    float2 center;
+    Node center;
     for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
     {
         center = (*i)->getCenter();
@@ -658,7 +658,7 @@ void GKSMesh::initMeshSineVelocity(double rho, double u, double v, double T)
 void GKSMesh::initMeshAtmospheric(double rho, double u, double v, double lambda, double g)
 {
 	double interpolatedRho;
-	float2 center;
+	Node center;
 	for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
 	{
 		center = (*i)->getCenter();
@@ -1089,12 +1089,13 @@ void GKSMesh::writeOverviewFile(string filename)
     file << "R  =\t " << this->fluidParam.R << endl;
     file << "Fx =\t " << this->fluidParam.Force.x << endl;
     file << "Fy =\t " << this->fluidParam.Force.y << endl;
+    file << "Pr =\t " << this->fluidParam.Pr << endl;
     file << endl;
 
     file << " ========== Simulation Parameters ==========";
     file << endl;
     file << "Max Number of Iteratios:             " << this->param.numberOfIterations << endl;
-    file << "VTK-File Output Intervat:            " << this->param.outputIntervalVTK << endl;
+    file << "VTK-File Output Interval:            " << this->param.outputIntervalVTK << endl;
     file << "Convergence History Output Interval: " << this->param.outputInterval << endl;
     file << "Convergence Criterium:               ( " << this->param.convergenceCriterium[0] << ", "
                                                       << this->param.convergenceCriterium[1] << ", "
@@ -1108,6 +1109,14 @@ void GKSMesh::writeOverviewFile(string filename)
     file << "Umax = " << this->getMaxVelocity() << " m/s" << endl;
     file << "Re   = " << this->getMaxRe() << endl;
     file << "Ma   = " << this->getMaxMa() << endl;
+    file << endl;
+
+    file << " ========== Boundary Conditions ===========";
+    file << endl;
+    for ( int i = 0; i < this->BoundaryConditionList.size(); i++ )
+    {
+        file << this->BoundaryConditionList[i]->toString() << endl;
+    }
     file << endl;
 
     file << " ========== Simulation Results ==========";
@@ -1128,7 +1137,7 @@ void GKSMesh::writeOverviewFile(string filename)
     file << "r_rhoE = " << ( *(convergenceHistory.end()-1) ).rhoE << "\t ";
     file << endl;
     file << endl;
-    file << "Real Time Simulated : " << this->time << " s" << endl;
+    file << "Real Time simulated : " << this->time << " s" << endl;
     file << "Time to solution:     " << this->computationTime << " s" << endl;
     file.close();
 

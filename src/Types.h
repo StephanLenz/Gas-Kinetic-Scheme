@@ -18,19 +18,42 @@ struct ConservedVariable
     double rhoE;
 };
 
-struct float2
+struct Node
 {
 	double x;
 	double y;
-    unsigned long int ID;
+    long int ID;
 
-    float2(){x = 0.0; y = 0.0;}
+    Node(){x = 0.0; y = 0.0;}
 
-    float2(double xArg, double yArg)
+    Node(double xArg, double yArg)
     {
         x = xArg;
         y = yArg;
     }
+};
+
+
+struct Vec2
+{
+	double x;
+	double y;
+
+    Vec2(){x = 0.0; y = 0.0;}
+
+    Vec2(double xArg, double yArg)
+    {
+        x = xArg;
+        y = yArg;
+    }
+
+    Vec2& operator=( const Node& that )
+    {
+        this->x = that.x;
+        this->y = that.y;
+        return *this;
+    }
+
 };
 
 struct FluidParameter
@@ -38,8 +61,8 @@ struct FluidParameter
     int K;   
     double nu;  // viscosity
     double R;   // spez gasconstant
-    float2 Force;
-    float2 BoussinesqForce;
+    Node Force;
+    Node BoussinesqForce;
     double rhoReference;
     double Pr;
 };
@@ -76,5 +99,7 @@ enum BoundaryConditionType
     periodic,
     periodicGhost
 };
+
+typedef long int idType;
 
 #endif

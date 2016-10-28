@@ -6,7 +6,7 @@
 //
 // ============================================================================
 //
-//      GKSMesh.cpp
+//      GKSSolver.h
 //
 //      Function:
 //          Generation and Storage of mesh
@@ -25,8 +25,6 @@
 #include "InterfaceBC.h"
 #include "Types.h"
 #include <vector>
-#include <string>
-#include <chrono>
 
 using namespace std;
 
@@ -37,12 +35,12 @@ class GKSMesh
 //                      Attributes
 // ====================================================================================================================
 // ====================================================================================================================
-private:
+public:
 
     // ========================================================================
     //              Mesh definition
     // ========================================================================
-    vector<float2*>     NodeList;           // List of Pointers to nodes
+    vector<Node*>     NodeList;           // List of Pointers to nodes
 	vector<Cell*>		CellList;           // List of Pointers to cells
 	vector<Interface*>	InterfaceList;      // List of Pointers to interfaces
 
@@ -176,6 +174,7 @@ private:
     void writeCellData(ofstream& file);
 
     void writeInterfaceData(ofstream& file);
+
 };
 
 #endif

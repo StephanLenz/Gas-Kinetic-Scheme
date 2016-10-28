@@ -47,7 +47,7 @@ protected:
     // ========================================================================
     //          Connectivity as Pointers
     // ========================================================================
-    float2* nodes[2];
+    Node* nodes[2];
 
 	Cell* negCell;
 	Cell* posCell;
@@ -57,8 +57,8 @@ protected:
     // ========================================================================
     //          Geometrical Information
     // ========================================================================
-    float2 center;
-    float2 normal;
+    Node center;
+    Node normal;
 
     double area;
 
@@ -83,7 +83,7 @@ public:
 	Interface();
 
 	Interface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd,
-              float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC,
+              Node** nodes, FluidParameter fluidParam, BoundaryCondition* BC,
               double periodicLengthX, double periodicLengthY);
 
 	~Interface();
@@ -92,7 +92,7 @@ public:
     //              Interface Factory
     // ========================================================================
     static Interface* createInterface(InterfaceType type, Cell* negCell, Cell* posCell, bool negAdd, bool posAdd,
-                                      float2** nodes, FluidParameter fluidParam, BoundaryCondition* BC,
+                                      Node** nodes, FluidParameter fluidParam, BoundaryCondition* BC,
                                       double periodicLengthX, double periodicLengthY);
     
     // ========================================================================
@@ -157,7 +157,11 @@ protected:
 public:
     // ============ get Connectivity ==========================================
 
-    float2* getNode(int i);
+    idType getID();
+
+    Node* getNode(int i);
+
+    Cell* getCell( idType i );
 
     Cell* getNeigborCell(Cell* askingCell);
 
@@ -165,9 +169,9 @@ public:
 
     Cell* getPeriodicCell();
 
-    float2 getPosConnectivity();
+    Node getPosConnectivity();
 
-    float2 getNegConnectivity();
+    Node getNegConnectivity();
 
     BoundaryCondition* getBoundaryCondition();
 
@@ -177,15 +181,17 @@ public:
 
     // ============ get Geometry ==============================================
 
-    float2 getNormal();
+    Node getNormal();
 
-    float2 getCenter();
+    Node getCenter();
 
-    float2 getScaledNormal();
+    Node getScaledNormal();
 
     double getArea();
 
-    double distance(float2 point);
+    double getDistance2CellCenter(idType i);
+
+    double distance(Node point);
     
     // ============ get Data ==================================================
 

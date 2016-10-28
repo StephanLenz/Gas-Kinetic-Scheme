@@ -47,7 +47,7 @@ Cell::Cell()
 //          BC:             Boundary Condition Pointer
 //          fluidParam:     FluidParameter Object
 // ============================================================================
-Cell::Cell(InterfaceType interfaceType, float2** nodes, BoundaryCondition* BC, FluidParameter fluidParam)
+Cell::Cell(InterfaceType interfaceType, Node** nodes, BoundaryCondition* BC, FluidParameter fluidParam)
 {
     // ========================================================================
     //                  Copy attributes
@@ -74,7 +74,7 @@ Cell::Cell(InterfaceType interfaceType, float2** nodes, BoundaryCondition* BC, F
     // ========================================================================
     //                  Compute Centroid and Volume of the Quad
     // ========================================================================
-    float2 triCenter[2];
+    Node triCenter[2];
     triCenter[0].x =  (this->nodes[0]->x + this->nodes[1]->x +                     this->nodes[3]->x) / 3.0;
     triCenter[0].y =  (this->nodes[0]->y + this->nodes[1]->y +                     this->nodes[3]->y) / 3.0;
     triCenter[1].x =  (                    this->nodes[1]->x + this->nodes[2]->x + this->nodes[3]->x) / 3.0;
@@ -166,7 +166,7 @@ double Cell::getLocalTimestep()
 // ============================================================================
 void Cell::applyForcing(double dt)
 {
-    float2 Force;
+    Node Force;
     
     // ========================================================================
     //                  Compute Primitive Variables (esp. Temp before forcing)
@@ -561,7 +561,7 @@ void Cell::computeMinDx()
                 if(  this->nodes[j] != this->InterfaceList[i]->getNode(0) 
                   && this->nodes[j] != this->InterfaceList[i]->getNode(1) )
                 {
-                    float2 node( this->nodes[j]->x, this->nodes[j]->y );
+                    Node node( this->nodes[j]->x, this->nodes[j]->y );
                     this->minDx = min( this->minDx, this->InterfaceList[i]->distance(node) );
                 }
             }
@@ -626,6 +626,14 @@ void Cell::setValues(double rho, double U, double V, double L)
     this->cons_old[3] = this->cons[3];
 }
 
+void Cell::setCons(ConservedVariable cons)
+{
+    this->cons[0] = cons.rho;
+    this->cons[1] = cons.rhoU;
+    this->cons[2] = cons.rhoV;
+    this->cons[3] = cons.rhoE;
+}
+
 // ====================================================================================================================
 // ====================================================================================================================
 // ====================================================================================================================
@@ -656,9 +664,14 @@ unsigned long int Cell::getID()
 //      Parameters:
 //          i:   the local id of the node to be returned
 // ============================================================================
-float2 Cell::getNode(int i)
+Node Cell::getNode(int i)
 {
     return *this->nodes[i];
+}
+
+Interface * Cell::getInterface(int i)
+{
+    return this->InterfaceList[i];
 }
 
 // ============================================================================
@@ -695,10 +708,10 @@ Cell * Cell::findNeighborInDomain()
 //      This method returns a vector from the cell center to the center of the
 //      i-th interface.
 // ============================================================================
-float2 Cell::getConnectivity(int i)
+Node Cell::getConnectivity(int i)
 {
-    if( this->InterfaceList[i] == NULL) return float2(0.0, 0.0);
-    float2 vector;
+    if( this->InterfaceList[i] == NULL) return Node(0.0, 0.0);
+    Node vector;
     vector.x = this->InterfaceList[i]->getCenter().x - this->center.x;
     vector.y = this->InterfaceList[i]->getCenter().y - this->center.y;
     return vector;
@@ -712,6 +725,11 @@ float2 Cell::getConnectivity(int i)
 bool Cell::isGhostCell()
 {
     return BoundaryContitionPointer != NULL;
+}
+
+BoundaryCondition * Cell::getBoundaryConditionPointer()
+{
+    return this->BoundaryContitionPointer;
 }
 
 // ====================================================================================================================
@@ -731,9 +749,14 @@ double Cell::getVolume()
 // ============================================================================
 //      This method returns the cell center.
 // ============================================================================
-float2 Cell::getCenter()
+Node Cell::getCenter()
 {
 	return this->center;
+}
+
+double Cell::getMinDx()
+{
+    return this->minDx;
 }
 
 // ============================================================================
@@ -743,7 +766,7 @@ float2 Cell::getCenter()
 //      Parameters:
 //          point:   Point to which the distance is computed
 // ============================================================================
-double Cell::distance(float2 point)
+double Cell::distance(Node point)
 {
     return sqrt( ( this->center.x - point.x )*( this->center.x - point.x )
                + ( this->center.y - point.y )*( this->center.y - point.y ) );
@@ -786,6 +809,16 @@ ConservedVariable Cell::getCons()
     tmp.rhoU = this->cons[1];
     tmp.rhoV = this->cons[2];
     tmp.rhoE = this->cons[3];
+    return tmp;
+}
+
+ConservedVariable Cell::getConsOld()
+{
+    ConservedVariable tmp;
+    tmp.rho  = this->cons_old[0];
+    tmp.rhoU = this->cons_old[1];
+    tmp.rhoV = this->cons_old[2];
+    tmp.rhoE = this->cons_old[3];
     return tmp;
 }
 
