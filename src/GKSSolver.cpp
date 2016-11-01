@@ -61,6 +61,7 @@ void GKSSolver::readMeshFromMeshObject(const GKSMesh& origin)
     this->InterfaceCenter.resize( numberOfInterfaces );
     this->InterfaceNormal.resize( numberOfInterfaces );
     this->InterfaceArea.resize( numberOfInterfaces );
+    this->InterfaceDistance.resize( numberOfInterfaces );
     this->Interface2CellCenterDistance.resize( numberOfInterfaces );
 
 
@@ -137,10 +138,11 @@ void GKSSolver::readMeshFromMeshObject(const GKSMesh& origin)
         for( int i = 0; i < 2; i++)
             this->Interface2Cell[currentInterface->getID()-1][i] = currentInterface->getCell(i)->getID()-1;
 
-        this->InterfaceCenter[currentInterface->getID()-1] = currentInterface->getCenter();
-        this->InterfaceNormal[currentInterface->getID()-1] = currentInterface->getNormal();
-        this->InterfaceArea[currentInterface->getID()-1]   = currentInterface->getArea();
-        
+        this->InterfaceCenter[currentInterface->getID()-1]   = currentInterface->getCenter();
+        this->InterfaceNormal[currentInterface->getID()-1]   = currentInterface->getNormal();
+        this->InterfaceArea[currentInterface->getID()-1]     = currentInterface->getArea();
+        this->InterfaceDistance[currentInterface->getID()-1] = currentInterface->getDistance2CellCenter(0) + currentInterface->getDistance2CellCenter(1);
+
         for( int i = 0; i < 2; i++)
             this->Interface2CellCenterDistance[currentInterface->getID()-1][i] = currentInterface->getDistance2CellCenter(i);
     }
@@ -250,11 +252,6 @@ void GKSSolver::timeStep()
         if ( !isGhostCell(id) )
             applyForcing(id);
     
-    //#pragma omp parallel for
-    //for ( int id = 0; id < numberOfCells; ++id )
-    //    if ( isGhostCell(id) )
-    //        applyBoundaryCondition(id);
-
     for( BoundaryCondition& BC : BoundaryConditionList )
         BC.setGhostCells(*this);
 
@@ -262,17 +259,10 @@ void GKSSolver::timeStep()
     for ( int id = 0; id < numberOfInterfaces; ++id )
         computeFlux(id);
 
-    int breakPoint = 0;
-
     #pragma omp parallel for
     for ( int id = 0; id < numberOfCells; ++id )
         if ( !isGhostCell(id) )
-            updateCell(id);
-    
-    #pragma omp parallel for
-    for ( int id = 0; id < numberOfCells; ++id )
-        if ( isGhostCell(id) )
-            applyBoundaryCondition(id);
+            updateCell(id);   
 }
 
 bool GKSSolver::isConverged(ConservedVariable residual)
@@ -317,8 +307,6 @@ void GKSSolver::computeGlobalTimestep()
 // ============================================================================
 void GKSSolver::applyForcing(idType id)
 {
-    Vec2 Force;
-
     this->CellDataOld[id] = this->CellData[id];
     
     // ========================================================================
@@ -328,17 +316,10 @@ void GKSSolver::applyForcing(idType id)
     ConservedVariable& cons = this->CellData[id];
 
     // ========================================================================
-    //                  Compute Volumeforce from acceleration
-    // ========================================================================
-    Force.x = this->fluidParam.Force.x * cons.rho;
-    Force.y = this->fluidParam.Force.y * cons.rho;
-    // ========================================================================
-    
-    // ========================================================================
     //                  Apply Forcing to momentum components
     // ========================================================================
-    cons.rhoU += dt * Force.x;
-    cons.rhoV += dt * Force.y;
+    cons.rhoU += dt * this->fluidParam.Force.x * cons.rho;
+    cons.rhoV += dt * this->fluidParam.Force.y * cons.rho;
     // ========================================================================
 
     // ========================================================================
@@ -526,33 +507,31 @@ void GKSSolver::updateCell(const idType id)
     // ========================================================================
 }
 
-PrimitiveVariable GKSSolver::reconstructPrimPiecewiseConstant(const idType id)
+__declspec(noinline)PrimitiveVariable GKSSolver::reconstructPrimPiecewiseConstant(const idType id)
 {
     PrimitiveVariable posPrim = cons2prim( CellData[ Interface2Cell[id][0] ] );
     PrimitiveVariable negPrim = cons2prim( CellData[ Interface2Cell[id][1] ] );
 
     PrimitiveVariable midPrim;
 
-    midPrim.rho  = 0.5 * ( posPrim.rho  + negPrim.rho  );
-    midPrim.U    = 0.5 * ( posPrim.U    + negPrim.U    );
-    midPrim.V    = 0.5 * ( posPrim.V    + negPrim.V    );
-    midPrim.L    = 0.5 * ( posPrim.L    + negPrim.L    );
+    midPrim.rho  = 0.5 * ( posPrim.rho + negPrim.rho );
+    midPrim.U    = 0.5 * ( posPrim.U   + negPrim.U   );
+    midPrim.V    = 0.5 * ( posPrim.V   + negPrim.V   );
+    midPrim.L    = 0.5 * ( posPrim.L   + negPrim.L   );
 
     return midPrim;
 }
 
-ConservedVariable GKSSolver::differentiateConsNormal(const idType id, double rho)
+__declspec(noinline) ConservedVariable GKSSolver::differentiateConsNormal(const idType id, double rho)
 {
     ConservedVariable& posCons = CellData[ Interface2Cell[id][0] ];
     ConservedVariable& negCons = CellData[ Interface2Cell[id][1] ];
 
-    double distance = Interface2CellCenterDistance[id][0] + Interface2CellCenterDistance[id][1];
-
     ConservedVariable gradConsNormal;
-    gradConsNormal.rho  = ( posCons.rho  - negCons.rho  ) / ( distance * rho );
-    gradConsNormal.rhoU = ( posCons.rhoU - negCons.rhoU ) / ( distance * rho );
-    gradConsNormal.rhoV = ( posCons.rhoV - negCons.rhoV ) / ( distance * rho );
-    gradConsNormal.rhoE = ( posCons.rhoE - negCons.rhoE ) / ( distance * rho );
+    gradConsNormal.rho  = ( posCons.rho  - negCons.rho  ) / ( InterfaceDistance[id] * rho );
+    gradConsNormal.rhoU = ( posCons.rhoU - negCons.rhoU ) / ( InterfaceDistance[id] * rho );
+    gradConsNormal.rhoV = ( posCons.rhoV - negCons.rhoV ) / ( InterfaceDistance[id] * rho );
+    gradConsNormal.rhoE = ( posCons.rhoE - negCons.rhoE ) / ( InterfaceDistance[id] * rho );
 
     return gradConsNormal;
 }
@@ -595,22 +574,22 @@ void GKSSolver::computeMoments(const PrimitiveVariable & prim, double * MomentU,
     MomentU[0] = 1.0;
     MomentU[1] = prim.U;
     for (int i = 2; i < numberMoments; i++)
-        MomentU[i] = prim.U * MomentU[i - 1] + ( (i - 1) * MomentU[i - 2] )/( 2.0 * prim.L );
+        MomentU[i] = prim.U * MomentU[i - 1] + ( double(i - 1) * MomentU[i - 2] )/( 2.0 * prim.L );
 
     //==================== V Moments ==========================================
     MomentV[0] = 1.0;
     MomentV[1] = prim.V;
     for (int i = 2; i < numberMoments; i++)
-        MomentV[i] = prim.V * MomentV[i - 1] + ( (i - 1) * MomentV[i - 2] )/( 2.0 * prim.L );
+        MomentV[i] = prim.V * MomentV[i - 1] + ( double(i - 1) * MomentV[i - 2] )/( 2.0 * prim.L );
 
     //==================== Xi Moments =========================================
     MomentXi[0] = 1.0;
     MomentXi[1] = 0.0;
     MomentXi[2] = this->fluidParam.K / (2.0 * prim.L);
     MomentXi[3] = 0.0;
-    MomentXi[4] = ( 2.0*this->fluidParam.K + 1.0*this->fluidParam.K*this->fluidParam.K ) / (4.0 * prim.L * prim.L);
+    MomentXi[4] = ( 2.0*this->fluidParam.K + this->fluidParam.K*this->fluidParam.K ) / (4.0 * prim.L * prim.L);
     MomentXi[5] = 0.0;
-    MomentXi[6] = ( 1.0*this->fluidParam.K + 4.0 ) / ( 2.0 * prim.L ) * MomentXi[4];
+    MomentXi[6] = ( this->fluidParam.K + 4.0 ) / ( 2.0 * prim.L ) * MomentXi[4];
 }
 
 ConservedVariable GKSSolver::computeTimeDerivative(double * MomentU, double * MomentV, double * MomentXi, double * a, double * b)

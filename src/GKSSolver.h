@@ -78,6 +78,7 @@ private:
 
     vector<Vec2> InterfaceCenter;
     vector<Vec2> InterfaceNormal;
+    vector<double> InterfaceDistance;
     vector<double> InterfaceArea;
     vector< array<double,2> > Interface2CellCenterDistance;
 
@@ -148,9 +149,9 @@ public:
     //              Flux computation subroutines
     // ========================================================================
 
-    PrimitiveVariable reconstructPrimPiecewiseConstant(const idType id);
+    __declspec(noinline) PrimitiveVariable reconstructPrimPiecewiseConstant(const idType id);
 
-    ConservedVariable differentiateConsNormal(const idType id, double rho);
+    __declspec(noinline) ConservedVariable differentiateConsNormal(const idType id, double rho);
 
     void computeMicroSlope( const PrimitiveVariable& prim, const ConservedVariable& macroSlope, double* microSlope );
 

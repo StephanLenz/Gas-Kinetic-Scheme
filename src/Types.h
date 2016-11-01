@@ -58,7 +58,7 @@ struct Vec2
 
 struct FluidParameter
 {
-    int K;   
+    double K;   
     double nu;  // viscosity
     double R;   // spez gasconstant
     Node Force;

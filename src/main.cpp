@@ -58,9 +58,15 @@ int main(int argc, char* argv[])
 
         Parameters param;
 
-        param.numberOfIterations = 500000000;         // maximal number of Iterations
-        param.outputIntervalVTK = 100000000;                 // Output interval for VTK Files (and .dat files)
-        param.outputInterval = 100000;                    // Output interval for Output on the screen
+        param.verbose     = false;                      // detailed screen output
+        param.fluxOutput  = false;                      // VTK files for interfaces
+        param.resOutput   = false;                      // include residuals in VTK files
+        param.ghostOutput = false;                      // include ghost cells in VTK files
+        param.csvOutput   = true;                       // output csv files for postprocessing
+
+        param.numberOfIterations = 10000;         // maximal number of Iterations
+        param.outputIntervalVTK = 10000;                 // Output interval for VTK Files (and .dat files)
+        param.outputInterval = 1000;                    // Output interval for Output on the screen
 
         // Abortion criteria for the different conserved variables
         // These are thresholds for relative residual changes
@@ -70,13 +76,7 @@ int main(int argc, char* argv[])
         param.convergenceCriterium[2] = 1.0;
         param.convergenceCriterium[3] = 1.0;
 
-        param.CFL = 0.7;                                // CFL number for time step computation
-
-        param.verbose     = false;                      // detailed screen output
-        param.fluxOutput  = false;                      // VTK files for interfaces
-        param.resOutput   = false;                      // include residuals in VTK files
-        param.ghostOutput = false;                      // include ghost cells in VTK files
-        param.csvOutput   = true;                       // output csv files for postprocessing
+        param.CFL = 0.01;                                // CFL number for time step computation
         
         // ========================================================================
         //                  Fluid and domain parameters
@@ -88,13 +88,13 @@ int main(int argc, char* argv[])
 
         FluidParameter fluidParam;
 
-        int    nx = 2;          // number of cells in x direction
-        int    ny = 128;         // number of cells in y direction
+        int    nx = 32;          // number of cells in x direction
+        int    ny = 32;         // number of cells in y direction
         double Re = 4.0;        // Reynolds number
         double u0 = 0.1;        // Velocits in the mid of the channel
         param.L = 1.0;          // reference length for Re number
 
-        fluidParam.K = 1;                                                   // internal degrees of freedom
+        fluidParam.K = 1.0;                                                   // internal degrees of freedom
         fluidParam.nu = (u0*param.L)/Re;                                    // kinematic viskosity
         fluidParam.R = 200.0;                                               // specific gas constant
         fluidParam.Force.x = (u0*8.0*fluidParam.nu) / (param.L*param.L);    // acceleration in x direction [m/s^2]
@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
         fluidParam.rhoReference = 1.0;                                      // reference density
         fluidParam.Pr = 1.0;                                                // Prandl number 
 
-        double T      = 300.0;                                              // reference temperature [K]
+        double T      = 1.0;                                              // reference temperature [K]
         double lambda = 1.0 / (2.0 * fluidParam.R * T);
         
         // ========================================================================
@@ -165,12 +165,13 @@ int main(int argc, char* argv[])
 
         solver->readMeshFromMeshObject(*mesh);
 
-        //mesh->iterate();
+        mesh->iterate();
+
         solver->iterate();
 
-        solver->writeDataToMeshObject(*mesh);
+        //solver->writeDataToMeshObject(*mesh);
 
-        mesh->writeVTKFile( "out/solver.vtk" );
+        //mesh->writeVTKFile( "out/solver.vtk" );
 
         // ====================================================================
         //              Output several files

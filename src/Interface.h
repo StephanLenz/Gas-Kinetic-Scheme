@@ -116,13 +116,13 @@ protected:
 
     void interpolatePrim(double* prim);
 
-    void reconstructPrimPiecewiseConstant(double* prim);
+    __declspec(noinline) void reconstructPrimPiecewiseConstant(double* prim);
 
     void reconstructPrimPiecewiseLinear(double* prim);
 
     // ============ Differentiation of conserved Variables ====================
 
-    void differentiateConsNormal(double* normalGradCons, double* prim);
+    __declspec(noinline) void differentiateConsNormal(double* normalGradCons, double* prim);
 
     void differentiateConsNormalThreePoint(double* normalGradCons, double* prim);
 

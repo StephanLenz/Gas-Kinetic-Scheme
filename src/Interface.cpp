@@ -277,7 +277,7 @@ void Interface::interpolatePrim(double * prim)
 //      Parameters:
 //          prim:   output parameter for the reconstructed primitive variables
 // ============================================================================
-void Interface::reconstructPrimPiecewiseConstant(double * prim)
+__declspec(noinline) void Interface::reconstructPrimPiecewiseConstant(double * prim)
 {
     // This method computes the Values of the primary variables at the interface
     // with pice wise constant reconstruction and averaging
@@ -362,7 +362,7 @@ void Interface::reconstructPrimPiecewiseLinear(double * prim)
 //          normalGradCons:   output parameters for the derivative
 //          prim:             array of primitive variables
 // ============================================================================
-void Interface::differentiateConsNormal(double* normalGradCons, double* prim)
+__declspec(noinline) void Interface::differentiateConsNormal(double* normalGradCons, double* prim)
 {
     double distance = this->posDistance + this->negDistance;
 
@@ -527,7 +527,7 @@ void Interface::computeInternalFlux(double dt)
     // ========================================================================
     //this->interpolatePrim(prim);
     this->reconstructPrimPiecewiseConstant(prim);
-    this->reconstructPrimPiecewiseConstant(primTest);
+    //this->reconstructPrimPiecewiseConstant(primTest);
     //this->reconstructPrimPiecewiseLinear(prim);
     // ========================================================================
     
@@ -535,7 +535,7 @@ void Interface::computeInternalFlux(double dt)
     //          compute spacial gradients of the conservative varibles
     // ========================================================================
     this->differentiateConsNormal(normalGradCons, prim);
-    this->differentiateConsNormal(normalGradConsTest, prim);
+    //this->differentiateConsNormal(normalGradConsTest, prim);
     //this->differentiateConsNormalThreePoint(normalGradCons, prim);
     //this->differentiateConsLeastSquare(normalGradCons, tangentialGradCons, prim);
     // ========================================================================
@@ -543,15 +543,15 @@ void Interface::computeInternalFlux(double dt)
     // ========================================================================
     //          Some Tests
     // ========================================================================
-    PrimitiveVariable posPrim = this->posCell->getPrim();
-    PrimitiveVariable negPrim = this->negCell->getPrim();
+    //PrimitiveVariable posPrim = this->posCell->getPrim();
+    //PrimitiveVariable negPrim = this->negCell->getPrim();
 
-    //if( fabs(this->normal.x - 1.0) > 1.0e-12 )
-    if(this->ID == 9)
-        int breakPoint = 0;
+    ////if( fabs(this->normal.x - 1.0) > 1.0e-12 )
+    //if(this->ID == 9)
+    //    int breakPoint = 0;
 
-    this->transformGlobal2Local( (double*)&posPrim );
-    this->transformGlobal2Local( (double*)&negPrim );
+    //this->transformGlobal2Local( (double*)&posPrim );
+    //this->transformGlobal2Local( (double*)&negPrim );
     // ========================================================================
     
     // ========================================================================
@@ -567,7 +567,7 @@ void Interface::computeInternalFlux(double dt)
     //              a = a1 + a2 u + a3 v + 0.5 a4 (u^2 + v^2 + xi^2)
     // ========================================================================
     this->computeMicroSlope(prim, normalGradCons, a);
-    this->computeMicroSlope(prim, tangentialGradCons, b);
+    //this->computeMicroSlope(prim, tangentialGradCons, b);
     // ========================================================================
     
     // ========================================================================
