@@ -24,6 +24,7 @@
 #include "CompressibleInterface.h"
 #include "Types.h"
 #include <sstream>
+#include <cmath>
 
 int Interface::interpolationOrder = 1;
 unsigned long int Interface::numberOfCells = 1;
@@ -277,7 +278,7 @@ void Interface::interpolatePrim(double * prim)
 //      Parameters:
 //          prim:   output parameter for the reconstructed primitive variables
 // ============================================================================
-__declspec(noinline) void Interface::reconstructPrimPiecewiseConstant(double * prim)
+void Interface::reconstructPrimPiecewiseConstant(double * prim)
 {
     // This method computes the Values of the primary variables at the interface
     // with pice wise constant reconstruction and averaging
@@ -362,7 +363,7 @@ void Interface::reconstructPrimPiecewiseLinear(double * prim)
 //          normalGradCons:   output parameters for the derivative
 //          prim:             array of primitive variables
 // ============================================================================
-__declspec(noinline) void Interface::differentiateConsNormal(double* normalGradCons, double* prim)
+void Interface::differentiateConsNormal(double* normalGradCons, double* prim)
 {
     double distance = this->posDistance + this->negDistance;
 

@@ -99,7 +99,7 @@ public:
     
     void computeCons(PrimitiveVariable prim);
 
-    void computeLeastSquareGradients();
+    //void computeLeastSquareGradients();
 
 	void update(double dt);
 

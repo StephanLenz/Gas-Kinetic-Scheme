@@ -123,6 +123,7 @@
     <ClCompile Include="src\GKSMesh.cpp" />
     <ClCompile Include="src\CompressibleInterface.cpp" />
     <ClCompile Include="src\GKSSolver.cpp" />
+    <ClCompile Include="src\GKSSolverPush.cpp" />
     <ClCompile Include="src\IncompressibleInterface.cpp" />
     <ClCompile Include="src\Interface.cpp" />
     <ClCompile Include="src\InterfaceBC.cpp" />

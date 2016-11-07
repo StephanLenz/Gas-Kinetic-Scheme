@@ -165,7 +165,7 @@ int main(int argc, char* argv[])
 
         solver->readMeshFromMeshObject(*mesh);
 
-        mesh->iterate();
+        //mesh->iterate();
 
         solver->iterate();
 

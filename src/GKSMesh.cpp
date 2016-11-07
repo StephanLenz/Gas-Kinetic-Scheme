@@ -834,17 +834,17 @@ void GKSMesh::applyBoundaryCondition()
 //      Cells with the least suqare method. These gradients are not used, if
 //      Finite differences are applied at the Interfaces.
 // ============================================================================
-void GKSMesh::computeLeastSquareGradients()
-{
-    #pragma omp parallel for
-    for ( int i = 0; i < CellList.size(); i++ )
-    {
-        // TODO: Right now the Gradients in the periodic ghost cells are 
-        // computed by finite differences and not by least square
-        //if ( !CellList[i]->isGhostCell() )
-            CellList[i]->computeLeastSquareGradients();
-    }
-}
+//void GKSMesh::computeLeastSquareGradients()
+//{
+//    #pragma omp parallel for
+//    for ( int i = 0; i < CellList.size(); i++ )
+//    {
+//        // TODO: Right now the Gradients in the periodic ghost cells are 
+//        // computed by finite differences and not by least square
+//        //if ( !CellList[i]->isGhostCell() )
+//            CellList[i]->computeLeastSquareGradients();
+//    }
+//}
 
 // ============================================================================
 //      This method computes the fluxes over all Interfaces

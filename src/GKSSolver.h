@@ -26,6 +26,7 @@
 #include "InterfaceBC.h"
 #include "Types.h"
 #include <vector>
+#include <array>
 #include <list>
 #include <string>
 #include <chrono>
@@ -149,9 +150,9 @@ public:
     //              Flux computation subroutines
     // ========================================================================
 
-    __declspec(noinline) PrimitiveVariable reconstructPrimPiecewiseConstant(const idType id);
+    PrimitiveVariable reconstructPrimPiecewiseConstant(const idType id);
 
-    __declspec(noinline) ConservedVariable differentiateConsNormal(const idType id, double rho);
+    ConservedVariable differentiateConsNormal(const idType id, double rho);
 
     void computeMicroSlope( const PrimitiveVariable& prim, const ConservedVariable& macroSlope, double* microSlope );
 

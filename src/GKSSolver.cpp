@@ -9,6 +9,7 @@
 #include <array>
 #include <list>
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 
 using namespace std;
@@ -507,7 +508,7 @@ void GKSSolver::updateCell(const idType id)
     // ========================================================================
 }
 
-__declspec(noinline)PrimitiveVariable GKSSolver::reconstructPrimPiecewiseConstant(const idType id)
+PrimitiveVariable GKSSolver::reconstructPrimPiecewiseConstant(const idType id)
 {
     PrimitiveVariable posPrim = cons2prim( CellData[ Interface2Cell[id][0] ] );
     PrimitiveVariable negPrim = cons2prim( CellData[ Interface2Cell[id][1] ] );
@@ -522,7 +523,7 @@ __declspec(noinline)PrimitiveVariable GKSSolver::reconstructPrimPiecewiseConstan
     return midPrim;
 }
 
-__declspec(noinline) ConservedVariable GKSSolver::differentiateConsNormal(const idType id, double rho)
+ConservedVariable GKSSolver::differentiateConsNormal(const idType id, double rho)
 {
     ConservedVariable& posCons = CellData[ Interface2Cell[id][0] ];
     ConservedVariable& negCons = CellData[ Interface2Cell[id][1] ];
