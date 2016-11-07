@@ -65,6 +65,9 @@ Interface::Interface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, Nod
 	this->negCell = negCell;
 	this->posCell = posCell;
 
+    this->posAdd = posAdd;
+    this->negAdd = negAdd;
+
     this->nodes[0] = nodes[0];
     this->nodes[1] = nodes[1]; 
 

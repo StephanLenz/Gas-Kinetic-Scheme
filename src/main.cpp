@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
         FluidParameter fluidParam;
 
         int    nx = 2;          // number of cells in x direction
-        int    ny = 2;         // number of cells in y direction
+        int    ny = 32;         // number of cells in y direction
         double Re = 4.0;        // Reynolds number
         double u0 = 0.1;        // Velocits in the mid of the channel
         param.L = 1.0;          // reference length for Re number
