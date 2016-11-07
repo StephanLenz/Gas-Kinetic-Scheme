@@ -16,8 +16,8 @@
 //
 // ============================================================================
 
-#ifndef GKSSOLVER_H
-#define GKSSOLVER_H
+#ifndef GKSSolver_H
+#define GKSSolver_H
 
 #include "GKSMesh.h"
 #include "Cell.h"
@@ -40,48 +40,12 @@ class GKSSolver
 //                      Attributes
 // ====================================================================================================================
 // ====================================================================================================================
-private:
+protected:
     idType numberOfNodes;
     idType numberOfCells;
     idType numberOfInterfaces;
 
-    // ========================================================================
-    //              data
-    // ========================================================================
-
-    vector<ConservedVariable> CellData;
-    vector<ConservedVariable> CellDataOld;
-
-    vector<ConservedVariable> InterfaceFlux;
-
     vector<BoundaryCondition> BoundaryConditionList;
-
-    // ========================================================================
-    //              Connectivity
-    // ========================================================================
-
-    vector< array<idType, 4> > Cell2Node;
-    vector< array<idType, 4> > Cell2Interface;
-    vector< idType >           CellBoundaryCondition;
-
-    vector< array<idType, 2> > Interface2Node;
-    vector< array<idType, 2> > Interface2Cell;
-
-    // ========================================================================
-    //              Geometry
-    // ========================================================================
-
-    vector<Vec2> NodeCenter;
-
-    vector<Vec2> CellCenter;
-    vector<double> CellVolume;
-    vector<double> CellMinDx;
-
-    vector<Vec2> InterfaceCenter;
-    vector<Vec2> InterfaceNormal;
-    vector<double> InterfaceDistance;
-    vector<double> InterfaceArea;
-    vector< array<double,2> > Interface2CellCenterDistance;
 
     // ========================================================================
     //              Fluid Parameters
@@ -122,9 +86,9 @@ public:
     //              Communication methods
     // ========================================================================
 
-    void readMeshFromMeshObject( const GKSMesh& origin );
+    virtual void readMeshFromMeshObject( const GKSMesh& origin ) = 0;
 
-    void writeDataToMeshObject( const GKSMesh& target );
+    virtual void writeDataToMeshObject( const GKSMesh& target ) = 0;
 
     // ========================================================================
     //              Simulation Control
@@ -140,11 +104,9 @@ public:
 
     void applyForcing(const idType id);
 
-    void applyBoundaryCondition(const idType id);
-
     void computeFlux(const idType id);
 
-    void updateCell(const idType id);
+    virtual void updateCell(const idType id) = 0;
 
     // ========================================================================
     //              Flux computation subroutines
@@ -161,6 +123,8 @@ public:
     ConservedVariable computeTimeDerivative(double* MomentU, double* MomentV, double* MomentXi, double* a, double* b);
 
     ConservedVariable assembleFlux(double* MomentU, double* MomentV, double* MomentXi, double* a, double* b, double* A, double* timeCoefficients, PrimitiveVariable prim, double area, double tau);
+
+    virtual void applyFlux(idType id, ConservedVariable flux) = 0;
 
     // ========================================================================
     //              Data Analysis
@@ -184,15 +148,25 @@ public:
     void global2local(const idType id, PrimitiveVariable& prim);
     void global2local(const idType id, ConservedVariable& cons);
 
-    bool isGhostCell(const idType& id);
+    virtual bool isGhostCell(const idType& id) = 0;
 
-    idType findNeigborCellInDomain(const idType& id);
+    virtual ConservedVariable& getCellData(idType id) = 0;
+    virtual ConservedVariable& getCellDataOld(idType id) = 0;
 
-    ConservedVariable getData(idType id);
-    PrimitiveVariable getPrim(idType id);
+    virtual double getCellMinDx(idType id) = 0;
 
-    void setData(idType id, ConservedVariable cons);
-    void setData(idType id, PrimitiveVariable prim);
+    virtual double getInterfaceArea(idType id) = 0;
+    virtual double getInterfaceDistance(idType id) = 0;
+
+    virtual idType getPosCell(idType id) = 0;
+    virtual idType getNegCell(idType id) = 0;
+
+    virtual Vec2& getInterfaceNormal(idType id) = 0;
+
+    virtual void setData(idType id, ConservedVariable cons) = 0;
+    virtual void setData(idType id, PrimitiveVariable prim);
+
+    virtual PrimitiveVariable  getPrim(idType id);
 };
 
 #endif

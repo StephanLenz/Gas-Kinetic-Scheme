@@ -16,6 +16,8 @@ struct ConservedVariable
 	double rhoU;
 	double rhoV;
     double rhoE;
+
+    ConservedVariable() : rho(0.0), rhoU(0.0), rhoV(0.0), rhoE(0.0) {}
 };
 
 struct Node

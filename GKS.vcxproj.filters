@@ -39,10 +39,13 @@
     <ClCompile Include="src\IncompressibleInterface.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="src\GKSSolver.cpp">
+    <ClCompile Include="src\GKSSolverPush.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="src\GKSSolverPush.cpp">
+    <ClCompile Include="src\GKSSolverPull.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GKSSolver.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
   </ItemGroup>
@@ -69,6 +72,12 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="src\IncompressibleInterface.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GKSSolverPush.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GKSSolverPull.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="src\GKSSolver.h">

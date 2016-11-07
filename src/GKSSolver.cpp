@@ -29,135 +29,6 @@ GKSSolver::~GKSSolver()
 {
 }
 
-void GKSSolver::readMeshFromMeshObject(const GKSMesh& origin)
-{
-    this->numberOfNodes        = origin.NodeList.size();
-
-    this->numberOfCells        = origin.CellList.size();
-
-    this->numberOfInterfaces   = origin.InterfaceList.size();
-
-    // ========================================================================
-    //              Allocate Memory
-    // ========================================================================
-
-    this->NodeCenter.resize( numberOfNodes );
-
-    this->CellData.resize( numberOfCells );
-    this->CellDataOld.resize( numberOfCells );
-
-    this->Cell2Node.resize( numberOfCells );
-    this->Cell2Interface.resize( numberOfCells );
-    this->CellBoundaryCondition.resize( numberOfCells );
-
-    this->CellCenter.resize( numberOfCells );
-    this->CellVolume.resize( numberOfCells );
-    this->CellMinDx.resize( numberOfCells );
-
-    this->InterfaceFlux.resize( numberOfInterfaces );
-
-    this->Interface2Node.resize( numberOfInterfaces );
-    this->Interface2Cell.resize( numberOfInterfaces );
-
-    this->InterfaceCenter.resize( numberOfInterfaces );
-    this->InterfaceNormal.resize( numberOfInterfaces );
-    this->InterfaceArea.resize( numberOfInterfaces );
-    this->InterfaceDistance.resize( numberOfInterfaces );
-    this->Interface2CellCenterDistance.resize( numberOfInterfaces );
-
-
-    // ========================================================================
-    //              Read BC data
-    // ========================================================================
-    for( BoundaryCondition* currentBC: origin.BoundaryConditionList )
-    {
-        this->BoundaryConditionList.push_back(*currentBC);
-        for(Cell* currentCell : origin.CellList)
-        {
-            if( currentBC == currentCell->getBoundaryConditionPointer() )
-            {
-                this->BoundaryConditionList.back().addCell( currentCell->getID() - 1 );
-                this->BoundaryConditionList.back().addNeighborCell( currentCell->findNeighborInDomain()->getID() - 1 );
-            }
-        }
-    }
-
-    // ========================================================================
-    //              Read Node data
-    // ========================================================================
-    for( Node* currentNode : origin.NodeList )
-    {
-        this->NodeCenter[currentNode->ID-1] = *currentNode;
-    }
-    // ========================================================================
-
-    // ========================================================================
-    //              Read Cell data
-    // ========================================================================
-    for( Cell* currentCell : origin.CellList )
-    {
-        this->CellData   [currentCell->getID()-1] = currentCell->getCons();
-        this->CellDataOld[currentCell->getID()-1] = currentCell->getConsOld();
-
-        for( int i = 0; i < 4; i++)
-            this->Cell2Node[currentCell->getID()-1][i] = currentCell->getNode(i).ID-1;
-
-        for( int i = 0; i < 4; i++)
-        {
-            if(currentCell->getInterface(i) != NULL)
-                this->Cell2Interface[currentCell->getID()-1][i] = currentCell->getInterface(i)->getID()-1;
-            else
-                this->Cell2Interface[currentCell->getID()-1][i] = -1;
-        }
-
-        this->CellCenter[currentCell->getID()-1] = currentCell->getCenter();
-        this->CellVolume[currentCell->getID()-1] = currentCell->getVolume();
-        this->CellMinDx [currentCell->getID()-1] = currentCell->getMinDx();
-
-        this->CellBoundaryCondition[currentCell->getID()-1] = -1;
-        for( int i = 0; i < origin.BoundaryConditionList.size(); ++i)
-        {
-            if( origin.BoundaryConditionList[i] == currentCell->getBoundaryConditionPointer() )
-            {
-                this->CellBoundaryCondition[currentCell->getID()-1] = i;
-                break;
-            }
-        }
-    }
-    // ========================================================================
-
-    // ========================================================================
-    //              Read Interface data
-    // ========================================================================
-    for( Interface* currentInterface : origin.InterfaceList )
-    {
-        this->InterfaceFlux[currentInterface->getID()-1] = currentInterface->getTimeIntegratedFlux();
-
-        for( int i = 0; i < 2; i++)
-            this->Interface2Node[currentInterface->getID()-1][i] = currentInterface->getNode(i)->ID-1;
-
-        for( int i = 0; i < 2; i++)
-            this->Interface2Cell[currentInterface->getID()-1][i] = currentInterface->getCell(i)->getID()-1;
-
-        this->InterfaceCenter[currentInterface->getID()-1]   = currentInterface->getCenter();
-        this->InterfaceNormal[currentInterface->getID()-1]   = currentInterface->getNormal();
-        this->InterfaceArea[currentInterface->getID()-1]     = currentInterface->getArea();
-        this->InterfaceDistance[currentInterface->getID()-1] = currentInterface->getDistance2CellCenter(0) + currentInterface->getDistance2CellCenter(1);
-
-        for( int i = 0; i < 2; i++)
-            this->Interface2CellCenterDistance[currentInterface->getID()-1][i] = currentInterface->getDistance2CellCenter(i);
-    }
-    // ========================================================================
-
-    int breakPoint = 0;
-}
-
-void GKSSolver::writeDataToMeshObject(const GKSMesh & target)
-{
-    for( Cell* currentCell : target.CellList )
-        currentCell->setCons( this->CellData[ currentCell->getID()-1 ] );
-}
-
 // ============================================================================
 //      This method perform the iteration and controls the solution process. 
 //      It also call the file output and checks the convergence.
@@ -220,13 +91,6 @@ void GKSSolver::iterate()
             }
         }
         // ====================================================================
-
-        // ====================================================================
-        //if (this->iter % this->param.outputIntervalVTK == 0)
-        //{
-        //    this->writeOutputFiles();
-        //}
-        // ====================================================================
     }
     // ========================================================================
     // ========================================================================
@@ -241,7 +105,7 @@ void GKSSolver::iterate()
 }
 
 // ============================================================================
-//      This method performes on time step of the GKS.
+//      This method performes one time step of the GKS.
 //      All computation is taking place with in this method.
 // ============================================================================
 void GKSSolver::timeStep()
@@ -289,11 +153,11 @@ void GKSSolver::computeGlobalTimestep()
     {
         if ( ! isGhostCell(id) )
         {
-            PrimitiveVariable prim = this->cons2prim( this->CellData[id] );
+            PrimitiveVariable prim = this->cons2prim( this->getCellData(id) );
 
             double U_max = sqrt(prim.U*prim.U + prim.V*prim.V);
             double c_s   = sqrt( 1.0 / ( 2.0*prim.L ) );           // c_s = sqrt(RT) = c_s = sqrt(1/2lambda)
-            double minDx = this->CellMinDx[id];
+            double minDx = this->getCellMinDx(id);
 
             double localTimestep = minDx / ( U_max + c_s + 2.0*this->fluidParam.nu / minDx );
 
@@ -308,13 +172,13 @@ void GKSSolver::computeGlobalTimestep()
 // ============================================================================
 void GKSSolver::applyForcing(idType id)
 {
-    this->CellDataOld[id] = this->CellData[id];
+    this->getCellDataOld(id) = this->getCellData(id);
     
     // ========================================================================
     //                  Compute Primitive Variables (esp. Temp before forcing)
     // ========================================================================
-    PrimitiveVariable  prim = cons2prim( this->CellData[id] );
-    ConservedVariable& cons = this->CellData[id];
+    PrimitiveVariable  prim = cons2prim( this->getCellData(id) );
+    ConservedVariable& cons = this->getCellData(id);
 
     // ========================================================================
     //                  Apply Forcing to momentum components
@@ -329,52 +193,6 @@ void GKSSolver::applyForcing(idType id)
     cons.rhoE = prim.rho * (this->fluidParam.K + 2.0) / (4.0*prim.L)
               + 0.5 * ( cons.rhoU*cons.rhoU + cons.rhoV*cons.rhoV ) / prim.rho;
     // ========================================================================
-
-}
-
-// ============================================================================
-//      This method sets the values of the ghost cells
-// ============================================================================
-void GKSSolver::applyBoundaryCondition(idType id)
-{
-
-    PrimitiveVariable primNeighbor = cons2prim( CellData[ findNeigborCellInDomain(id) ] );
-    PrimitiveVariable prim;
-
-    ConservedVariable& cons = CellData[id];
-
-    BoundaryCondition& BC = BoundaryConditionList[ CellBoundaryCondition[id] ];
-
-    switch ( BC.getType() )
-    {
-        // ====================================================================
-        case wall:
-        {
-            PrimitiveVariable boundaryValue = BC.getValue();
-
-            prim.rho = primNeighbor.rho;
-            prim.U   = 2.0*boundaryValue.U - primNeighbor.U;
-            prim.V   = 2.0*boundaryValue.V - primNeighbor.V;
-            prim.L   = primNeighbor.L;
-
-            break;
-        }
-        // ====================================================================
-        case isothermalWall:
-        {
-            PrimitiveVariable boundaryValue = BC.getValue();
-
-            prim.rho = primNeighbor.rho * ( 2.0*boundaryValue.L - primNeighbor.L ) / primNeighbor.L;
-            prim.U   = 2.0*boundaryValue.U - primNeighbor.U;
-            prim.V   = 2.0*boundaryValue.V - primNeighbor.V;
-            prim.L   = 2.0*boundaryValue.L - primNeighbor.L;
-                
-            break;
-        }
-        // ====================================================================
-    }
-    
-    cons = prim2cons( prim );
 }
 
 // ============================================================================
@@ -388,7 +206,7 @@ void GKSSolver::computeFlux(const idType id)
     ConservedVariable normalGradCons;
     ConservedVariable timeGrad;
 
-    ConservedVariable& flux = InterfaceFlux[id];
+    ConservedVariable InterfaceFlux;
 
     double a[4];
     double b[4] = {0.0, 0.0, 0.0, 0.0};
@@ -454,64 +272,22 @@ void GKSSolver::computeFlux(const idType id)
     // ========================================================================
     //          compute mass and momentum fluxes
     // ========================================================================
-    flux = assembleFlux(MomentU, MomentV, MomentXi, a, b, A, timeCoefficients, prim, InterfaceArea[id], tau);
+    InterfaceFlux = assembleFlux(MomentU, MomentV, MomentXi, a, b, A, timeCoefficients, prim, getInterfaceArea(id), tau);
     // ========================================================================
-    
+
     // ========================================================================
     //          transform momentum Flux components back to global system
     // ========================================================================
-    local2global( id, flux );
+    local2global( id, InterfaceFlux );
     // ========================================================================
-}
-
-// ============================================================================
-//      This method updates the cell averaged conserved variables from the fluxes.
-// ============================================================================
-void GKSSolver::updateCell(const idType id)
-{
-    // ========================================================================
-    //                      Compute Flux signs
-    // ========================================================================
-    double fluxSign[4];
-    fluxSign[0] = ( Interface2Cell[ Cell2Interface[id][0] ][0] == id ) ? (1.0) : (-1.0);
-    fluxSign[1] = ( Interface2Cell[ Cell2Interface[id][1] ][0] == id ) ? (1.0) : (-1.0);
-    fluxSign[2] = ( Interface2Cell[ Cell2Interface[id][2] ][0] == id ) ? (1.0) : (-1.0);
-    fluxSign[3] = ( Interface2Cell[ Cell2Interface[id][3] ][0] == id ) ? (1.0) : (-1.0);
-    // ========================================================================
-
-    // ========================================================================
-    //                      Update conservative Variables
-    // ========================================================================
-    CellData[id].rho  += ( fluxSign[0] * InterfaceFlux[ Cell2Interface[id][0] ].rho
-                         + fluxSign[1] * InterfaceFlux[ Cell2Interface[id][1] ].rho
-                         + fluxSign[2] * InterfaceFlux[ Cell2Interface[id][2] ].rho
-                         + fluxSign[3] * InterfaceFlux[ Cell2Interface[id][3] ].rho
-                         ) / CellVolume[id];
-
-    CellData[id].rhoU += ( fluxSign[0] * InterfaceFlux[ Cell2Interface[id][0] ].rhoU
-                         + fluxSign[1] * InterfaceFlux[ Cell2Interface[id][1] ].rhoU
-                         + fluxSign[2] * InterfaceFlux[ Cell2Interface[id][2] ].rhoU
-                         + fluxSign[3] * InterfaceFlux[ Cell2Interface[id][3] ].rhoU
-                         ) / CellVolume[id];
-
-    CellData[id].rhoV += ( fluxSign[0] * InterfaceFlux[ Cell2Interface[id][0] ].rhoV
-                         + fluxSign[1] * InterfaceFlux[ Cell2Interface[id][1] ].rhoV
-                         + fluxSign[2] * InterfaceFlux[ Cell2Interface[id][2] ].rhoV
-                         + fluxSign[3] * InterfaceFlux[ Cell2Interface[id][3] ].rhoV
-                         ) / CellVolume[id];
-
-    CellData[id].rhoE += ( fluxSign[0] * InterfaceFlux[ Cell2Interface[id][0] ].rhoE
-                         + fluxSign[1] * InterfaceFlux[ Cell2Interface[id][1] ].rhoE
-                         + fluxSign[2] * InterfaceFlux[ Cell2Interface[id][2] ].rhoE
-                         + fluxSign[3] * InterfaceFlux[ Cell2Interface[id][3] ].rhoE
-                         ) / CellVolume[id];
-    // ========================================================================
+    
+    this->applyFlux(id, InterfaceFlux);
 }
 
 PrimitiveVariable GKSSolver::reconstructPrimPiecewiseConstant(const idType id)
 {
-    PrimitiveVariable posPrim = cons2prim( CellData[ Interface2Cell[id][0] ] );
-    PrimitiveVariable negPrim = cons2prim( CellData[ Interface2Cell[id][1] ] );
+    PrimitiveVariable posPrim = cons2prim( this->getCellData( this->getPosCell(id) ) );
+    PrimitiveVariable negPrim = cons2prim( this->getCellData( this->getNegCell(id) ) );
 
     PrimitiveVariable midPrim;
 
@@ -525,14 +301,14 @@ PrimitiveVariable GKSSolver::reconstructPrimPiecewiseConstant(const idType id)
 
 ConservedVariable GKSSolver::differentiateConsNormal(const idType id, double rho)
 {
-    ConservedVariable& posCons = CellData[ Interface2Cell[id][0] ];
-    ConservedVariable& negCons = CellData[ Interface2Cell[id][1] ];
+    ConservedVariable& posCons = this->getCellData( this->getPosCell(id) );
+    ConservedVariable& negCons = this->getCellData( this->getNegCell(id) );
 
     ConservedVariable gradConsNormal;
-    gradConsNormal.rho  = ( posCons.rho  - negCons.rho  ) / ( InterfaceDistance[id] * rho );
-    gradConsNormal.rhoU = ( posCons.rhoU - negCons.rhoU ) / ( InterfaceDistance[id] * rho );
-    gradConsNormal.rhoV = ( posCons.rhoV - negCons.rhoV ) / ( InterfaceDistance[id] * rho );
-    gradConsNormal.rhoE = ( posCons.rhoE - negCons.rhoE ) / ( InterfaceDistance[id] * rho );
+    gradConsNormal.rho  = ( posCons.rho  - negCons.rho  ) / ( this->getInterfaceDistance(id) * rho );
+    gradConsNormal.rhoU = ( posCons.rhoU - negCons.rhoU ) / ( this->getInterfaceDistance(id) * rho );
+    gradConsNormal.rhoV = ( posCons.rhoV - negCons.rhoV ) / ( this->getInterfaceDistance(id) * rho );
+    gradConsNormal.rhoE = ( posCons.rhoE - negCons.rhoE ) / ( this->getInterfaceDistance(id) * rho );
 
     return gradConsNormal;
 }
@@ -910,15 +686,15 @@ ConservedVariable GKSSolver::getL2GlobalResidual()
     {
         if ( ! isGhostCell(id) )
         {
-            residualSquare.rho  +=  ( CellDataOld[id].rho  - CellData[id].rho  ) * ( CellDataOld[id].rho  - CellData[id].rho  );
-            residualSquare.rhoU +=  ( CellDataOld[id].rhoU - CellData[id].rhoU ) * ( CellDataOld[id].rhoU - CellData[id].rhoU );
-            residualSquare.rhoV +=  ( CellDataOld[id].rhoV - CellData[id].rhoV ) * ( CellDataOld[id].rhoV - CellData[id].rhoV );
-            residualSquare.rhoE +=  ( CellDataOld[id].rhoE - CellData[id].rhoE ) * ( CellDataOld[id].rhoE - CellData[id].rhoE );
+            residualSquare.rho  +=  ( this->getCellDataOld(id).rho  - this->getCellData(id).rho  ) * ( this->getCellDataOld(id).rho  - this->getCellData(id).rho  );
+            residualSquare.rhoU +=  ( this->getCellDataOld(id).rhoU - this->getCellData(id).rhoU ) * ( this->getCellDataOld(id).rhoU - this->getCellData(id).rhoU );
+            residualSquare.rhoV +=  ( this->getCellDataOld(id).rhoV - this->getCellData(id).rhoV ) * ( this->getCellDataOld(id).rhoV - this->getCellData(id).rhoV );
+            residualSquare.rhoE +=  ( this->getCellDataOld(id).rhoE - this->getCellData(id).rhoE ) * ( this->getCellDataOld(id).rhoE - this->getCellData(id).rhoE );
 
-            consSquare.rho  +=  CellData[id].rho  * CellData[id].rho ;
-            consSquare.rhoU +=  CellData[id].rhoU * CellData[id].rhoU;
-            consSquare.rhoV +=  CellData[id].rhoV * CellData[id].rhoV;
-            consSquare.rhoE +=  CellData[id].rhoE * CellData[id].rhoE;
+            consSquare.rho  +=  this->getCellData(id).rho  * this->getCellData(id).rho ;
+            consSquare.rhoU +=  this->getCellData(id).rhoU * this->getCellData(id).rhoU;
+            consSquare.rhoV +=  this->getCellData(id).rhoV * this->getCellData(id).rhoV;
+            consSquare.rhoE +=  this->getCellData(id).rhoE * this->getCellData(id).rhoE;
         }
     }
 
@@ -938,7 +714,7 @@ double GKSSolver::getMaxVelocity()
     {
         if ( ! isGhostCell(id) )
         {
-            PrimitiveVariable prim = cons2prim( CellData[id] );
+            PrimitiveVariable prim = cons2prim( this->getCellData(id) );
             localVelocity = sqrt( prim.U * prim.U 
                                 + prim.V * prim.V );
             maxVelocity = max(maxVelocity, localVelocity);
@@ -982,8 +758,8 @@ void GKSSolver::global2local(const idType id, PrimitiveVariable & prim)
     // n = (n1,n2)
     // t = (-n2,n1)
     // vL = [n t]^T * v0
-    prim.U =   InterfaceNormal[id].x * u0 + InterfaceNormal[id].y * v0;
-    prim.V = - InterfaceNormal[id].y * u0 + InterfaceNormal[id].x * v0;
+    prim.U =   getInterfaceNormal(id).x * u0 + getInterfaceNormal(id).y * v0;
+    prim.V = - getInterfaceNormal(id).y * u0 + getInterfaceNormal(id).x * v0;
 }
 
 void GKSSolver::global2local(const idType id, ConservedVariable & cons)
@@ -996,8 +772,8 @@ void GKSSolver::global2local(const idType id, ConservedVariable & cons)
     // n = (n1,n2)
     // t = (-n2,n1)
     // vL = [n t]^T * v0
-    cons.rhoU =   InterfaceNormal[id].x * u0 + InterfaceNormal[id].y * v0;
-    cons.rhoV = - InterfaceNormal[id].y * u0 + InterfaceNormal[id].x * v0;
+    cons.rhoU =   getInterfaceNormal(id).x * u0 + getInterfaceNormal(id).y * v0;
+    cons.rhoV = - getInterfaceNormal(id).y * u0 + getInterfaceNormal(id).x * v0;
 }
 
 void GKSSolver::local2global(const idType id, PrimitiveVariable & prim)
@@ -1010,8 +786,8 @@ void GKSSolver::local2global(const idType id, PrimitiveVariable & prim)
     // n = (n1,n2)
     // t = (-n2,n1)
     // vL = [n t] * v0
-    prim.U = InterfaceNormal[id].x * un - InterfaceNormal[id].y * vt;
-    prim.V = InterfaceNormal[id].y * un + InterfaceNormal[id].x * vt;
+    prim.U = getInterfaceNormal(id).x * un - getInterfaceNormal(id).y * vt;
+    prim.V = getInterfaceNormal(id).y * un + getInterfaceNormal(id).x * vt;
 }
 
 void GKSSolver::local2global(const idType id, ConservedVariable & cons)
@@ -1024,43 +800,16 @@ void GKSSolver::local2global(const idType id, ConservedVariable & cons)
     // n = (n1,n2)
     // t = (-n2,n1)
     // vL = [n t] * v0
-    cons.rhoU = InterfaceNormal[id].x * un - InterfaceNormal[id].y * vt;
-    cons.rhoV = InterfaceNormal[id].y * un + InterfaceNormal[id].x * vt;
-}
-
-bool GKSSolver::isGhostCell(const idType& id)
-{
-    return this->CellBoundaryCondition[id] != -1;
-}
-
-idType GKSSolver::findNeigborCellInDomain(const idType& id)
-{
-    if ( ! isGhostCell(id) ) return -1;
-
-    if ( id == Interface2Cell[ Cell2Interface[id][0] ][0] )
-        return Interface2Cell[ Cell2Interface[id][0] ][1];
-    else
-        return Interface2Cell[ Cell2Interface[id][0] ][0];
-}
-
-ConservedVariable GKSSolver::getData(idType id)
-{
-    return CellData[id];
-}
-
-PrimitiveVariable GKSSolver::getPrim(idType id)
-{
-    return cons2prim( CellData[id] );
-}
-
-void GKSSolver::setData(idType id, ConservedVariable cons)
-{
-    CellData[id] = cons;
+    cons.rhoU = getInterfaceNormal(id).x * un - getInterfaceNormal(id).y * vt;
+    cons.rhoV = getInterfaceNormal(id).y * un + getInterfaceNormal(id).x * vt;
 }
 
 void GKSSolver::setData(idType id, PrimitiveVariable prim)
 {
-    CellData[id] = prim2cons(prim);
+    this->setData( id, prim2cons(prim) );
 }
 
-
+PrimitiveVariable GKSSolver::getPrim(idType id)
+{
+    return cons2prim( this->getCellData(id) );
+}
