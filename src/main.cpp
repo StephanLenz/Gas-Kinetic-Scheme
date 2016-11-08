@@ -14,6 +14,8 @@
 
 #include "GKSSolverPull.h"
 #include "GKSSolverPush.h"
+#include "GKSSolverSOA.h"
+#include "GKSSolverAOS.h"
 #include "GKSMesh.h"
 #include "BoundaryCondition.h"
 #include <iostream>
@@ -65,8 +67,8 @@ int main(int argc, char* argv[])
         param.ghostOutput = false;                      // include ghost cells in VTK files
         param.csvOutput   = true;                       // output csv files for postprocessing
 
-        param.numberOfIterations = 10000000;            // maximal number of Iterations
-        param.outputIntervalVTK = 10000000;                 // Output interval for VTK Files (and .dat files)
+        param.numberOfIterations = 100000;            // maximal number of Iterations
+        param.outputIntervalVTK = 100000;                 // Output interval for VTK Files (and .dat files)
         param.outputInterval = 10000;                    // Output interval for Output on the screen
 
         // Abortion criteria for the different conserved variables
@@ -90,7 +92,7 @@ int main(int argc, char* argv[])
         FluidParameter fluidParam;
 
         int    nx = 2;          // number of cells in x direction
-        int    ny = 32;         // number of cells in y direction
+        int    ny = 4;         // number of cells in y direction
         double Re = 4.0;        // Reynolds number
         double u0 = 0.1;        // Velocits in the mid of the channel
         param.L = 1.0;          // reference length for Re number
@@ -126,7 +128,7 @@ int main(int argc, char* argv[])
         mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, lambda);
 
         // Generate the Mesh
-        mesh->generateRectMeshGraded(compressible, W, H, nx, ny, 1.0, 0.1);
+        mesh->generateRectMeshGraded(compressible, W, H, nx, ny, 1.0, 1.0);
 
         // Set initial condition
         mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
@@ -162,18 +164,34 @@ int main(int argc, char* argv[])
         // ====================================================================
         // ====================================================================
 
-        //GKSSolver* solver = new GKSSolverPull(param, fluidParam);
-        GKSSolver* solver = new GKSSolverPush(param, fluidParam);
+        GKSSolver* solverPull = new GKSSolverPull(param, fluidParam);
+        GKSSolver* solverPush = new GKSSolverPush(param, fluidParam);
+        GKSSolver* solverSOA  = new GKSSolverSOA (param, fluidParam);
+        GKSSolver* solverAOS  = new GKSSolverAOS (param, fluidParam);
 
-        solver->readMeshFromMeshObject(*mesh);
+        //solverPull->readMeshFromMeshObject(*mesh);
+        //solverPush->readMeshFromMeshObject(*mesh);
+        solverSOA->readMeshFromMeshObject(*mesh);
+        //solverAOS->readMeshFromMeshObject(*mesh);
 
         //mesh->iterate();
 
-        solver->iterate();
+        //solverPull->iterate();
+        //solverPush->iterate();
+        solverSOA->iterate();
+        //solverAOS->iterate();
 
-        solver->writeDataToMeshObject(*mesh);
+        //solverPull->writeDataToMeshObject(*mesh);
+        //mesh->writeVTKFile( "out/solverPull.vtk" );
 
-        mesh->writeVTKFile( "out/solver.vtk" );
+        //solverPush->writeDataToMeshObject(*mesh);
+        //mesh->writeVTKFile( "out/solverPush.vtk" );
+        
+        solverSOA->writeDataToMeshObject(*mesh);
+        mesh->writeVTKFile( "out/solverSOA.vtk" );
+        
+        //solverAOS->writeDataToMeshObject(*mesh);
+        //mesh->writeVTKFile( "out/solverAOS.vtk" );
 
         // ====================================================================
         //              Output several files
@@ -228,8 +246,11 @@ int main(int argc, char* argv[])
         ////mesh->writeDensity("out/Density.dat");
         // ====================================================================
 
-        //system("pause");
+        system("pause");
         delete mesh;
-        delete solver;
+        delete solverPull;
+        delete solverPush;
+        delete solverSOA;
+        delete solverAOS;
     }
 }

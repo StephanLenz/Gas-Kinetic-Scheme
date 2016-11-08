@@ -207,12 +207,12 @@ bool GKSSolverPull::isGhostCell(const idType & id)
     return this->CellBoundaryCondition[id] != -1;
 }
 
-ConservedVariable & GKSSolverPull::getCellData(idType id)
+ConservedVariable GKSSolverPull::getCellData(idType id)
 {
     return this->CellData[id];
 }
 
-ConservedVariable & GKSSolverPull::getCellDataOld(idType id)
+ConservedVariable GKSSolverPull::getCellDataOld(idType id)
 {
     return this->CellDataOld[id];
 }
@@ -242,7 +242,7 @@ idType GKSSolverPull::getNegCell(idType id)
     return this->Interface2Cell[id][1];
 }
 
-Vec2 & GKSSolverPull::getInterfaceNormal(idType id)
+Vec2 GKSSolverPull::getInterfaceNormal(idType id)
 {
     return this->InterfaceNormal[id];
 }

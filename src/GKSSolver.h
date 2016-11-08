@@ -112,6 +112,8 @@ public:
     //              Flux computation subroutines
     // ========================================================================
 
+    virtual void storeDataOld(idType id);
+
     PrimitiveVariable reconstructPrimPiecewiseConstant(const idType id);
 
     ConservedVariable differentiateConsNormal(const idType id, double rho);
@@ -150,8 +152,8 @@ public:
 
     virtual bool isGhostCell(const idType& id) = 0;
 
-    virtual ConservedVariable& getCellData(idType id) = 0;
-    virtual ConservedVariable& getCellDataOld(idType id) = 0;
+    virtual ConservedVariable getCellData(idType id) = 0;
+    virtual ConservedVariable getCellDataOld(idType id) = 0;
 
     virtual double getCellMinDx(idType id) = 0;
 
@@ -161,7 +163,7 @@ public:
     virtual idType getPosCell(idType id) = 0;
     virtual idType getNegCell(idType id) = 0;
 
-    virtual Vec2& getInterfaceNormal(idType id) = 0;
+    virtual Vec2 getInterfaceNormal(idType id) = 0;
 
     virtual void setData(idType id, ConservedVariable cons) = 0;
     virtual void setData(idType id, PrimitiveVariable prim);

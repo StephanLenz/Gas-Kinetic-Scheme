@@ -119,8 +119,8 @@ public:
 
     virtual bool isGhostCell(const idType& id);
 
-    virtual ConservedVariable& getCellData(idType id);
-    virtual ConservedVariable& getCellDataOld(idType id);
+    virtual ConservedVariable getCellData(idType id);
+    virtual ConservedVariable getCellDataOld(idType id);
 
     virtual double getCellMinDx(idType id);
 
@@ -130,7 +130,7 @@ public:
     virtual idType getPosCell(idType id);
     virtual idType getNegCell(idType id);
 
-    virtual Vec2& getInterfaceNormal(idType id);
+    virtual Vec2 getInterfaceNormal(idType id);
 
     virtual void setData(idType id, ConservedVariable cons);
 };

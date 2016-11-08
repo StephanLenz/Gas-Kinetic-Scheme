@@ -6,7 +6,7 @@
 //
 // ============================================================================
 //
-//      GKSSolverPull.h
+//      GKSSolverAOS.h
 //
 //      Function:
 //          Generation and Storage of mesh
@@ -16,8 +16,8 @@
 //
 // ============================================================================
 
-#ifndef GKSSolverPull_H
-#define GKSSolverPull_H
+#ifndef GKSSolverAOS_H
+#define GKSSolverAOS_H
 
 #include "GKSSolver.h"
 #include "GKSMesh.h"
@@ -34,8 +34,38 @@
 
 using namespace std;
 
-class GKSSolverPull : public GKSSolver
+class GKSSolverAOS : public GKSSolver
 {
+// ====================================================================================================================
+// ====================================================================================================================
+//                      Structure Definitions
+// ====================================================================================================================
+// ====================================================================================================================
+private:
+    struct CellStruct 
+    {
+        ConservedVariable Data;         // 4 double = 32 Byte
+        ConservedVariable DataOld;      // 4 double = 32 Byte
+
+        Vec2              Center;       // 2 double = 16 Byte
+        double            Volume;       // 1 double =  8 Byte
+        double            MinDx;        // 1 double =  8 Byte
+
+        array<idType, 4>  Interfaces;   // 4 idType = 16 Byte
+                                        //            -------
+                                        //            64 + 48 Byte
+    };
+    // ========================================================================
+    struct InterfaceStruct
+    {
+        ConservedVariable Flux;         // 4 double = 32 Byte
+        Vec2              Normal;       // 2 double = 16 Byte
+        double            Distance;     // 1 double =  8 Byte
+        double            Area;         // 1 double =  8 Byte
+        array<idType, 2>  Cells;        // 2 idType =  8 Byte
+                                        //            -------
+                                        //            64 +  8 Byte
+    };
 // ====================================================================================================================
 // ====================================================================================================================
 //                      Attributes
@@ -43,41 +73,8 @@ class GKSSolverPull : public GKSSolver
 // ====================================================================================================================
 private:
 
-    // ========================================================================
-    //              data
-    // ========================================================================
-
-    vector<ConservedVariable> CellData;
-    vector<ConservedVariable> CellDataOld;
-
-    vector<ConservedVariable> InterfaceFlux;
-
-    // ========================================================================
-    //              Connectivity
-    // ========================================================================
-
-    vector< array<idType, 4> > Cell2Node;
-    vector< array<idType, 4> > Cell2Interface;
-    vector< idType >           CellBoundaryCondition;
-
-    vector< array<idType, 2> > Interface2Node;
-    vector< array<idType, 2> > Interface2Cell;
-
-    // ========================================================================
-    //              Geometry
-    // ========================================================================
-
-    vector<Vec2> NodeCenter;
-
-    vector<Vec2> CellCenter;
-    vector<double> CellVolume;
-    vector<double> CellMinDx;
-
-    vector<Vec2> InterfaceCenter;
-    vector<Vec2> InterfaceNormal;
-    vector<double> InterfaceDistance;
-    vector<double> InterfaceArea;
-    vector< array<double,2> > Interface2CellCenterDistance;
+    vector<CellStruct>      Cells;
+    vector<InterfaceStruct> Interfaces;
 
 // ====================================================================================================================
 // ====================================================================================================================
@@ -85,11 +82,11 @@ private:
 // ====================================================================================================================
 // ====================================================================================================================
 public:
-	GKSSolverPull();
+	GKSSolverAOS();
 
-    GKSSolverPull(Parameters param, FluidParameter fluidParam);
+    GKSSolverAOS(Parameters param, FluidParameter fluidParam);
 
-	~GKSSolverPull();
+	~GKSSolverAOS();
 
     // ========================================================================
     //              Communication methods

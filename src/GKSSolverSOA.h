@@ -6,7 +6,7 @@
 //
 // ============================================================================
 //
-//      GKSSolverPull.h
+//      GKSSolverSOA.h
 //
 //      Function:
 //          Generation and Storage of mesh
@@ -16,8 +16,8 @@
 //
 // ============================================================================
 
-#ifndef GKSSolverPull_H
-#define GKSSolverPull_H
+#ifndef GKSSolverSOA_H
+#define GKSSolverSOA_H
 
 #include "GKSSolver.h"
 #include "GKSMesh.h"
@@ -34,8 +34,9 @@
 
 using namespace std;
 
-class GKSSolverPull : public GKSSolver
+class GKSSolverSOA : public GKSSolver
 {
+
 // ====================================================================================================================
 // ====================================================================================================================
 //                      Attributes
@@ -47,37 +48,45 @@ private:
     //              data
     // ========================================================================
 
-    vector<ConservedVariable> CellData;
-    vector<ConservedVariable> CellDataOld;
+    vector<double> rho;
+    vector<double> rhoU;
+    vector<double> rhoV;
+    vector<double> rhoE;
 
-    vector<ConservedVariable> InterfaceFlux;
+    vector<double> rho_Old;
+    vector<double> rhoU_Old;
+    vector<double> rhoV_Old;
+    vector<double> rhoE_Old;
+    
+    vector<double> F_rho;
+    vector<double> F_rhoU;
+    vector<double> F_rhoV;
+    vector<double> F_rhoE;
 
     // ========================================================================
     //              Connectivity
     // ========================================================================
+    
+    vector<idType> Cell2Interface_0;
+    vector<idType> Cell2Interface_1;
+    vector<idType> Cell2Interface_2;
+    vector<idType> Cell2Interface_3;
 
-    vector< array<idType, 4> > Cell2Node;
-    vector< array<idType, 4> > Cell2Interface;
-    vector< idType >           CellBoundaryCondition;
-
-    vector< array<idType, 2> > Interface2Node;
-    vector< array<idType, 2> > Interface2Cell;
+    vector<idType> Interface2CellPos;
+    vector<idType> Interface2CellNeg;
 
     // ========================================================================
     //              Geometry
     // ========================================================================
 
-    vector<Vec2> NodeCenter;
-
-    vector<Vec2> CellCenter;
     vector<double> CellVolume;
     vector<double> CellMinDx;
 
-    vector<Vec2> InterfaceCenter;
-    vector<Vec2> InterfaceNormal;
+    vector<double> InterfaceNormalX;
+    vector<double> InterfaceNormalY;
+
     vector<double> InterfaceDistance;
     vector<double> InterfaceArea;
-    vector< array<double,2> > Interface2CellCenterDistance;
 
 // ====================================================================================================================
 // ====================================================================================================================
@@ -85,11 +94,11 @@ private:
 // ====================================================================================================================
 // ====================================================================================================================
 public:
-	GKSSolverPull();
+	GKSSolverSOA();
 
-    GKSSolverPull(Parameters param, FluidParameter fluidParam);
+    GKSSolverSOA(Parameters param, FluidParameter fluidParam);
 
-	~GKSSolverPull();
+	~GKSSolverSOA();
 
     // ========================================================================
     //              Communication methods
@@ -108,6 +117,8 @@ public:
     // ========================================================================
     //              Flux computation subroutines
     // ========================================================================
+
+    virtual void storeDataOld(idType id);
 
     virtual void applyFlux(idType id, ConservedVariable flux);
 

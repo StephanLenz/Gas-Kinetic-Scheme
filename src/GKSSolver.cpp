@@ -122,12 +122,17 @@ void GKSSolver::timeStep()
 
     #pragma omp parallel for
     for ( int id = 0; id < numberOfInterfaces; ++id )
-        computeFlux(id);
+        computeFlux(id);  
+
+    int breakPoint = 0;
 
     #pragma omp parallel for
     for ( int id = 0; id < numberOfCells; ++id )
         if ( !isGhostCell(id) )
             updateCell(id);   
+
+    breakPoint = 0;
+    breakPoint = 0;
 }
 
 bool GKSSolver::isConverged(ConservedVariable residual)
@@ -172,13 +177,14 @@ void GKSSolver::computeGlobalTimestep()
 // ============================================================================
 void GKSSolver::applyForcing(idType id)
 {
-    this->getCellDataOld(id) = this->getCellData(id);
+    this->storeDataOld(id);
     
     // ========================================================================
     //                  Compute Primitive Variables (esp. Temp before forcing)
     // ========================================================================
-    PrimitiveVariable  prim = cons2prim( this->getCellData(id) );
-    ConservedVariable& cons = this->getCellData(id);
+    //PrimitiveVariable  prim = cons2prim( this->getCellData(id) );
+    ConservedVariable cons = this->getCellData(id);
+    PrimitiveVariable prim = cons2prim(cons);
 
     // ========================================================================
     //                  Apply Forcing to momentum components
@@ -193,6 +199,8 @@ void GKSSolver::applyForcing(idType id)
     cons.rhoE = prim.rho * (this->fluidParam.K + 2.0) / (4.0*prim.L)
               + 0.5 * ( cons.rhoU*cons.rhoU + cons.rhoV*cons.rhoV ) / prim.rho;
     // ========================================================================
+
+    this->setData(id, cons);
 }
 
 // ============================================================================
@@ -284,6 +292,11 @@ void GKSSolver::computeFlux(const idType id)
     this->applyFlux(id, InterfaceFlux);
 }
 
+void GKSSolver::storeDataOld(idType id)
+{
+    this->getCellDataOld(id) = this->getCellData(id);
+}
+
 PrimitiveVariable GKSSolver::reconstructPrimPiecewiseConstant(const idType id)
 {
     PrimitiveVariable posPrim = cons2prim( this->getCellData( this->getPosCell(id) ) );
@@ -301,8 +314,8 @@ PrimitiveVariable GKSSolver::reconstructPrimPiecewiseConstant(const idType id)
 
 ConservedVariable GKSSolver::differentiateConsNormal(const idType id, double rho)
 {
-    ConservedVariable& posCons = this->getCellData( this->getPosCell(id) );
-    ConservedVariable& negCons = this->getCellData( this->getNegCell(id) );
+    ConservedVariable posCons = this->getCellData( this->getPosCell(id) );
+    ConservedVariable negCons = this->getCellData( this->getNegCell(id) );
 
     ConservedVariable gradConsNormal;
     gradConsNormal.rho  = ( posCons.rho  - negCons.rho  ) / ( this->getInterfaceDistance(id) * rho );
