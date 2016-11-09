@@ -148,8 +148,6 @@ void GKSSolverSOA::readMeshFromMeshObject(const GKSMesh& origin)
         this->InterfaceDistance[currentInterface->getID()-1] = currentInterface->getDistance2CellCenter(0) + currentInterface->getDistance2CellCenter(1);
     }
     // ========================================================================
-
-    cout << rho.size() << endl;
 }
 
 void GKSSolverSOA::writeDataToMeshObject(const GKSMesh & target)

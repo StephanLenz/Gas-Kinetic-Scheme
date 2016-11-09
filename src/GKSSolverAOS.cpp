@@ -107,6 +107,11 @@ void GKSSolverAOS::writeDataToMeshObject(const GKSMesh & target)
         currentCell->setCons( this->Cells[ currentCell->getID()-1 ].Data );
 }
 
+void GKSSolverAOS::storeDataOld(idType id)
+{
+    this->Cells[id].DataOld = this->Cells[id].Data;
+}
+
 void GKSSolverAOS::updateCell(const idType id)
 {
     // ========================================================================

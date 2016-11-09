@@ -156,6 +156,11 @@ void GKSSolverPull::writeDataToMeshObject(const GKSMesh & target)
         currentCell->setCons( this->CellData[ currentCell->getID()-1 ] );
 }
 
+void GKSSolverPull::storeDataOld(idType id)
+{
+    this->CellDataOld[id] = this->CellData[id];
+}
+
 void GKSSolverPull::updateCell(const idType id)
 {
     // ========================================================================

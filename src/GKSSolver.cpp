@@ -292,11 +292,6 @@ void GKSSolver::computeFlux(const idType id)
     this->applyFlux(id, InterfaceFlux);
 }
 
-void GKSSolver::storeDataOld(idType id)
-{
-    this->getCellDataOld(id) = this->getCellData(id);
-}
-
 PrimitiveVariable GKSSolver::reconstructPrimPiecewiseConstant(const idType id)
 {
     PrimitiveVariable posPrim = cons2prim( this->getCellData( this->getPosCell(id) ) );

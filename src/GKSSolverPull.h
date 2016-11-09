@@ -103,6 +103,8 @@ public:
     //              Simulation Control
     // ========================================================================
 
+    virtual void storeDataOld(idType id);
+
     virtual void updateCell(const idType id);
 
     // ========================================================================

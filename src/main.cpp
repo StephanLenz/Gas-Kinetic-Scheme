@@ -67,9 +67,9 @@ int main(int argc, char* argv[])
         param.ghostOutput = false;                      // include ghost cells in VTK files
         param.csvOutput   = true;                       // output csv files for postprocessing
 
-        param.numberOfIterations = 100000;            // maximal number of Iterations
-        param.outputIntervalVTK = 100000;                 // Output interval for VTK Files (and .dat files)
-        param.outputInterval = 10000;                    // Output interval for Output on the screen
+        param.numberOfIterations = 10;            // maximal number of Iterations
+        param.outputIntervalVTK = 10;                 // Output interval for VTK Files (and .dat files)
+        param.outputInterval = 1;                    // Output interval for Output on the screen
 
         // Abortion criteria for the different conserved variables
         // These are thresholds for relative residual changes
@@ -91,8 +91,8 @@ int main(int argc, char* argv[])
 
         FluidParameter fluidParam;
 
-        int    nx = 2;          // number of cells in x direction
-        int    ny = 4;         // number of cells in y direction
+        int    nx = 1024;          // number of cells in x direction
+        int    ny = 1024;         // number of cells in y direction
         double Re = 4.0;        // Reynolds number
         double u0 = 0.1;        // Velocits in the mid of the channel
         param.L = 1.0;          // reference length for Re number
@@ -169,29 +169,29 @@ int main(int argc, char* argv[])
         GKSSolver* solverSOA  = new GKSSolverSOA (param, fluidParam);
         GKSSolver* solverAOS  = new GKSSolverAOS (param, fluidParam);
 
-        //solverPull->readMeshFromMeshObject(*mesh);
-        //solverPush->readMeshFromMeshObject(*mesh);
+        solverPull->readMeshFromMeshObject(*mesh);
+        solverPush->readMeshFromMeshObject(*mesh);
         solverSOA->readMeshFromMeshObject(*mesh);
-        //solverAOS->readMeshFromMeshObject(*mesh);
+        solverAOS->readMeshFromMeshObject(*mesh);
 
         //mesh->iterate();
 
-        //solverPull->iterate();
-        //solverPush->iterate();
+        solverPull->iterate();
+        solverPush->iterate();
         solverSOA->iterate();
-        //solverAOS->iterate();
+        solverAOS->iterate();
 
-        //solverPull->writeDataToMeshObject(*mesh);
-        //mesh->writeVTKFile( "out/solverPull.vtk" );
+        solverPull->writeDataToMeshObject(*mesh);
+        mesh->writeVTKFile( "out/solverPull.vtk" );
 
-        //solverPush->writeDataToMeshObject(*mesh);
-        //mesh->writeVTKFile( "out/solverPush.vtk" );
+        solverPush->writeDataToMeshObject(*mesh);
+        mesh->writeVTKFile( "out/solverPush.vtk" );
         
         solverSOA->writeDataToMeshObject(*mesh);
         mesh->writeVTKFile( "out/solverSOA.vtk" );
         
-        //solverAOS->writeDataToMeshObject(*mesh);
-        //mesh->writeVTKFile( "out/solverAOS.vtk" );
+        solverAOS->writeDataToMeshObject(*mesh);
+        mesh->writeVTKFile( "out/solverAOS.vtk" );
 
         // ====================================================================
         //              Output several files

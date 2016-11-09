@@ -112,7 +112,7 @@ public:
     //              Flux computation subroutines
     // ========================================================================
 
-    virtual void storeDataOld(idType id);
+    virtual void storeDataOld(idType id) = 0;
 
     PrimitiveVariable reconstructPrimPiecewiseConstant(const idType id);
 
