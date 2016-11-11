@@ -392,16 +392,16 @@ void Interface::differentiateConsNormal(double* normalGradCons, double* prim)
 // ============================================================================
 void Interface::differentiateConsNormalThreePoint(double* normalGradCons, double * prim)
 {
-    double distanceFacctor = 0.5 * ( this->posDistance * this->posDistance + this->negDistance * this->negDistance ) 
-                                 / ( this->posDistance * this->negDistance * ( this->posDistance + this->negDistance ) );
+    double distanceFactor = 0.5 * ( this->posDistance * this->posDistance + this->negDistance * this->negDistance ) 
+                                / ( this->posDistance * this->negDistance * ( this->posDistance + this->negDistance ) );
 
-    normalGradCons[0] = distanceFacctor * ( this->posCell->getCons().rho  - this->negCell->getCons().rho )  / ( prim[0] );
+    normalGradCons[0] = distanceFactor * ( this->posCell->getCons().rho  - this->negCell->getCons().rho )  / ( prim[0] );
 
-    normalGradCons[1] = distanceFacctor * ( this->posCell->getCons().rhoU - this->negCell->getCons().rhoU ) / ( prim[0] );
+    normalGradCons[1] = distanceFactor * ( this->posCell->getCons().rhoU - this->negCell->getCons().rhoU ) / ( prim[0] );
 
-    normalGradCons[2] = distanceFacctor * ( this->posCell->getCons().rhoV - this->negCell->getCons().rhoV ) / ( prim[0] );
+    normalGradCons[2] = distanceFactor * ( this->posCell->getCons().rhoV - this->negCell->getCons().rhoV ) / ( prim[0] );
 
-    normalGradCons[3] = distanceFacctor * ( this->posCell->getCons().rhoE - this->negCell->getCons().rhoE ) / ( prim[0] );
+    normalGradCons[3] = distanceFactor * ( this->posCell->getCons().rhoE - this->negCell->getCons().rhoE ) / ( prim[0] );
 }
 
 // ============================================================================
@@ -538,10 +538,10 @@ void Interface::computeInternalFlux(double dt)
     // ========================================================================
     //          compute spacial gradients of the conservative varibles
     // ========================================================================
-    this->differentiateConsNormal(normalGradCons, prim);
+    //this->differentiateConsNormal(normalGradCons, prim);
     //this->differentiateConsNormal(normalGradConsTest, prim);
     //this->differentiateConsNormalThreePoint(normalGradCons, prim);
-    //this->differentiateConsLeastSquare(normalGradCons, tangentialGradCons, prim);
+    this->differentiateConsLeastSquare(normalGradCons, tangentialGradCons, prim);
     // ========================================================================
     
     // ========================================================================
@@ -571,7 +571,7 @@ void Interface::computeInternalFlux(double dt)
     //              a = a1 + a2 u + a3 v + 0.5 a4 (u^2 + v^2 + xi^2)
     // ========================================================================
     this->computeMicroSlope(prim, normalGradCons, a);
-    //this->computeMicroSlope(prim, tangentialGradCons, b);
+    this->computeMicroSlope(prim, tangentialGradCons, b);
     // ========================================================================
     
     // ========================================================================
@@ -607,7 +607,7 @@ void Interface::computeInternalFlux(double dt)
     this->assembleFlux(MomentU, MomentV, MomentXi, a, b, A, timeCoefficients, prim, tau);
     // ========================================================================
 
-    if(this->ID == 9)
+    //if(this->ID == 9)
         int breakPoint = 1;
     
     // ========================================================================

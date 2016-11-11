@@ -64,12 +64,12 @@ int main(int argc, char* argv[])
         param.verbose     = false;                      // detailed screen output
         param.fluxOutput  = false;                      // VTK files for interfaces
         param.resOutput   = false;                      // include residuals in VTK files
-        param.ghostOutput = false;                      // include ghost cells in VTK files
-        param.csvOutput   = true;                       // output csv files for postprocessing
+        param.ghostOutput = true;                      // include ghost cells in VTK files
+        param.csvOutput   = false;                       // output csv files for postprocessing
 
-        param.numberOfIterations = 10;            // maximal number of Iterations
-        param.outputIntervalVTK = 10;                 // Output interval for VTK Files (and .dat files)
-        param.outputInterval = 1;                    // Output interval for Output on the screen
+        param.numberOfIterations = 1000000000;            // maximal number of Iterations
+        param.outputIntervalVTK = 100000;                 // Output interval for VTK Files (and .dat files)
+        param.outputInterval = 100000;                    // Output interval for Output on the screen
 
         // Abortion criteria for the different conserved variables
         // These are thresholds for relative residual changes
@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
         param.convergenceCriterium[2] = 1.0;
         param.convergenceCriterium[3] = 1.0;
 
-        param.CFL = 0.7;                                // CFL number for time step computation
+        param.CFL = 0.01;                                // CFL number for time step computation
         
         // ========================================================================
         //                  Fluid and domain parameters
@@ -91,8 +91,8 @@ int main(int argc, char* argv[])
 
         FluidParameter fluidParam;
 
-        int    nx = 1024;          // number of cells in x direction
-        int    ny = 1024;         // number of cells in y direction
+        int    nx = 32;          // number of cells in x direction
+        int    ny = 32;         // number of cells in y direction
         double Re = 4.0;        // Reynolds number
         double u0 = 0.1;        // Velocits in the mid of the channel
         param.L = 1.0;          // reference length for Re number
@@ -122,9 +122,9 @@ int main(int argc, char* argv[])
         //    | 0     2 |
         //    |    1    |
         //    -----------
-        mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(periodicGhost, 0.0, 0.0, 0.0, lambda);
         mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, lambda);
-        mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(periodicGhost, 0.0, 0.0, 0.0, lambda);
         mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, lambda);
 
         // Generate the Mesh
@@ -164,45 +164,45 @@ int main(int argc, char* argv[])
         // ====================================================================
         // ====================================================================
 
-        GKSSolver* solverPull = new GKSSolverPull(param, fluidParam);
-        GKSSolver* solverPush = new GKSSolverPush(param, fluidParam);
-        GKSSolver* solverSOA  = new GKSSolverSOA (param, fluidParam);
-        GKSSolver* solverAOS  = new GKSSolverAOS (param, fluidParam);
+        //GKSSolver* solverPull = new GKSSolverPull(param, fluidParam);
+        //GKSSolver* solverPush = new GKSSolverPush(param, fluidParam);
+        //GKSSolver* solverSOA  = new GKSSolverSOA (param, fluidParam);
+        //GKSSolver* solverAOS  = new GKSSolverAOS (param, fluidParam);
 
-        solverPull->readMeshFromMeshObject(*mesh);
-        solverPush->readMeshFromMeshObject(*mesh);
-        solverSOA->readMeshFromMeshObject(*mesh);
-        solverAOS->readMeshFromMeshObject(*mesh);
+        //solverPull->readMeshFromMeshObject(*mesh);
+        //solverPush->readMeshFromMeshObject(*mesh);
+        //solverSOA->readMeshFromMeshObject(*mesh);
+        //solverAOS->readMeshFromMeshObject(*mesh);
 
-        //mesh->iterate();
+        mesh->iterate();
 
-        solverPull->iterate();
-        solverPush->iterate();
-        solverSOA->iterate();
-        solverAOS->iterate();
+        //solverPull->iterate();
+        //solverPush->iterate();
+        //solverSOA->iterate();
+        //solverAOS->iterate();
 
-        solverPull->writeDataToMeshObject(*mesh);
-        mesh->writeVTKFile( "out/solverPull.vtk" );
+        //solverPull->writeDataToMeshObject(*mesh);
+        //mesh->writeVTKFile( "out/solverPull.vtk" );
 
-        solverPush->writeDataToMeshObject(*mesh);
-        mesh->writeVTKFile( "out/solverPush.vtk" );
-        
-        solverSOA->writeDataToMeshObject(*mesh);
-        mesh->writeVTKFile( "out/solverSOA.vtk" );
-        
-        solverAOS->writeDataToMeshObject(*mesh);
-        mesh->writeVTKFile( "out/solverAOS.vtk" );
+        //solverPush->writeDataToMeshObject(*mesh);
+        //mesh->writeVTKFile( "out/solverPush.vtk" );
+        //
+        //solverSOA->writeDataToMeshObject(*mesh);
+        //mesh->writeVTKFile( "out/solverSOA.vtk" );
+        //
+        //solverAOS->writeDataToMeshObject(*mesh);
+        //mesh->writeVTKFile( "out/solverAOS.vtk" );
 
         // ====================================================================
         //              Output several files
         // ====================================================================
 
 
-        //mesh->writeTimeSteps("out/timeSteps.dat");
-        //mesh->writeTime("out/time.dat");
-        //mesh->writeResultFields("out/ResultFields.dat");
-        //mesh->writeOverviewFile("out/OverviewFile.dat");
-        //mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
+        mesh->writeTimeSteps("out/timeSteps.dat");
+        mesh->writeTime("out/time.dat");
+        mesh->writeResultFields("out/ResultFields.dat");
+        mesh->writeOverviewFile("out/OverviewFile.dat");
+        mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
 
         // ========== Poiseuille Convergence Study ============================
         //ostringstream filename;
@@ -248,9 +248,9 @@ int main(int argc, char* argv[])
 
         system("pause");
         delete mesh;
-        delete solverPull;
-        delete solverPush;
-        delete solverSOA;
-        delete solverAOS;
+        //delete solverPull;
+        //delete solverPush;
+        //delete solverSOA;
+        //delete solverAOS;
     }
 }

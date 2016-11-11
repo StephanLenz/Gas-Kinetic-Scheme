@@ -118,7 +118,7 @@ public:
 
     void applyBoundaryCondition();
 
-    //void computeLeastSquareGradients();
+    void computeLeastSquareGradients();
 
     void computeFluxes();
 

@@ -51,6 +51,7 @@ Cell::Cell()
 //          fluidParam:     FluidParameter Object
 // ============================================================================
 Cell::Cell(InterfaceType interfaceType, Node** nodes, BoundaryCondition* BC, FluidParameter fluidParam)
+    : BoundaryContitionPointer(BC)
 {
     // ========================================================================
     //                  Copy attributes
@@ -64,8 +65,6 @@ Cell::Cell(InterfaceType interfaceType, Node** nodes, BoundaryCondition* BC, Flu
 
     for(int i = 0; i < 4; i++)
         this->nodes[i] = nodes[i];
-
-    this->BoundaryContitionPointer = BC;
 
     this->fluidParam = fluidParam;
 
@@ -288,49 +287,51 @@ void Cell::computeCons(PrimitiveVariable prim)
 //      Since the Ghost cells have only one neighbor, the Gradient is computed 
 //      by finite difference as a direction derivative
 // ============================================================================
-//void Cell::computeLeastSquareGradients()
-//{
-//    if( this->isGhostCell() )
-//    {
-//        // loop over conserved variables
-//        for(int i = 0; i < 4; i++)
-//        {
-//            double dx = this->InterfaceList[0]->getNeigborCell(this)->getCenter().x - this->center.x;
-//            double dy = this->InterfaceList[0]->getNeigborCell(this)->getCenter().y - this->center.y;
-//
-//            double dW = ((double*)&this->InterfaceList[0]->getNeigborCell(this)->getCons())[i] - this->cons[i];
-//
-//            ((double*)&this->gradientX)[i] = dW / (dx*dx + dy*dy) * dx;
-//            ((double*)&this->gradientY)[i] = dW / (dx*dx + dy*dy) * dy;
-//        }
-//        return;
-//    }
-//
-//    // loop over conserved variables
-//    for(int i = 0; i < 4; i++)
-//    {
-//        ((double*)&this->gradientX)[i] = 0.0;
-//        ((double*)&this->gradientY)[i] = 0.0;
-//
-//        // loop over 4 adjacent cells
-//        for(int j = 0; j < 4; j++)
-//        {
-//            double dx = this->InterfaceList[j]->getNeigborCell(this)->getCenter().x - this->center.x;
-//            double dy = this->InterfaceList[j]->getNeigborCell(this)->getCenter().y - this->center.y;
-//            double weight = 1.0 / sqrt( dx*dx + dy*dy );
-//            dx *= weight;
-//            dy *= weight;
-//
-//            double dW = weight * ( ((double*)&this->InterfaceList[j]->getNeigborCell(this)->getCons())[i] - this->cons[i] );
-//
-//            double w1 = dx / (r11*r11) - r12/r11 * ( dy - r12/r11 * dx ) / (r22*r22);
-//            double w2 =                            ( dy - r12/r11 * dx ) / (r22*r22);
-//
-//            ((double*)&this->gradientX)[i] += w1 * dW;
-//            ((double*)&this->gradientY)[i] += w2 * dW;
-//        }
-//    }
-//}
+void Cell::computeLeastSquareGradients()
+{
+    if( this->isGhostCell() )
+    {
+        // loop over conserved variables
+        for(int i = 0; i < 4; i++)
+        {
+            double dx = this->InterfaceList[0]->getNeigborCell(this)->getCenter().x - this->center.x;
+            double dy = this->InterfaceList[0]->getNeigborCell(this)->getCenter().y - this->center.y;
+
+            double dW = ((double*)&this->InterfaceList[0]->getNeigborCell(this)->getCons())[i] - this->cons[i];
+
+            ((double*)&this->gradientX)[i] = dW / (dx*dx + dy*dy) * dx;
+            ((double*)&this->gradientY)[i] = dW / (dx*dx + dy*dy) * dy;
+        }
+        return;
+    }
+
+    // loop over conserved variables
+    for(int i = 0; i < 4; i++)
+    {
+        ((double*)&this->gradientX)[i] = 0.0;
+        ((double*)&this->gradientY)[i] = 0.0;
+
+        // loop over 4 adjacent cells
+        for(int j = 0; j < 4; j++)
+        {
+            double dx = this->InterfaceList[j]->getNeigborCell(this)->getCenter().x - this->center.x;
+            double dy = this->InterfaceList[j]->getNeigborCell(this)->getCenter().y - this->center.y;
+
+            // distance weighting
+            double weight = 1.0 / sqrt( dx*dx + dy*dy );
+            dx *= weight;
+            dy *= weight;
+
+            double dW = weight * ( ((double*)&this->InterfaceList[j]->getNeigborCell(this)->getCons())[i] - this->cons[i] );
+
+            double w1 = dx / (r11*r11) - r12/r11 * ( dy - r12/r11 * dx ) / (r22*r22);
+            double w2 =                            ( dy - r12/r11 * dx ) / (r22*r22);
+
+            ((double*)&this->gradientX)[i] += w1 * dW;
+            ((double*)&this->gradientY)[i] += w2 * dW;
+        }
+    }
+}
 
 // ============================================================================
 //      This method updates the conserved variables in the cell.
@@ -587,10 +588,13 @@ void Cell::computeLeastSquareCoefficients()
     this->r12 = 0.0;
     this->r22 = 0.0;
 
+    // loop over all adjacent Cells
     for(int i = 0; i < 4; i++)
     {
         double dx = this->InterfaceList[i]->getNeigborCell(this)->getCenter().x - this->center.x;
         double dy = this->InterfaceList[i]->getNeigborCell(this)->getCenter().y - this->center.y;
+
+        // distance weighting
         double weight = 1.0 / sqrt( dx*dx + dy*dy );
         dx *= weight;
         dy *= weight;

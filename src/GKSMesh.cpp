@@ -203,7 +203,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             //tmpNode->x -=  0.05 * sin( NodesY[i] * 2.0 * M_PI/this->lengthY ) * sin( (NodesX[j] - 0.5*this->lengthX) * 2.0 * M_PI/this->lengthX );
 
             // ===== internal sine Distortion (y) ======
-            //tmpNode->y -= 0.05 * sin( NodesX[j] * 2.0 * M_PI/this->lengthX ) * sin( ( NodesY[i] - 0.5*this->lengthY ) * 2.0 * M_PI/this->lengthY );
+            tmpNode->y -= 0.05 * sin( NodesX[j] * 2.0 * M_PI/this->lengthX ) * sin( ( NodesY[i] - 0.5*this->lengthY ) * 2.0 * M_PI/this->lengthY );
 
             // ===== internal linear Distortion ========
             //if( i != 0 && i != ny && j != 0 && j != nx ) tmpNode->y += 0.1;
@@ -424,7 +424,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
                 tmpNodesInterface[0] = tmpNodes[0];
                 tmpNodesInterface[1] = tmpNodes[3];
 
-                Interface* tmpInterface = Interface::createInterface(type, tmpCell, periodicCell, true, true, tmpNodesInterface, fluidParam, (*i)->getBoundaryCondition(), lengthX, lengthY);
+                Interface* tmpInterface = Interface::createInterface(type, tmpCell, periodicCell, true, false, tmpNodesInterface, fluidParam, (*i)->getBoundaryCondition(), lengthX, lengthY);
 
                 tmpInterfaceList.push_back(tmpInterface);
             }
@@ -775,9 +775,9 @@ void GKSMesh::timeStep()
 
     this->applyBoundaryCondition();
 
-    //this->computeLeastSquareGradients();
+    this->computeLeastSquareGradients();
 
-    //this->applyBoundaryCondition();
+    this->applyBoundaryCondition();
 
     this->computeFluxes();
 
@@ -834,17 +834,17 @@ void GKSMesh::applyBoundaryCondition()
 //      Cells with the least suqare method. These gradients are not used, if
 //      Finite differences are applied at the Interfaces.
 // ============================================================================
-//void GKSMesh::computeLeastSquareGradients()
-//{
-//    #pragma omp parallel for
-//    for ( int i = 0; i < CellList.size(); i++ )
-//    {
-//        // TODO: Right now the Gradients in the periodic ghost cells are 
-//        // computed by finite differences and not by least square
-//        //if ( !CellList[i]->isGhostCell() )
-//            CellList[i]->computeLeastSquareGradients();
-//    }
-//}
+void GKSMesh::computeLeastSquareGradients()
+{
+    #pragma omp parallel for
+    for ( int i = 0; i < CellList.size(); i++ )
+    {
+        // TODO: Right now the Gradients in the periodic ghost cells are 
+        // computed by finite differences and not by least square
+        //if ( !CellList[i]->isGhostCell() )
+            CellList[i]->computeLeastSquareGradients();
+    }
+}
 
 // ============================================================================
 //      This method computes the fluxes over all Interfaces
