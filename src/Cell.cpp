@@ -234,6 +234,9 @@ void Cell::applyBoundaryCondition()
             prim.V   = 2.0*boundaryValue.V - primNeighbor.V;
             prim.L   = primNeighbor.L;
 
+            //this->gradientX = this->findNeighborInDomain()->getGradientX();
+            //this->gradientY = this->findNeighborInDomain()->getGradientY();
+
             break;
         }
         // ====================================================================
@@ -245,6 +248,9 @@ void Cell::applyBoundaryCondition()
             prim.U   = 2.0*boundaryValue.U - primNeighbor.U;
             prim.V   = 2.0*boundaryValue.V - primNeighbor.V;
             prim.L   = 2.0*boundaryValue.L - primNeighbor.L;
+
+            //this->gradientX = this->findNeighborInDomain()->getGradientX();
+            //this->gradientY = this->findNeighborInDomain()->getGradientY();
                 
             break;
         }
@@ -252,6 +258,7 @@ void Cell::applyBoundaryCondition()
         case periodicGhost:
         {
             prim = this->InterfaceList[1]->getNeigborCell(this)->getPrim();
+
             this->gradientX = this->InterfaceList[1]->getNeigborCell(this)->getGradientX();
             this->gradientY = this->InterfaceList[1]->getNeigborCell(this)->getGradientY();
         }
@@ -319,8 +326,8 @@ void Cell::computeLeastSquareGradients()
 
             // distance weighting
             double weight = 1.0 / sqrt( dx*dx + dy*dy );
-            dx *= weight;
-            dy *= weight;
+            //dx *= weight;
+            //dy *= weight;
 
             double dW = weight * ( ((double*)&this->InterfaceList[j]->getNeigborCell(this)->getCons())[i] - this->cons[i] );
 
@@ -596,12 +603,12 @@ void Cell::computeLeastSquareCoefficients()
 
         // distance weighting
         double weight = 1.0 / sqrt( dx*dx + dy*dy );
-        dx *= weight;
-        dy *= weight;
+        //dx *= weight;
+        //dy *= weight;
 
-        this->r11 += dx*dx;
-        this->r12 += dx*dy;
-        this->r22 += dy*dy;
+        this->r11 += weight * dx*dx;
+        this->r12 += weight * dx*dy;
+        this->r22 += weight * dy*dy;
     }
 
     this->r11 = sqrt(this->r11);
