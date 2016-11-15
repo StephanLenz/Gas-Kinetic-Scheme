@@ -131,6 +131,7 @@
     <ClCompile Include="src\Interface.cpp" />
     <ClCompile Include="src\InterfaceBC.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\mshReader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\BoundaryCondition.h" />
@@ -145,6 +146,7 @@
     <ClInclude Include="src\IncompressibleInterface.h" />
     <ClInclude Include="src\Interface.h" />
     <ClInclude Include="src\InterfaceBC.h" />
+    <ClInclude Include="src\mshReader.h" />
     <ClInclude Include="src\Types.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

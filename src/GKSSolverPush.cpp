@@ -5,6 +5,7 @@
 #include "BoundaryCondition.h"
 #include "InterfaceBC.h"
 #include "Types.h"
+#include "mshReader.h"
 #include <vector>
 #include <array>
 #include <list>
@@ -156,6 +157,11 @@ void GKSSolverPush::writeDataToMeshObject(const GKSMesh & target)
 {
     for( Cell* currentCell : target.CellList )
         currentCell->setCons( this->CellData[ currentCell->getID()-1 ] );
+}
+
+void GKSSolverPush::readMeshFromMshFile(string filename)
+{
+
 }
 
 void GKSSolverPush::storeDataOld(idType id)

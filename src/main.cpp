@@ -18,6 +18,7 @@
 #include "GKSSolverAOS.h"
 #include "GKSMesh.h"
 #include "BoundaryCondition.h"
+#include "mshReader.h"
 #include <iostream>
 #include <sstream>
 #include <chrono>
@@ -34,6 +35,10 @@ int main(int argc, char* argv[])
     // ================================================================================================================
     // ================================================================================================================
 
+    mshReader reader;
+
+    reader.readMsh("msh/ChannelCoarse.msh");
+
     // These loops can be used for Convergence studies
     double ReList[] = {40.0, 100.0, 400.0, 1000.0};
     int    nyList[] = {8, 16, 32, 64, 128};
@@ -41,7 +46,7 @@ int main(int argc, char* argv[])
     //for (int i = 0; i < 4;i++)      //ReList
     //for (int j = 0; j < 5;j++)      // nyList
     //for(int i = 0; i < 6; i++)      // RaList
-    {
+    if(false){
         ///*
         
         // ============================================================================================================
