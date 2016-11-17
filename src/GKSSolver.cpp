@@ -11,6 +11,8 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <fstream>
+#include <string>
 
 using namespace std;
 
@@ -87,10 +89,16 @@ void GKSSolver::iterate()
 
                 //this->writeOutputFiles();
 
+                this->writeVTK("out/SolverResult.vtk");
+
                 break;
             }
         }
         // ====================================================================
+        if ( this->iter % this->param.outputIntervalVTK == 0 )
+        {
+            this->writeVTK( string("out/Solver_") + to_string(this->iter) + string(".vtk") );
+        }
     }
     // ========================================================================
     // ========================================================================
@@ -820,4 +828,71 @@ void GKSSolver::setData(idType id, PrimitiveVariable prim)
 PrimitiveVariable GKSSolver::getPrim(idType id)
 {
     return cons2prim( this->getCellData(id) );
+}
+
+void GKSSolver::writeVTK(string filename)
+{
+    cout << "Wrinting file " << filename << " ... ";
+	// open file stream
+	ofstream file;
+    file.precision(15);
+	file.open(filename.c_str());
+
+	if (!file.is_open()) {
+		cout << " File cound not be opened.\n\nERROR!\n\n\n";
+		return;
+	}
+    
+    // write VTK Header
+    file << "# vtk DataFile Version 1.0\n";
+    file << "by Stephan Lenz\n";
+    file << "ASCII\n";
+    file << "DATASET UNSTRUCTURED_GRID\n";
+    
+    file << "POINTS " << this->numberOfNodes << " double\n";
+    for(int node = 0; node < this->numberOfNodes; ++node)
+    {
+        file << this->getNode(node).x << " " << this->getNode(node).y << " 0.0" << endl;
+    }
+
+    file << "CELLS " << numberOfCells << " " << 4 * numberOfCells << endl;
+    for (int cell = 0; cell < this->numberOfCells; ++cell)
+    {
+        file << "3 " << this->getCell2Node(cell)[0] << " "
+                     << this->getCell2Node(cell)[1] << " "
+                     << this->getCell2Node(cell)[2] << endl;
+    }
+
+    file << "CELL_TYPES " << numberOfCells << endl;
+    for (int cell = 0; cell < this->numberOfCells; ++cell)
+    {
+        file << "5" << endl;
+    }
+    
+    file << "CELL_DATA " << this->numberOfCells << endl;
+    file << "FIELD Lable " << 4 << "\n";
+    file << "rho 1 " << numberOfCells << " double\n";
+    for (int cell = 0; cell < this->numberOfCells; ++cell)
+    {
+        file << this->getPrim(cell).rho << endl;
+    }
+    file << "U 1 " << numberOfCells << " double\n";
+    for (int cell = 0; cell < this->numberOfCells; ++cell)
+    {
+        file << this->getPrim(cell).U << endl;
+    }
+    file << "V 1 " << numberOfCells << " double\n";
+    for (int cell = 0; cell < this->numberOfCells; ++cell)
+    {
+        file << this->getPrim(cell).V << endl;
+    }
+    file << "Lambda 1 " << numberOfCells << " double\n";
+    for (int cell = 0; cell < this->numberOfCells; ++cell)
+    {
+        file << this->getPrim(cell).L << endl;
+    }
+
+    file.close();
+
+    cout << "done!" << endl;
 }

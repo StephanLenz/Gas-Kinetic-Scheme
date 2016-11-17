@@ -1,4 +1,5 @@
 
+#include "Types.h"
 #include <vector>
 #include <array>
 #include <fstream>
@@ -10,21 +11,22 @@ using namespace std;
 
 class mshReader
 {
-    struct Vec2 { 
-        double x; 
-        double y; 
-        Vec2(double x, double y):x(x),y(y){} 
-        Vec2():x(0.0),y(0.0){}
-    };
+    //struct Vec2 { 
+    //    double x; 
+    //    double y; 
+    //    Vec2(double x, double y):x(x),y(y){} 
+    //    Vec2():x(0.0),y(0.0){}
+    //};
 
-    enum BCtype { periodicLeft, periodicRight, wall};
+    //enum BCtype { periodicLeft, periodicRight, wall};
 
-private:
+public:
 
     vector<Vec2> Nodes;
     
     vector< array<int,3> >  Cell2Node;
     vector< array<int,3> >  Cell2Face;
+    vector< int >           Cell2BC;
                             
     vector< array<int,2> >  Face2Cell;
     vector< array<int,2> >  Face2Node;
@@ -41,7 +43,7 @@ private:
     vector<double> FaceArea;
 
     vector< int >    BCIDs;
-    vector< BCtype > BCs;
+    vector< BoundaryConditionType > BCs;
 
 public:
     mshReader();
@@ -71,10 +73,14 @@ public:
 
     bool findPeriodicCells();
 
+    void createGhostCells();
+
     template <typename T>
     int findIndex(vector<T> _vector, T _value);
 
     double normalDistanceFace2Cell( int face, int cell );
+
+    double normalDistanceFace2Point( int face, Vec2 point );
 };
 
 #endif

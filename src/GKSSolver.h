@@ -170,7 +170,13 @@ public:
     virtual void setData(idType id, ConservedVariable cons) = 0;
     virtual void setData(idType id, PrimitiveVariable prim);
 
+    virtual Vec2 getNode(idType node) = 0;
+
+    virtual array<idType,4> getCell2Node(idType cell) = 0;
+
     virtual PrimitiveVariable  getPrim(idType id);
+
+    void writeVTK( string filename );
 };
 
 #endif

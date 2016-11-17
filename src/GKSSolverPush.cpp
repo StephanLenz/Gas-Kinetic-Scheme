@@ -161,7 +161,134 @@ void GKSSolverPush::writeDataToMeshObject(const GKSMesh & target)
 
 void GKSSolverPush::readMeshFromMshFile(string filename)
 {
+    mshReader reader;
+    reader.readMsh(filename);
 
+    
+    this->numberOfNodes        = reader.Nodes.size();
+
+    this->numberOfCells        = reader.Cell2Node.size();
+
+    this->numberOfInterfaces   = reader.Face2Node.size();
+
+    // ========================================================================
+    //              Allocate Memory
+    // ========================================================================
+
+    this->NodeCenter.resize( numberOfNodes );
+
+    this->CellData.resize( numberOfCells );
+    this->CellDataOld.resize( numberOfCells );
+
+    this->CellUpdate.resize( numberOfCells );
+
+    this->Cell2Node.resize( numberOfCells );
+    this->Cell2Interface.resize( numberOfCells );
+    this->CellBoundaryCondition.resize( numberOfCells );
+
+    this->CellCenter.resize( numberOfCells );
+    this->CellVolume.resize( numberOfCells );
+    this->CellMinDx.resize( numberOfCells );
+
+    this->Interface2Node.resize( numberOfInterfaces );
+    this->Interface2Cell.resize( numberOfInterfaces );
+
+    this->InterfaceCenter.resize( numberOfInterfaces );
+    this->InterfaceNormal.resize( numberOfInterfaces );
+    this->InterfaceArea.resize( numberOfInterfaces );
+    this->InterfaceDistance.resize( numberOfInterfaces );
+    this->Interface2CellCenterDistance.resize( numberOfInterfaces );
+
+    this->InterfaceAdd2Cell.resize( numberOfInterfaces );
+
+    // ========================================================================
+    //              Read BC data
+    // ========================================================================
+    for( int currentBC = 0; currentBC < reader.BCs.size();++currentBC )
+    {
+        this->BoundaryConditionList.push_back( BoundaryCondition(reader.BCs[currentBC], 1.0, 0.0, 0.0, 1.0 / (2.0 * 200.0 *300.0) ) );
+
+        for(idType cell = 0; cell < reader.Cell2Node.size(); ++cell)
+        {
+            if( currentBC == reader.Cell2BC[cell] )
+            {
+                this->BoundaryConditionList.back().addCell( cell );
+
+                idType NeighborCell;
+                if( reader.Face2Cell[ reader.Cell2Face[cell][0] ][0] != cell )
+                    NeighborCell = reader.Face2Cell[ reader.Cell2Face[cell][0] ][0];
+                else
+                    NeighborCell = reader.Face2Cell[ reader.Cell2Face[cell][0] ][1];
+
+                this->BoundaryConditionList.back().addNeighborCell( NeighborCell );
+            }
+        }
+    }
+
+    // ========================================================================
+    //              Read Node data
+    // ========================================================================
+    for( idType node = 0; node < numberOfNodes; ++node)
+    {
+        this->NodeCenter[node] = reader.Nodes[node];
+    }
+    // ========================================================================
+
+    // ========================================================================
+    //              Read Cell data
+    // ========================================================================
+    for( idType cell = 0; cell < numberOfCells; ++cell )
+    {
+        this->CellData   [cell].rho  = 1.0;
+        this->CellData   [cell].rhoU = 0.0;
+        this->CellData   [cell].rhoV = 0.0;
+        this->CellData   [cell].rhoE = 1.0 / ( 2.0 * 200.0 *300.0 );
+        this->CellDataOld[cell].rho  = 1.0;
+        this->CellDataOld[cell].rhoU = 0.0;
+        this->CellDataOld[cell].rhoV = 0.0;
+        this->CellDataOld[cell].rhoE = 1.0 / ( 2.0 * 200.0 *300.0 );
+
+        this->Cell2Node[cell][0] = reader.Cell2Node[cell][0];
+        this->Cell2Node[cell][1] = reader.Cell2Node[cell][1];
+        this->Cell2Node[cell][2] = reader.Cell2Node[cell][2];
+        this->Cell2Node[cell][3] = -1;
+
+        this->Cell2Interface[cell][0] = reader.Cell2Face[cell][0];
+        this->Cell2Interface[cell][1] = reader.Cell2Face[cell][1];
+        this->Cell2Interface[cell][2] = reader.Cell2Face[cell][2];
+        this->Cell2Interface[cell][3] = -1;
+
+        this->CellCenter[cell] = reader.CellCenter[cell];
+        this->CellVolume[cell] = reader.CellVolume[cell];
+        this->CellMinDx [cell] = reader.CellMinDx[cell];
+
+        this->CellBoundaryCondition[cell] = reader.Cell2BC[cell];
+    }
+    // ========================================================================
+
+    // ========================================================================
+    //              Read Interface data
+    // ========================================================================
+    for( idType interface = 0; interface < numberOfInterfaces; ++interface )
+    {
+
+        this->Interface2Node[interface][0] = reader.Face2Node[interface][0];
+        this->Interface2Node[interface][1] = reader.Face2Node[interface][1];
+
+        this->Interface2Cell[interface][0] = reader.Face2Cell[interface][0];
+        this->Interface2Cell[interface][1] = reader.Face2Cell[interface][1];
+
+        this->InterfaceCenter  [interface] = reader.FaceCenter  [interface];
+        this->InterfaceNormal  [interface] = reader.FaceNormal  [interface];
+        this->InterfaceArea    [interface] = reader.FaceArea    [interface];
+        this->InterfaceDistance[interface] = reader.FaceDistance[interface];
+
+        this->InterfaceAdd2Cell[interface][0] = reader.Face2CellAdd[interface][0];
+        this->InterfaceAdd2Cell[interface][1] = reader.Face2CellAdd[interface][1];
+    }
+    // ========================================================================
+
+    int breakPoint = 0;
 }
 
 void GKSSolverPush::storeDataOld(idType id)
@@ -267,6 +394,16 @@ Vec2 GKSSolverPush::getInterfaceNormal(idType id)
 void GKSSolverPush::setData(idType id, ConservedVariable cons)
 {
     this->CellData[id] = cons;
+}
+
+Vec2 GKSSolverPush::getNode(idType node)
+{
+    return this->NodeCenter[node];
+}
+
+array<idType, 4> GKSSolverPush::getCell2Node(idType cell)
+{
+    return this->Cell2Node[cell];
 }
 
 

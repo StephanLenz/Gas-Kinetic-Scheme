@@ -137,6 +137,10 @@ public:
     virtual Vec2 getInterfaceNormal(idType id);
 
     virtual void setData(idType id, ConservedVariable cons);
+
+    virtual Vec2 getNode(idType node);
+
+    virtual array<idType,4> getCell2Node(idType cell);
 };
 
 #endif

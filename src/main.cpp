@@ -35,10 +35,6 @@ int main(int argc, char* argv[])
     // ================================================================================================================
     // ================================================================================================================
 
-    //mshReader reader;
-
-    //reader.readMsh("msh/ChannelCoarse.msh");
-
     // These loops can be used for Convergence studies
     double ReList[] = {40.0, 100.0, 400.0, 1000.0};
     int    nyList[] = {8, 16, 32, 64, 128};
@@ -46,7 +42,7 @@ int main(int argc, char* argv[])
     //for (int i = 0; i < 4;i++)      //ReList
     //for (int j = 0; j < 5;j++)      // nyList
     //for(int i = 0; i < 6; i++)      // RaList
-    {
+    if(true){
         ///*
         
         // ============================================================================================================
@@ -72,9 +68,9 @@ int main(int argc, char* argv[])
         param.ghostOutput = true;                      // include ghost cells in VTK files
         param.csvOutput   = false;                       // output csv files for postprocessing
 
-        param.numberOfIterations = 100000000;            // maximal number of Iterations
+        param.numberOfIterations = 10000000;            // maximal number of Iterations
         param.outputIntervalVTK = 100000;                 // Output interval for VTK Files (and .dat files)
-        param.outputInterval = 10000;                    // Output interval for Output on the screen
+        param.outputInterval = 100000;                    // Output interval for Output on the screen
 
         // Abortion criteria for the different conserved variables
         // These are thresholds for relative residual changes
@@ -84,7 +80,7 @@ int main(int argc, char* argv[])
         param.convergenceCriterium[2] = 1.0;
         param.convergenceCriterium[3] = 1.0;
 
-        param.CFL = 0.01;                                // CFL number for time step computation
+        param.CFL = 0.1;                                // CFL number for time step computation
         
         // ========================================================================
         //                  Fluid and domain parameters
@@ -105,7 +101,7 @@ int main(int argc, char* argv[])
         fluidParam.K = 1.0;                                                   // internal degrees of freedom
         fluidParam.nu = (u0*param.L)/Re;                                    // kinematic viskosity
         fluidParam.R = 200.0;                                               // specific gas constant
-        fluidParam.Force.x = 0.0;//(u0*8.0*fluidParam.nu) / (param.L*param.L);    // acceleration in x direction [m/s^2]
+        fluidParam.Force.x = (u0*8.0*fluidParam.nu) / (param.L*param.L);    // acceleration in x direction [m/s^2]
         fluidParam.Force.y = 0.0;                                           // acceleration in y direction [m/s^2]
         fluidParam.BoussinesqForce.x = 0.0;                                 // acceleration only allpied to density variations [m/s^2]
         fluidParam.BoussinesqForce.y = 0.0;                                 // acceleration only allpied to density variations [m/s^2]
@@ -171,7 +167,7 @@ int main(int argc, char* argv[])
         // ====================================================================
 
         //GKSSolver* solverPull = new GKSSolverPull(param, fluidParam);
-        //GKSSolver* solverPush = new GKSSolverPush(param, fluidParam);
+        GKSSolver* solverPush = new GKSSolverPush(param, fluidParam);
         //GKSSolver* solverSOA  = new GKSSolverSOA (param, fluidParam);
         //GKSSolver* solverAOS  = new GKSSolverAOS (param, fluidParam);
 
@@ -180,10 +176,12 @@ int main(int argc, char* argv[])
         //solverSOA->readMeshFromMeshObject(*mesh);
         //solverAOS->readMeshFromMeshObject(*mesh);
 
-        mesh->iterate();
+        solverPush->readMeshFromMshFile("msh/SquareTri72.msh");
+
+        //mesh->iterate();
 
         //solverPull->iterate();
-        //solverPush->iterate();
+        solverPush->iterate();
         //solverSOA->iterate();
         //solverAOS->iterate();
 
@@ -204,11 +202,11 @@ int main(int argc, char* argv[])
         // ====================================================================
 
 
-        mesh->writeTimeSteps("out/timeSteps.dat");
-        mesh->writeTime("out/time.dat");
-        mesh->writeResultFields("out/ResultFields.dat");
-        mesh->writeOverviewFile("out/OverviewFile.dat");
-        mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
+        //mesh->writeTimeSteps("out/timeSteps.dat");
+        //mesh->writeTime("out/time.dat");
+        //mesh->writeResultFields("out/ResultFields.dat");
+        //mesh->writeOverviewFile("out/OverviewFile.dat");
+        //mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
 
         // ========== Poiseuille Convergence Study ============================
         //ostringstream filename;
