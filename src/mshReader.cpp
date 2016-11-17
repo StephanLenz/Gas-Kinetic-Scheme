@@ -375,12 +375,10 @@ void mshReader::computeCellMinDx()
                        + this->FaceNormal[ Cell2Face[cell][0] ].y * this->Nodes[ Cell2Node[cell][2] ].y );
         this->CellMinDx[cell] = min( this->CellMinDx[cell], distance );
 
-        double distance;
         distance = fabs( this->FaceNormal[ Cell2Face[cell][1] ].x * this->Nodes[ Cell2Node[cell][0] ].x
                        + this->FaceNormal[ Cell2Face[cell][1] ].y * this->Nodes[ Cell2Node[cell][0] ].y );
         this->CellMinDx[cell] = min( this->CellMinDx[cell], distance );
 
-        double distance;
         distance = fabs( this->FaceNormal[ Cell2Face[cell][2] ].x * this->Nodes[ Cell2Node[cell][1] ].x
                        + this->FaceNormal[ Cell2Face[cell][2] ].y * this->Nodes[ Cell2Node[cell][1] ].y );
         this->CellMinDx[cell] = min( this->CellMinDx[cell], distance );

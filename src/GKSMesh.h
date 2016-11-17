@@ -102,6 +102,8 @@ public:
 
     void initMeshSineVelocity(double rho, double u, double v, double T);
 
+    void initMeshStepVelocity(double rho, double u, double v, double T);
+
     void initMeshAtmospheric(double rho, double u, double v, double lambda, double g);
 
     // ========================================================================

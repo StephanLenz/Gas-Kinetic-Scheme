@@ -35,9 +35,9 @@ int main(int argc, char* argv[])
     // ================================================================================================================
     // ================================================================================================================
 
-    mshReader reader;
+    //mshReader reader;
 
-    reader.readMsh("msh/ChannelCoarse.msh");
+    //reader.readMsh("msh/ChannelCoarse.msh");
 
     // These loops can be used for Convergence studies
     double ReList[] = {40.0, 100.0, 400.0, 1000.0};
@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
     //for (int i = 0; i < 4;i++)      //ReList
     //for (int j = 0; j < 5;j++)      // nyList
     //for(int i = 0; i < 6; i++)      // RaList
-    if(false){
+    {
         ///*
         
         // ============================================================================================================
@@ -72,9 +72,9 @@ int main(int argc, char* argv[])
         param.ghostOutput = true;                      // include ghost cells in VTK files
         param.csvOutput   = false;                       // output csv files for postprocessing
 
-        param.numberOfIterations = 1000000000;            // maximal number of Iterations
+        param.numberOfIterations = 100000000;            // maximal number of Iterations
         param.outputIntervalVTK = 100000;                 // Output interval for VTK Files (and .dat files)
-        param.outputInterval = 100000;                    // Output interval for Output on the screen
+        param.outputInterval = 10000;                    // Output interval for Output on the screen
 
         // Abortion criteria for the different conserved variables
         // These are thresholds for relative residual changes
@@ -96,8 +96,8 @@ int main(int argc, char* argv[])
 
         FluidParameter fluidParam;
 
-        int    nx = 32;          // number of cells in x direction
-        int    ny = 32;         // number of cells in y direction
+        int    nx = 16;          // number of cells in x direction
+        int    ny = 16;         // number of cells in y direction
         double Re = 4.0;        // Reynolds number
         double u0 = 0.1;        // Velocits in the mid of the channel
         param.L = 1.0;          // reference length for Re number
@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
         fluidParam.K = 1.0;                                                   // internal degrees of freedom
         fluidParam.nu = (u0*param.L)/Re;                                    // kinematic viskosity
         fluidParam.R = 200.0;                                               // specific gas constant
-        fluidParam.Force.x = (u0*8.0*fluidParam.nu) / (param.L*param.L);    // acceleration in x direction [m/s^2]
+        fluidParam.Force.x = 0.0;//(u0*8.0*fluidParam.nu) / (param.L*param.L);    // acceleration in x direction [m/s^2]
         fluidParam.Force.y = 0.0;                                           // acceleration in y direction [m/s^2]
         fluidParam.BoussinesqForce.x = 0.0;                                 // acceleration only allpied to density variations [m/s^2]
         fluidParam.BoussinesqForce.y = 0.0;                                 // acceleration only allpied to density variations [m/s^2]
@@ -128,17 +128,18 @@ int main(int argc, char* argv[])
         //    |    1    |
         //    -----------
         mesh->addBoundaryCondition(periodicGhost, 0.0, 0.0, 0.0, lambda);
-        mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, lambda);
         mesh->addBoundaryCondition(periodicGhost, 0.0, 0.0, 0.0, lambda);
-        mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(periodicGhost, 0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(periodicGhost, 0.0, 0.0, 0.0, lambda);
 
         // Generate the Mesh
         mesh->generateRectMeshGraded(compressible, W, H, nx, ny, 1.0, 1.0);
 
         // Set initial condition
-        mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
+        //mesh->initMeshConstant(1.0, 1.0, 0.0, lambda);
         //mesh->initMeshParabularVelocity(1.0, u0, 0.0, lambda);
-        //mesh->initMeshSineVelocity(1.0, u0, 0.0, lambda);
+        mesh->initMeshStepVelocity(1.0, u0, 0.0, lambda);
+
 
         //*/
         

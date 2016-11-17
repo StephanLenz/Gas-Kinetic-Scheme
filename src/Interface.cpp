@@ -487,6 +487,30 @@ void Interface::differentiateConsLeastSquare(double* normalGradCons, double* tan
     tangentialGradCons[1] = ( - this->normal.y * interpolatedGradientX.rhoU + this->normal.x * interpolatedGradientY.rhoU ) / prim[0];
     tangentialGradCons[2] = ( - this->normal.y * interpolatedGradientX.rhoV + this->normal.x * interpolatedGradientY.rhoV ) / prim[0];
     tangentialGradCons[3] = ( - this->normal.y * interpolatedGradientX.rhoE + this->normal.x * interpolatedGradientY.rhoE ) / prim[0];
+
+    //double nx =   this->normal.x;
+    //double ny =   this->normal.y;
+    //double tx = - this->normal.y;
+    //double ty =   this->normal.x;
+
+    //double dudx = interpolatedGradientX.rhoU;
+    //double dudy = interpolatedGradientY.rhoU;
+
+    //double dvdx = interpolatedGradientX.rhoV;
+    //double dvdy = interpolatedGradientY.rhoV;
+
+    //normalGradCons[1] = ( nx*nx*dudx + nx*ny*dudy + ny*nx*dvdx + ny*ny*dvdy ) / prim[0];
+    //normalGradCons[2] = ( nx*tx*dudx + nx*ty*dudy + ny*tx*dvdx + ny*ty*dvdy ) / prim[0];
+
+    //tangentialGradCons[1] = ( tx*nx*dudx + tx*ny*dudy + ty*nx*dvdx + ty*ny*dvdy ) / prim[0];
+    //tangentialGradCons[2] = ( tx*tx*dudx + tx*ty*dudy + ty*tx*dvdx + ty*ty*dvdy ) / prim[0];
+
+    //normalGradCons[1] = ( nx*nx*dudx + nx*ny*dvdx + ny*nx*dudy + ny*ny*dvdy ) / prim[0];
+    //normalGradCons[2] = ( nx*tx*dudx + nx*ty*dvdx + ny*tx*dudy + ny*ty*dvdy ) / prim[0];
+
+    //tangentialGradCons[1] = ( tx*nx*dudx + tx*ny*dvdx + ty*nx*dudy + ty*ny*dvdy ) / prim[0];
+    //tangentialGradCons[2] = ( tx*tx*dudx + tx*ty*dvdx + ty*tx*dudy + ty*ty*dvdy ) / prim[0];
+
     // ========================================================================
 
     int breakPoint = 0;

@@ -639,6 +639,23 @@ void GKSMesh::initMeshSineVelocity(double rho, double u, double v, double T)
     }
 }
 
+void GKSMesh::initMeshStepVelocity(double rho, double u, double v, double T)
+{    
+    double uValue;
+    Node center;
+    for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
+    {
+        center = (*i)->getCenter();
+
+        if(center.y < 0.5*this->lengthY)
+            uValue =  u;
+        else
+            uValue = -u;
+
+        (*i)->setValues(rho, uValue, v, T);
+    }
+}
+
 // ============================================================================
 //      This method initializes the mesh with Such that it is stable under
 //      constant external forcing (gravity).
