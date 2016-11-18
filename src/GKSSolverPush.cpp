@@ -323,25 +323,25 @@ void GKSSolverPush::applyFlux(idType id, ConservedVariable flux)
 {
     if( this->InterfaceAdd2Cell[id][0] )
     {
-        # pragma omp atomic
+        #pragma omp atomic
         this->CellUpdate[ Interface2Cell[id][0] ].rho  += flux.rho ;
-        # pragma omp atomic
+        #pragma omp atomic
         this->CellUpdate[ Interface2Cell[id][0] ].rhoU += flux.rhoU;
-        # pragma omp atomic
+        #pragma omp atomic
         this->CellUpdate[ Interface2Cell[id][0] ].rhoV += flux.rhoV;
-        # pragma omp atomic
+        #pragma omp atomic
         this->CellUpdate[ Interface2Cell[id][0] ].rhoE += flux.rhoE;
     }
     
     if( this->InterfaceAdd2Cell[id][1] )
     {
-        # pragma omp atomic
+        #pragma omp atomic
         this->CellUpdate[ Interface2Cell[id][1] ].rho  -= flux.rho ;
-        # pragma omp atomic
+        #pragma omp atomic
         this->CellUpdate[ Interface2Cell[id][1] ].rhoU -= flux.rhoU;
-        # pragma omp atomic
+        #pragma omp atomic
         this->CellUpdate[ Interface2Cell[id][1] ].rhoV -= flux.rhoV;
-        # pragma omp atomic
+        #pragma omp atomic
         this->CellUpdate[ Interface2Cell[id][1] ].rhoE -= flux.rhoE;
     }
 }

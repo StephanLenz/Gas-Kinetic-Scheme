@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
 
         FluidParameter fluidParam;
 
-        int    nx = 16;          // number of cells in x direction
+        int    nx = 8;          // number of cells in x direction
         int    ny = 16;         // number of cells in y direction
         double Re = 4.0;        // Reynolds number
         double u0 = 0.1;        // Velocits in the mid of the channel
@@ -123,18 +123,19 @@ int main(int argc, char* argv[])
         //    | 0     2 |
         //    |    1    |
         //    -----------
-        mesh->addBoundaryCondition(periodicGhost, 0.0, 0.0, 0.0, lambda);
-        mesh->addBoundaryCondition(periodicGhost, 0.0, 0.0, 0.0, lambda);
-        mesh->addBoundaryCondition(periodicGhost, 0.0, 0.0, 0.0, lambda);
-        mesh->addBoundaryCondition(periodicGhost, 0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, lambda);
 
         // Generate the Mesh
         mesh->generateRectMeshGraded(compressible, W, H, nx, ny, 1.0, 1.0);
 
         // Set initial condition
+        mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
         //mesh->initMeshConstant(1.0, 1.0, 0.0, lambda);
         //mesh->initMeshParabularVelocity(1.0, u0, 0.0, lambda);
-        mesh->initMeshStepVelocity(1.0, u0, 0.0, lambda);
+        //mesh->initMeshStepVelocity(1.0, u0, 0.0, lambda);
 
 
         //*/
@@ -166,17 +167,17 @@ int main(int argc, char* argv[])
         // ====================================================================
         // ====================================================================
 
-        //GKSSolver* solverPull = new GKSSolverPull(param, fluidParam);
+        GKSSolver* solverPull = new GKSSolverPull(param, fluidParam);
         GKSSolver* solverPush = new GKSSolverPush(param, fluidParam);
         //GKSSolver* solverSOA  = new GKSSolverSOA (param, fluidParam);
         //GKSSolver* solverAOS  = new GKSSolverAOS (param, fluidParam);
 
-        //solverPull->readMeshFromMeshObject(*mesh);
-        //solverPush->readMeshFromMeshObject(*mesh);
+        solverPull->readMeshFromMeshObject(*mesh);
+        solverPush->readMeshFromMeshObject(*mesh);
         //solverSOA->readMeshFromMeshObject(*mesh);
         //solverAOS->readMeshFromMeshObject(*mesh);
 
-        solverPush->readMeshFromMshFile("msh/SquareQuadGraded32.msh");
+        //solverPush->readMeshFromMshFile("msh/SquareQuadGraded32.msh");
 
         //mesh->iterate();
 

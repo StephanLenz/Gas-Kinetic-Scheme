@@ -128,7 +128,7 @@ void GKSSolver::timeStep()
     for( BoundaryCondition& BC : BoundaryConditionList )
         BC.setGhostCells(*this);
 
-    #pragma omp parallel for
+    #pragma omp parallel for ordered
     for ( int id = 0; id < numberOfInterfaces; ++id )
         computeFlux(id);  
 
@@ -296,7 +296,8 @@ void GKSSolver::computeFlux(const idType id)
     // ========================================================================
     local2global( id, InterfaceFlux );
     // ========================================================================
-    
+    //#pragma omp ordered
+    //#pragma omp critical
     this->applyFlux(id, InterfaceFlux);
 }
 

@@ -203,7 +203,7 @@ void GKSMesh::generateRectMeshGraded(InterfaceType type, double lengthX, double 
             //tmpNode->x -=  0.05 * sin( NodesY[i] * 2.0 * M_PI/this->lengthY ) * sin( (NodesX[j] - 0.5*this->lengthX) * 2.0 * M_PI/this->lengthX );
 
             // ===== internal sine Distortion (y) ======
-            tmpNode->y -= 0.05 * sin( NodesX[j] * 2.0 * M_PI/this->lengthX ) * sin( ( NodesY[i] - 0.5*this->lengthY ) * 2.0 * M_PI/this->lengthY );
+            //tmpNode->y -= 0.05 * sin( NodesX[j] * 2.0 * M_PI/this->lengthX ) * sin( ( NodesY[i] - 0.5*this->lengthY ) * 2.0 * M_PI/this->lengthY );
 
             // ===== internal linear Distortion ========
             //if( i != 0 && i != ny && j != 0 && j != nx ) tmpNode->y += 0.1;

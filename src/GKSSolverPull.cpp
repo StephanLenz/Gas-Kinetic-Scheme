@@ -156,6 +156,10 @@ void GKSSolverPull::writeDataToMeshObject(const GKSMesh & target)
         currentCell->setCons( this->CellData[ currentCell->getID()-1 ] );
 }
 
+void GKSSolverPull::readMeshFromMshFile(string filename)
+{
+}
+
 void GKSSolverPull::storeDataOld(idType id)
 {
     this->CellDataOld[id] = this->CellData[id];
@@ -255,6 +259,16 @@ Vec2 GKSSolverPull::getInterfaceNormal(idType id)
 void GKSSolverPull::setData(idType id, ConservedVariable cons)
 {
     this->CellData[id] = cons;
+}
+
+Vec2 GKSSolverPull::getNode(idType node)
+{
+    return this->NodeCenter[node];
+}
+
+array<idType, 4> GKSSolverPull::getCell2Node(idType cell)
+{
+    return this->Cell2Node[cell];
 }
 
 
