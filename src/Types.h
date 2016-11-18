@@ -102,6 +102,12 @@ enum BoundaryConditionType
     periodicGhost
 };
 
+enum CellType
+{
+    tri,
+    quad
+};
+
 typedef long int idType;
 
 #endif

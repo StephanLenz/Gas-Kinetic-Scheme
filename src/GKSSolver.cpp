@@ -855,22 +855,27 @@ void GKSSolver::writeVTK(string filename)
         file << this->getNode(node).x << " " << this->getNode(node).y << " 0.0" << endl;
     }
 
-    file << "CELLS " << numberOfCells << " " << 4 * numberOfCells << endl;
+    file << "CELLS " << numberOfCells << " " << 5 * numberOfCells << endl;
     for (int cell = 0; cell < this->numberOfCells; ++cell)
     {
-        file << "3 " << this->getCell2Node(cell)[0] << " "
+        file << "4 " << this->getCell2Node(cell)[0] << " "
                      << this->getCell2Node(cell)[1] << " "
-                     << this->getCell2Node(cell)[2] << endl;
+                     << this->getCell2Node(cell)[2] << " ";
+
+        if( -1 == this->getCell2Node(cell)[3] )
+            file << this->getCell2Node(cell)[2] << endl;
+        else
+            file << this->getCell2Node(cell)[3] << endl;
     }
 
     file << "CELL_TYPES " << numberOfCells << endl;
     for (int cell = 0; cell < this->numberOfCells; ++cell)
     {
-        file << "5" << endl;
+        file << "9" << endl;
     }
     
     file << "CELL_DATA " << this->numberOfCells << endl;
-    file << "FIELD Lable " << 4 << "\n";
+    file << "FIELD Lable " << 5 << "\n";
     file << "rho 1 " << numberOfCells << " double\n";
     for (int cell = 0; cell < this->numberOfCells; ++cell)
     {
@@ -885,6 +890,11 @@ void GKSSolver::writeVTK(string filename)
     for (int cell = 0; cell < this->numberOfCells; ++cell)
     {
         file << this->getPrim(cell).V << endl;
+    }
+    file << "T 1 " << numberOfCells << " double\n";
+    for (int cell = 0; cell < this->numberOfCells; ++cell)
+    {
+        file << 1.0 / ( 2.0 * this->fluidParam.R * this->getPrim(cell).L ) << endl;
     }
     file << "Lambda 1 " << numberOfCells << " double\n";
     for (int cell = 0; cell < this->numberOfCells; ++cell)

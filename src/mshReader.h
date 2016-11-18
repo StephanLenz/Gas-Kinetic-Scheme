@@ -24,8 +24,9 @@ public:
 
     vector<Vec2> Nodes;
     
-    vector< array<int,3> >  Cell2Node;
-    vector< array<int,3> >  Cell2Face;
+    vector< CellType >      Cell2Type;
+    vector< array<int,4> >  Cell2Node;
+    vector< array<int,4> >  Cell2Face;
     vector< int >           Cell2BC;
                             
     vector< array<int,2> >  Face2Cell;
@@ -59,11 +60,11 @@ public:
 
     bool newFace(string buffer);
 
-    bool newCell(string buffer);
+    bool newCell(string buffer, CellType type);
 
-    bool linkExistingFaces(array<int,3> tmpCell2Node, array<int,3>& tmpCell2Face, int CellID);
+    bool linkExistingFaces(array<int,4> tmpCell2Node, array<int,4>& tmpCell2Face, int CellID, CellType type);
 
-    bool createMissingFaces(array<int,3> tmpCell2Node, array<int,3>& tmpCell2Face, int CellID);
+    bool createMissingFaces(array<int,4> tmpCell2Node, array<int,4>& tmpCell2Face, int CellID, CellType type);
 
     void computeCellGeometry();
 

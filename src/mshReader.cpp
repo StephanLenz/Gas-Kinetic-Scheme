@@ -20,6 +20,11 @@ bool mshReader::readMsh(string filename)
     ifstream file;
     file.open(filename);
 
+    if ( !file.is_open() ) {
+        cout << " File cound not be opened.\n\nERROR!\n\n\n";
+        return false;
+    }
+
     string buffer;
 
     getline(file, buffer);
@@ -142,8 +147,9 @@ bool mshReader::readElements(ifstream & file)
 
         bufferStream >> ID >> type;
 
-        if (type == 1) if( ! newFace(buffer) ) return false;
-        if (type == 2) if( ! newCell(buffer) ) return false;
+        if (type == 1) if( ! newFace(buffer)       ) return false;
+        if (type == 2) if( ! newCell(buffer, tri ) ) return false;
+        if (type == 3) if( ! newCell(buffer, quad) ) return false;
     }
 
     getline(file, buffer);
@@ -191,31 +197,46 @@ bool mshReader::newFace(string buffer)
     return true;
 }
 
-bool mshReader::newCell(string buffer)
+bool mshReader::newCell(string buffer, CellType type)
 {
     stringstream bufferStream(buffer);
 
     int ID;
     int BCID;
-    int N1, N2, N3;
+    int N1, N2, N3, N4;
     int tmp;
+    array<int,4> tmpCell2Node;
 
-    bufferStream >> ID >> tmp >> tmp >> tmp >> tmp >> N1 >> N2 >> N3;
+    if( type == tri )
+    {
+        bufferStream >> ID >> tmp >> tmp >> tmp >> tmp >> N1 >> N2 >> N3;
 
-    array<int,3> tmpCell2Node;
-    tmpCell2Node[0] = N1-1;
-    tmpCell2Node[1] = N2-1;
-    tmpCell2Node[2] = N3-1;
+        tmpCell2Node[0] = N1-1;
+        tmpCell2Node[1] = N2-1;
+        tmpCell2Node[2] = N3-1;
+        tmpCell2Node[3] = -1;
+    }
+    else if (type == quad)
+    {
+        bufferStream >> ID >> tmp >> tmp >> tmp >> tmp >> N1 >> N2 >> N3 >> N4;
 
-    array<int, 3> tmpCell2Face;
+        tmpCell2Node[0] = N1-1;
+        tmpCell2Node[1] = N2-1;
+        tmpCell2Node[2] = N3-1;
+        tmpCell2Node[3] = N4-1;
+    }
+
+    array<int, 4> tmpCell2Face;
     tmpCell2Face[0] = -1;
     tmpCell2Face[1] = -1;
     tmpCell2Face[2] = -1;
+    tmpCell2Face[3] = -1;
 
-    this->linkExistingFaces( tmpCell2Node, tmpCell2Face, this->Cell2Node.size() );
+    this->linkExistingFaces( tmpCell2Node, tmpCell2Face, this->Cell2Node.size(), type);
 
-    this->createMissingFaces( tmpCell2Node, tmpCell2Face, this->Cell2Node.size() );
+    this->createMissingFaces( tmpCell2Node, tmpCell2Face, this->Cell2Node.size(), type);
 
+    this->Cell2Type.push_back(type);
     this->Cell2Node.push_back(tmpCell2Node);
     this->Cell2Face.push_back(tmpCell2Face);
 
@@ -224,113 +245,61 @@ bool mshReader::newCell(string buffer)
     return true;
 }
 
-bool mshReader::linkExistingFaces(array<int, 3> tmpCell2Node, array<int, 3>& tmpCell2Face, int CellID)
+bool mshReader::linkExistingFaces(array<int, 4> tmpCell2Node, array<int, 4>& tmpCell2Face, int CellID, CellType type)
 {
-    for( int i = 0; i < Face2Node.size(); ++i )
-    {            
-        if      ( Face2Node[i][0] == tmpCell2Node[0] && Face2Node[i][1] == tmpCell2Node[1] )
+    int nNodes;
+    if     (type == tri)  nNodes = 3;
+    else if(type == quad) nNodes = 4;
+
+    for( int face = 0; face < Face2Node.size(); ++face )
+    {
+        for( int cellNode = 0; cellNode < nNodes; ++cellNode )
         {
-            tmpCell2Face[0] = i;
-            Face2Cell   [i][1] = CellID;
-            Face2CellAdd[i][1] = true;
-        }
-        else if ( Face2Node[i][1] == tmpCell2Node[0] && Face2Node[i][0] == tmpCell2Node[1] )
-        {
-            tmpCell2Face[0] = i;
-            Face2Cell   [i][0] = CellID;
-            Face2CellAdd[i][0] = true;
-        }   
-        // ======
-        if      ( Face2Node[i][0] == tmpCell2Node[1] && Face2Node[i][1] == tmpCell2Node[2] )
-        {
-            tmpCell2Face[1] = i;
-            Face2Cell   [i][1] = CellID;
-            Face2CellAdd[i][1] = true;
-        }
-        else if ( Face2Node[i][1] == tmpCell2Node[1] && Face2Node[i][0] == tmpCell2Node[2] )
-        {
-            tmpCell2Face[1] = i;
-            Face2Cell   [i][0] = CellID;
-            Face2CellAdd[i][0] = true;
-        } 
-        // ======
-        if      ( Face2Node[i][0] == tmpCell2Node[2] && Face2Node[i][1] == tmpCell2Node[0] )
-        {
-            tmpCell2Face[2] = i;
-            Face2Cell   [i][1] = CellID;
-            Face2CellAdd[i][1] = true;
-        }
-        else if ( Face2Node[i][1] == tmpCell2Node[2] && Face2Node[i][0] == tmpCell2Node[0] )
-        {
-            tmpCell2Face[2] = i;
-            Face2Cell   [i][0] = CellID;
-            Face2CellAdd[i][0] = true;
+            if      ( this->Face2Node[face][0] == tmpCell2Node[ cellNode%nNodes ] && this->Face2Node[face][1] == tmpCell2Node[ (cellNode+1)%nNodes ] )
+            {
+                tmpCell2Face[cellNode] = face;
+                this->Face2Cell   [face][1] = CellID;
+                this->Face2CellAdd[face][1] = true;
+            }
+            else if ( this->Face2Node[face][1] == tmpCell2Node[ cellNode%nNodes ] && this->Face2Node[face][0] == tmpCell2Node[ (cellNode+1)%nNodes ] )
+            {
+                tmpCell2Face[cellNode] = face;
+                this->Face2Cell   [face][0] = CellID;
+                this->Face2CellAdd[face][0] = true;
+            }  
         }
     }
 
     return true;
 }
 
-bool mshReader::createMissingFaces(array<int, 3> tmpCell2Node, array<int, 3>& tmpCell2Face, int CellID)
+bool mshReader::createMissingFaces(array<int, 4> tmpCell2Node, array<int, 4>& tmpCell2Face, int CellID, CellType type)
 {
-    if(tmpCell2Face[0] == -1)
+    int nFaces;
+    if     (type == tri)   nFaces = 3;
+    else if(type == quad) nFaces = 4;
+
+    for( int cellFace = 0; cellFace < nFaces; ++cellFace )
     {
-        array<int,2> tmpFace2Node;
-        tmpFace2Node[0] = tmpCell2Node[0];
-        tmpFace2Node[1] = tmpCell2Node[1];
-        Face2Node.push_back(tmpFace2Node);
+        if(tmpCell2Face[cellFace] == -1)
+        {
+            array<int,2> tmpFace2Node;
+            tmpFace2Node[0] = tmpCell2Node[ cellFace   %nFaces];
+            tmpFace2Node[1] = tmpCell2Node[(cellFace+1)%nFaces];
+            Face2Node.push_back(tmpFace2Node);
 
-        array<int,2> tmpFace2Cell;
-        tmpFace2Cell[0] = -1;
-        tmpFace2Cell[1] = CellID;
-        Face2Cell.push_back(tmpFace2Cell);
+            array<int,2> tmpFace2Cell;
+            tmpFace2Cell[0] = -1;
+            tmpFace2Cell[1] = CellID;
+            Face2Cell.push_back(tmpFace2Cell);
 
-        array<bool,2> tmpFace2CellAdd = {true, true};
-        this->Face2CellAdd.push_back(tmpFace2CellAdd);
+            array<bool,2> tmpFace2CellAdd = {true, true};
+            this->Face2CellAdd.push_back(tmpFace2CellAdd);
 
-        Face2BC.push_back(-1);
+            Face2BC.push_back(-1);
 
-        tmpCell2Face[0] = Face2Cell.size()-1;
-    }
-
-    if(tmpCell2Face[1] == -1)
-    {
-        array<int,2> tmpFace2Node;
-        tmpFace2Node[0] = tmpCell2Node[1];
-        tmpFace2Node[1] = tmpCell2Node[2];
-        Face2Node.push_back(tmpFace2Node);
-
-        array<int,2> tmpFace2Cell;
-        tmpFace2Cell[0] = -1;
-        tmpFace2Cell[1] = CellID;
-        Face2Cell.push_back(tmpFace2Cell);
-
-        array<bool,2> tmpFace2CellAdd = {true, true};
-        this->Face2CellAdd.push_back(tmpFace2CellAdd);
-
-        Face2BC.push_back(-1);
-
-        tmpCell2Face[1] = Face2Cell.size()-1;
-    }
-
-    if(tmpCell2Face[2] == -1)
-    {
-        array<int,2> tmpFace2Node;
-        tmpFace2Node[0] = tmpCell2Node[2];
-        tmpFace2Node[1] = tmpCell2Node[0];
-        Face2Node.push_back(tmpFace2Node);
-
-        array<int,2> tmpFace2Cell;
-        tmpFace2Cell[0] = -1;
-        tmpFace2Cell[1] = CellID;
-        Face2Cell.push_back(tmpFace2Cell);
-
-        array<bool,2> tmpFace2CellAdd = {true, true};
-        this->Face2CellAdd.push_back(tmpFace2CellAdd);
-
-        Face2BC.push_back(-1);
-
-        tmpCell2Face[2] = Face2Cell.size()-1;
+            tmpCell2Face[cellFace] = Face2Cell.size()-1;
+        }  
     }
     
     return true;
@@ -344,12 +313,35 @@ void mshReader::computeCellGeometry()
 
     for( int cell = 0; cell < this->Cell2Node.size(); ++cell )
     {
-        this->CellCenter[cell].x =  (this->Nodes[ Cell2Node[cell][0] ].x + this->Nodes[ Cell2Node[cell][1] ].x + this->Nodes[ Cell2Node[cell][2] ].x) / 3.0;
-        this->CellCenter[cell].y =  (this->Nodes[ Cell2Node[cell][0] ].y + this->Nodes[ Cell2Node[cell][1] ].y + this->Nodes[ Cell2Node[cell][2] ].y) / 3.0;
+        if      ( this->Cell2Type[cell] == tri )
+        {
+            this->CellCenter[cell].x =  (this->Nodes[ Cell2Node[cell][0] ].x + this->Nodes[ Cell2Node[cell][1] ].x + this->Nodes[ Cell2Node[cell][2] ].x) / 3.0;
+            this->CellCenter[cell].y =  (this->Nodes[ Cell2Node[cell][0] ].y + this->Nodes[ Cell2Node[cell][1] ].y + this->Nodes[ Cell2Node[cell][2] ].y) / 3.0;
 
-        this->CellVolume[cell] = 0.5 * fabs( this->Nodes[ Cell2Node[cell][0] ].x * ( this->Nodes[ Cell2Node[cell][1] ].y - this->Nodes[ Cell2Node[cell][2] ].y ) 
-                                           + this->Nodes[ Cell2Node[cell][1] ].x * ( this->Nodes[ Cell2Node[cell][2] ].y - this->Nodes[ Cell2Node[cell][0] ].y ) 
-                                           + this->Nodes[ Cell2Node[cell][2] ].x * ( this->Nodes[ Cell2Node[cell][0] ].y - this->Nodes[ Cell2Node[cell][1] ].y ) );
+            this->CellVolume[cell] = 0.5 * fabs( this->Nodes[ Cell2Node[cell][0] ].x * ( this->Nodes[ Cell2Node[cell][1] ].y - this->Nodes[ Cell2Node[cell][2] ].y ) 
+                                               + this->Nodes[ Cell2Node[cell][1] ].x * ( this->Nodes[ Cell2Node[cell][2] ].y - this->Nodes[ Cell2Node[cell][0] ].y ) 
+                                               + this->Nodes[ Cell2Node[cell][2] ].x * ( this->Nodes[ Cell2Node[cell][0] ].y - this->Nodes[ Cell2Node[cell][1] ].y ) );
+        }
+        else if ( this->Cell2Type[cell] == quad )
+        {
+            Vec2 triCenter[2];
+            triCenter[0].x =  (this->Nodes[ Cell2Node[cell][0] ].x + this->Nodes[ Cell2Node[cell][1] ].x +                                       this->Nodes[ Cell2Node[cell][3] ].x) / 3.0;
+            triCenter[0].y =  (this->Nodes[ Cell2Node[cell][0] ].y + this->Nodes[ Cell2Node[cell][1] ].y +                                       this->Nodes[ Cell2Node[cell][3] ].y) / 3.0;
+            triCenter[1].y =  (                                      this->Nodes[ Cell2Node[cell][1] ].y + this->Nodes[ Cell2Node[cell][2] ].y + this->Nodes[ Cell2Node[cell][3] ].y) / 3.0;
+            triCenter[1].x =  (                                      this->Nodes[ Cell2Node[cell][1] ].x + this->Nodes[ Cell2Node[cell][2] ].x + this->Nodes[ Cell2Node[cell][3] ].x) / 3.0;
+
+            double triVolume[2];
+            triVolume[0] = 0.5 * fabs( this->Nodes[ Cell2Node[cell][0] ].x * ( this->Nodes[ Cell2Node[cell][1] ].y - this->Nodes[ Cell2Node[cell][3] ].y ) 
+                                     + this->Nodes[ Cell2Node[cell][1] ].x * ( this->Nodes[ Cell2Node[cell][3] ].y - this->Nodes[ Cell2Node[cell][0] ].y ) 
+                                     + this->Nodes[ Cell2Node[cell][3] ].x * ( this->Nodes[ Cell2Node[cell][0] ].y - this->Nodes[ Cell2Node[cell][1] ].y ) );
+            triVolume[1] = 0.5 * fabs( this->Nodes[ Cell2Node[cell][2] ].x * ( this->Nodes[ Cell2Node[cell][3] ].y - this->Nodes[ Cell2Node[cell][1] ].y ) 
+                                     + this->Nodes[ Cell2Node[cell][3] ].x * ( this->Nodes[ Cell2Node[cell][1] ].y - this->Nodes[ Cell2Node[cell][2] ].y ) 
+                                     + this->Nodes[ Cell2Node[cell][1] ].x * ( this->Nodes[ Cell2Node[cell][2] ].y - this->Nodes[ Cell2Node[cell][3] ].y ) );
+
+            this->CellVolume[cell]   = triVolume[0] + triVolume[1];
+            this->CellCenter[cell].x = ( triCenter[0].x * triVolume[0] + triCenter[1].x * triVolume[1] ) / this->CellVolume[cell];
+            this->CellCenter[cell].y = ( triCenter[0].y * triVolume[0] + triCenter[1].y * triVolume[1] ) / this->CellVolume[cell];
+        }
     }
     cout << " done!" << endl;
 }
@@ -401,14 +393,18 @@ void mshReader::computeCellMinDx()
     {
         this->CellMinDx[cell] = 1.0e99;
 
-        for(int i = 0; i < 3; i++)          // loop over faces
+        int nNodes;
+        if      ( this->Cell2Type[cell] == tri  ) nNodes = 3;
+        else if ( this->Cell2Type[cell] == quad ) nNodes = 4;
+
+        for(int cellFace = 0; cellFace < nNodes; ++cellFace)          // loop over faces
         {
-            for( int j = 0; j < 3; j++)     // loop over nodes not on the interface
+            for( int cellNode = 0; cellNode < nNodes; ++cellNode)     // loop over nodes not on the interface
             {
-                if(  this->Cell2Node[cell][j] != this->Face2Node[ this->Cell2Face[cell][i] ][0] 
-                  && this->Cell2Node[cell][j] != this->Face2Node[ this->Cell2Face[cell][i] ][1] )
+                if(  this->Cell2Node[cell][cellNode] != this->Face2Node[ this->Cell2Face[cell][cellFace] ][0] 
+                  && this->Cell2Node[cell][cellNode] != this->Face2Node[ this->Cell2Face[cell][cellFace] ][1] )
                 {
-                    this->CellMinDx[cell] = min( this->CellMinDx[cell], this->normalDistanceFace2Point( this->Cell2Face[cell][i], this->Nodes[ this->Cell2Node[cell][j] ] ) );
+                    this->CellMinDx[cell] = min( this->CellMinDx[cell], this->normalDistanceFace2Point( this->Cell2Face[cell][cellFace], this->Nodes[ this->Cell2Node[cell][cellNode] ] ) );
                 }
             }
         }
@@ -422,8 +418,8 @@ bool mshReader::findPeriodicCells()
     cout << "Find periodic Cell:";
     for(int left = 0; left < Face2Node.size(); ++left)
     {
-        if( Face2BC[left] == -1 ) continue;
-        if( BCs[ Face2BC[left] ] == periodic && ( Face2Cell[left][0] != -1 || Face2Cell[left][1] != -1 ) )
+        if( this->Face2BC[left] == -1 ) continue;
+        if( this->BCs[ Face2BC[left] ] == periodic && ( this->Face2Cell[left][0] != -1 || this->Face2Cell[left][1] != -1 ) )
         {
             for(int right = 0; right < Face2Node.size(); ++right)
             {
@@ -442,14 +438,14 @@ bool mshReader::findPeriodicCells()
                         int leftCell, leftEmpty;
                         int rightCell, rightEmpty;
 
-                        if      (Face2Cell[left][0] != -1)
+                        if      (this->Face2Cell[left][0] != -1)
                         {
-                            leftCell  = Face2Cell[left][0];
+                            leftCell  = this->Face2Cell[left][0];
                             leftEmpty = 1;
                         }
-                        else if (Face2Cell[left][1] != -1)
+                        else if (this->Face2Cell[left][1] != -1)
                         {
-                            leftCell  = Face2Cell[left][1];
+                            leftCell  = this->Face2Cell[left][1];
                             leftEmpty = 0;
                         }
                         else
@@ -457,14 +453,14 @@ bool mshReader::findPeriodicCells()
                             cout << "Error: Left Cell already has two Neighbors" << endl; return false;
                         }
 
-                        if      (Face2Cell[right][0] != -1)
+                        if      (this->Face2Cell[right][0] != -1)
                         {
-                            rightCell  = Face2Cell[right][0];
+                            rightCell  = this->Face2Cell[right][0];
                             rightEmpty = 1;
                         }
-                        else if (Face2Cell[right][1] != -1)
+                        else if (this->Face2Cell[right][1] != -1)
                         {
-                            rightCell  = Face2Cell[right][1];
+                            rightCell  = this->Face2Cell[right][1];
                             rightEmpty = 0;
                         }
                         else
@@ -472,8 +468,8 @@ bool mshReader::findPeriodicCells()
                             cout << "Error: Right Cell already has two Neighbors" << endl; return false;
                         }
 
-                        Face2Cell[left ][leftEmpty ] = rightCell;
-                        Face2Cell[right][rightEmpty] = leftCell;
+                        this->Face2Cell[left ][leftEmpty ] = rightCell;
+                        this->Face2Cell[right][rightEmpty] = leftCell;
 
                         double distance = this->FaceDistance[left] + this->FaceDistance[right];
                         this->FaceDistance[left ] = distance;
@@ -510,25 +506,27 @@ void mshReader::createGhostCells()
         this->Nodes.push_back( Vec2( this->FaceCenter[face].x + vector.x,
                                      this->FaceCenter[face].y + vector.y ) );
 
-        array<int,3> newCell2Node;
+        array<int,4> newCell2Node;
         if( emptyFace2Cell == 0 )
         {
             newCell2Node[0] = this->Face2Node[face][0];
             newCell2Node[1] = this->Face2Node[face][1];
-            newCell2Node[2] = this->Nodes.size()-1;
         }
         else
         {
             newCell2Node[0] = this->Face2Node[face][1];
             newCell2Node[1] = this->Face2Node[face][0];
-            newCell2Node[2] = this->Nodes.size()-1;
         }
+        newCell2Node[2] = this->Nodes.size()-1;
+        newCell2Node[3] = -1;
 
-        array<int,3> newCell2Face;
+        array<int,4> newCell2Face;
         newCell2Face[0] = face;
         newCell2Face[1] = -1;
         newCell2Face[2] = -1;
+        newCell2Face[3] = -1;
 
+        this->Cell2Type.push_back(tri);
         this->Cell2Node.push_back(newCell2Node);
         this->Cell2Face.push_back(newCell2Face);
         this->Cell2BC.push_back(this->Face2BC[face]);

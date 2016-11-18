@@ -242,21 +242,21 @@ void GKSSolverPush::readMeshFromMshFile(string filename)
         this->CellData   [cell].rho  = 1.0;
         this->CellData   [cell].rhoU = 0.0;
         this->CellData   [cell].rhoV = 0.0;
-        this->CellData   [cell].rhoE = 1.0 / ( 2.0 * 200.0 *300.0 );
+        this->CellData   [cell].rhoE = 0.5 * (this->fluidParam.K + 2) * this->fluidParam.R * 300.0;
         this->CellDataOld[cell].rho  = 1.0;
         this->CellDataOld[cell].rhoU = 0.0;
         this->CellDataOld[cell].rhoV = 0.0;
-        this->CellDataOld[cell].rhoE = 1.0 / ( 2.0 * 200.0 *300.0 );
+        this->CellDataOld[cell].rhoE = 0.5 * (this->fluidParam.K + 2) * this->fluidParam.R * 300.0;
 
         this->Cell2Node[cell][0] = reader.Cell2Node[cell][0];
         this->Cell2Node[cell][1] = reader.Cell2Node[cell][1];
         this->Cell2Node[cell][2] = reader.Cell2Node[cell][2];
-        this->Cell2Node[cell][3] = -1;
+        this->Cell2Node[cell][3] = reader.Cell2Node[cell][3];
 
         this->Cell2Interface[cell][0] = reader.Cell2Face[cell][0];
         this->Cell2Interface[cell][1] = reader.Cell2Face[cell][1];
         this->Cell2Interface[cell][2] = reader.Cell2Face[cell][2];
-        this->Cell2Interface[cell][3] = -1;
+        this->Cell2Interface[cell][3] = reader.Cell2Face[cell][3];
 
         this->CellCenter[cell] = reader.CellCenter[cell];
         this->CellVolume[cell] = reader.CellVolume[cell];

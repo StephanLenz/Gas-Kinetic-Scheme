@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
         param.convergenceCriterium[2] = 1.0;
         param.convergenceCriterium[3] = 1.0;
 
-        param.CFL = 0.1;                                // CFL number for time step computation
+        param.CFL = 0.7;                                // CFL number for time step computation
         
         // ========================================================================
         //                  Fluid and domain parameters
@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
         //solverSOA->readMeshFromMeshObject(*mesh);
         //solverAOS->readMeshFromMeshObject(*mesh);
 
-        solverPush->readMeshFromMshFile("msh/SquareTri72.msh");
+        solverPush->readMeshFromMshFile("msh/SquareQuadGraded32.msh");
 
         //mesh->iterate();
 
