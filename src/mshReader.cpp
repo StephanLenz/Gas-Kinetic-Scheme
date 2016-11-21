@@ -32,7 +32,11 @@ bool mshReader::readMsh(string filename)
     getline(file, buffer);
 
     if( ! this->readPhysicalNames(file) ) return false;
+
     if( ! this->readNodes(file) )         return false;
+
+    if( ! this->NodeCheck() )             return false;
+
     if( ! this->readElements(file) )      return false;
     
     this->computeCellGeometry();
@@ -42,6 +46,8 @@ bool mshReader::readMsh(string filename)
     if( ! this->findPeriodicCells() )     return false;
 
     this->createGhostCells();
+
+    if( ! this->FaceCheck() )             return false;
 
     cout << "Complete Mesh read!" << endl;
 
@@ -79,6 +85,8 @@ bool mshReader::readPhysicalNames(ifstream& file)
 
         if     ( type.compare("periodic") == 0 ) this->BCs.push_back(periodic);
         else if( type.compare("wall")     == 0 ) this->BCs.push_back(wall);
+        else if( type.compare("inlet")    == 0 ) this->BCs.push_back(inlet);
+        else if( type.compare("outlet")   == 0 ) this->BCs.push_back(outlet);
         else { cout << "Error: Wrong BC" << endl; return false; }
     }
 
@@ -538,6 +546,35 @@ void mshReader::createGhostCells()
         this->Face2Cell[face][emptyFace2Cell] = Cell2Node.size()-1;
         this->FaceDistance[face] *= 2.0;
     }
+}
+
+bool mshReader::NodeCheck()
+{
+    for( int node_1 = 0; node_1 < this->Nodes.size(); ++node_1 )
+    for( int node_2 = 0; node_2 < this->Nodes.size(); ++node_2 )
+    {
+        if  (  node_1 != node_2 
+            && fabs( Nodes[node_1].x - Nodes[node_2].x ) < 1.0e-10
+            && fabs( Nodes[node_1].y - Nodes[node_2].y ) < 1.0e-10 )
+        {
+            cout << "Error: Identical Nodes found: " << node_1 << " and " << node_2 << endl;
+            return false;
+        }
+    }
+    return true;
+}
+
+bool mshReader::FaceCheck()
+{
+    for( int face = 0; face < this->Face2Node.size(); ++face )
+    {
+        if( this->Face2Cell[face][0] == -1 || this->Face2Cell[face][1] == -1 )
+        {
+            cout << "Error: Free cell faces detected at face " << face << endl;
+            return false;
+        }
+    }
+    return true;
 }
 
 double mshReader::normalDistanceFace2Cell(int face, int cell)

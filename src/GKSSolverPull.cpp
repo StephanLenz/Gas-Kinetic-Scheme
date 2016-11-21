@@ -156,8 +156,9 @@ void GKSSolverPull::writeDataToMeshObject(const GKSMesh & target)
         currentCell->setCons( this->CellData[ currentCell->getID()-1 ] );
 }
 
-void GKSSolverPull::readMeshFromMshFile(string filename)
+bool GKSSolverPull::readMeshFromMshFile(string filename)
 {
+    return true;
 }
 
 void GKSSolverPull::storeDataOld(idType id)

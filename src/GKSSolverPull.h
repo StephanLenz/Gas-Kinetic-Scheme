@@ -99,7 +99,7 @@ public:
 
     virtual void writeDataToMeshObject( const GKSMesh& target );
 
-    virtual void readMeshFromMshFile( string filename );
+    virtual bool readMeshFromMshFile( string filename );
 
     // ========================================================================
     //              Simulation Control

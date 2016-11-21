@@ -74,6 +74,26 @@ void BoundaryCondition::setGhostCells(GKSSolver & solver)
                 break;
             }
             // ====================================================================
+            case inlet:
+            {
+                prim.rho = primNeighbor.rho;
+                prim.U   = 2.0*this->value.U - primNeighbor.U;
+                prim.V   = 2.0*this->value.V - primNeighbor.V;
+                prim.L   = primNeighbor.L;
+
+                break;
+            }
+            // ====================================================================
+            case outlet:
+            {
+                prim.rho = primNeighbor.rho;
+                prim.U   = primNeighbor.U;
+                prim.V   = primNeighbor.V;
+                prim.L   = primNeighbor.L;
+
+                break;
+            }
+            // ====================================================================
         }
         
         solver.setData(Cell[i], prim);

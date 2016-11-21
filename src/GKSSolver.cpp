@@ -122,24 +122,29 @@ void GKSSolver::timeStep()
     
     #pragma omp parallel for
     for ( int id = 0; id < numberOfCells; ++id )
-        if ( !isGhostCell(id) )
-            applyForcing(id);
+    {
+        if ( !isGhostCell(id) ) applyForcing(id);
+    }
     
     for( BoundaryCondition& BC : BoundaryConditionList )
+    {
         BC.setGhostCells(*this);
+    }
 
-    #pragma omp parallel for ordered
+    //#pragma omp parallel for
     for ( int id = 0; id < numberOfInterfaces; ++id )
+    {
         computeFlux(id);  
+    }
 
     int breakPoint = 0;
 
     #pragma omp parallel for
     for ( int id = 0; id < numberOfCells; ++id )
-        if ( !isGhostCell(id) )
-            updateCell(id);   
+    {
+        if ( !isGhostCell(id) ) updateCell(id);   
+    }
 
-    breakPoint = 0;
     breakPoint = 0;
 }
 
@@ -667,6 +672,13 @@ ConservedVariable GKSSolver::assembleFlux(double * MomentU, double * MomentV, do
 
     Flux.rhoE += ( 1.0/this->fluidParam.Pr - 1.0 ) * q;
     // ================================================================================================================================================
+    
+    // ================================================================================================================================================
+    //                              Pressure Conditioning
+    // ================================================================================================================================================
+    //double pReference = this->fluidParam.rhoReference / ( 2.0 * this->fluidParam.lambdaReference );
+
+    //Flux.rhoU -= pReference * this->dt * area;
 
     return Flux;
 }

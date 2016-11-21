@@ -68,9 +68,9 @@ int main(int argc, char* argv[])
         param.ghostOutput = true;                      // include ghost cells in VTK files
         param.csvOutput   = false;                       // output csv files for postprocessing
 
-        param.numberOfIterations = 10000000;            // maximal number of Iterations
-        param.outputIntervalVTK = 100000;                 // Output interval for VTK Files (and .dat files)
-        param.outputInterval = 100000;                    // Output interval for Output on the screen
+        param.numberOfIterations = 100;            // maximal number of Iterations
+        param.outputIntervalVTK = 1;                 // Output interval for VTK Files (and .dat files)
+        param.outputInterval = 1;                    // Output interval for Output on the screen
 
         // Abortion criteria for the different conserved variables
         // These are thresholds for relative residual changes
@@ -96,21 +96,22 @@ int main(int argc, char* argv[])
         int    ny = 16;         // number of cells in y direction
         double Re = 4.0;        // Reynolds number
         double u0 = 0.1;        // Velocits in the mid of the channel
-        param.L = 1.0;          // reference length for Re number
+        double T  = 300.0;
+        param.L = 0.25;          // reference length for Re number
 
         fluidParam.K = 1.0;                                                   // internal degrees of freedom
         fluidParam.nu = (u0*param.L)/Re;                                    // kinematic viskosity
         fluidParam.R = 200.0;                                               // specific gas constant
-        fluidParam.Force.x = (u0*8.0*fluidParam.nu) / (param.L*param.L);    // acceleration in x direction [m/s^2]
+        fluidParam.Force.x = 0.0;//(u0*8.0*fluidParam.nu) / (param.L*param.L);    // acceleration in x direction [m/s^2]
         fluidParam.Force.y = 0.0;                                           // acceleration in y direction [m/s^2]
         fluidParam.BoussinesqForce.x = 0.0;                                 // acceleration only allpied to density variations [m/s^2]
         fluidParam.BoussinesqForce.y = 0.0;                                 // acceleration only allpied to density variations [m/s^2]
         fluidParam.rhoReference = 1.0;                                      // reference density
+        fluidParam.uReference   = u0;
+        fluidParam.vReference   = 0.0;
+        fluidParam.lambdaReference = 1.0 / (2.0 * fluidParam.R * T);        // reference temperature
         fluidParam.Pr = 1.0;                                                // Prandl number 
-
-        double T      = 1.0;                                              // reference temperature [K]
-        double lambda = 1.0 / (2.0 * fluidParam.R * T);
-        
+                                              // reference temperature [K]
         // ========================================================================
         //                  Definition of boundary conditions
         // ========================================================================
@@ -123,16 +124,16 @@ int main(int argc, char* argv[])
         //    | 0     2 |
         //    |    1    |
         //    -----------
-        mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
-        mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, lambda);
-        mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, lambda);
-        mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, lambda);
+        mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, fluidParam.lambdaReference);
+        mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, fluidParam.lambdaReference);
+        mesh->addBoundaryCondition(periodic, 0.0, 0.0, 0.0, fluidParam.lambdaReference);
+        mesh->addBoundaryCondition(wall, 0.0, 0.0, 0.0, fluidParam.lambdaReference);
 
         // Generate the Mesh
         mesh->generateRectMeshGraded(compressible, W, H, nx, ny, 1.0, 1.0);
 
         // Set initial condition
-        mesh->initMeshConstant(1.0, 0.0, 0.0, lambda);
+        mesh->initMeshConstant(1.0, 0.0, 0.0, fluidParam.lambdaReference);
         //mesh->initMeshConstant(1.0, 1.0, 0.0, lambda);
         //mesh->initMeshParabularVelocity(1.0, u0, 0.0, lambda);
         //mesh->initMeshStepVelocity(1.0, u0, 0.0, lambda);
@@ -173,11 +174,15 @@ int main(int argc, char* argv[])
         //GKSSolver* solverAOS  = new GKSSolverAOS (param, fluidParam);
 
         solverPull->readMeshFromMeshObject(*mesh);
-        solverPush->readMeshFromMeshObject(*mesh);
+        //solverPush->readMeshFromMeshObject(*mesh);
         //solverSOA->readMeshFromMeshObject(*mesh);
         //solverAOS->readMeshFromMeshObject(*mesh);
 
-        //solverPush->readMeshFromMshFile("msh/SquareQuadGraded32.msh");
+        if( ! solverPush->readMeshFromMshFile("msh/Cylinder.msh") )
+        {
+            system("pause");
+            return false;
+        }
 
         //mesh->iterate();
 

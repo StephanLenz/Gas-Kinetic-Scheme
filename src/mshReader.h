@@ -76,6 +76,10 @@ public:
 
     void createGhostCells();
 
+    bool NodeCheck();
+
+    bool FaceCheck();
+
     template <typename T>
     int findIndex(vector<T> _vector, T _value);
 

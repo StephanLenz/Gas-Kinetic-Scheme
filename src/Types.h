@@ -66,6 +66,9 @@ struct FluidParameter
     Node Force;
     Node BoussinesqForce;
     double rhoReference;
+    double uReference;
+    double vReference;
+    double lambdaReference;
     double Pr;
 };
 
@@ -99,7 +102,9 @@ enum BoundaryConditionType
     wall,
     isothermalWall,
     periodic,
-    periodicGhost
+    periodicGhost,
+    inlet,
+    outlet
 };
 
 enum CellType

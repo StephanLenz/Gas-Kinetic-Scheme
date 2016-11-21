@@ -55,6 +55,8 @@ void GKSSolverPush::readMeshFromMeshObject(const GKSMesh& origin)
     this->CellVolume.resize( numberOfCells );
     this->CellMinDx.resize( numberOfCells );
 
+    this->InterfaceFlux.resize( numberOfInterfaces );
+
     this->Interface2Node.resize( numberOfInterfaces );
     this->Interface2Cell.resize( numberOfInterfaces );
 
@@ -159,11 +161,10 @@ void GKSSolverPush::writeDataToMeshObject(const GKSMesh & target)
         currentCell->setCons( this->CellData[ currentCell->getID()-1 ] );
 }
 
-void GKSSolverPush::readMeshFromMshFile(string filename)
+bool GKSSolverPush::readMeshFromMshFile(string filename)
 {
     mshReader reader;
-    reader.readMsh(filename);
-
+    if( ! reader.readMsh(filename) ) return false;
     
     this->numberOfNodes        = reader.Nodes.size();
 
@@ -190,6 +191,8 @@ void GKSSolverPush::readMeshFromMshFile(string filename)
     this->CellVolume.resize( numberOfCells );
     this->CellMinDx.resize( numberOfCells );
 
+    this->InterfaceFlux.resize( numberOfInterfaces );
+
     this->Interface2Node.resize( numberOfInterfaces );
     this->Interface2Cell.resize( numberOfInterfaces );
 
@@ -206,7 +209,14 @@ void GKSSolverPush::readMeshFromMshFile(string filename)
     // ========================================================================
     for( int currentBC = 0; currentBC < reader.BCs.size();++currentBC )
     {
-        this->BoundaryConditionList.push_back( BoundaryCondition(reader.BCs[currentBC], 1.0, 0.0, 0.0, 1.0 / (2.0 * 200.0 *300.0) ) );
+        if     (reader.BCs[currentBC] == wall)
+            this->BoundaryConditionList.push_back( BoundaryCondition(reader.BCs[currentBC], this->fluidParam.rhoReference, 0.0, 0.0, this->fluidParam.lambdaReference ) );
+        else if(reader.BCs[currentBC] == periodic)
+            this->BoundaryConditionList.push_back( BoundaryCondition(reader.BCs[currentBC], 0.0, 0.0, 0.0, 0.0 ) );
+        else if(reader.BCs[currentBC] == outlet)
+            this->BoundaryConditionList.push_back( BoundaryCondition(reader.BCs[currentBC], 0.0, 0.0, 0.0, 0.0 ) );
+        else if(reader.BCs[currentBC] == inlet)
+            this->BoundaryConditionList.push_back( BoundaryCondition(reader.BCs[currentBC], this->fluidParam.rhoReference, this->fluidParam.uReference, this->fluidParam.vReference, this->fluidParam.lambdaReference ) );
 
         for(idType cell = 0; cell < reader.Cell2Node.size(); ++cell)
         {
@@ -239,14 +249,22 @@ void GKSSolverPush::readMeshFromMshFile(string filename)
     // ========================================================================
     for( idType cell = 0; cell < numberOfCells; ++cell )
     {
-        this->CellData   [cell].rho  = 1.0;
-        this->CellData   [cell].rhoU = 0.0;
-        this->CellData   [cell].rhoV = 0.0;
-        this->CellData   [cell].rhoE = 0.5 * (this->fluidParam.K + 2) * this->fluidParam.R * 300.0;
-        this->CellDataOld[cell].rho  = 1.0;
-        this->CellDataOld[cell].rhoU = 0.0;
-        this->CellDataOld[cell].rhoV = 0.0;
-        this->CellDataOld[cell].rhoE = 0.5 * (this->fluidParam.K + 2) * this->fluidParam.R * 300.0;
+        PrimitiveVariable prim;
+        prim.rho = this->fluidParam.rhoReference;
+        prim.U   = 0.0;//this->fluidParam.uReference;
+        prim.V   = 0.0;//this->fluidParam.vReference;
+        prim.L   = this->fluidParam.lambdaReference;
+
+        ConservedVariable cons = prim2cons( prim );
+
+        this->CellData   [cell].rho  = cons.rho ;
+        this->CellData   [cell].rhoU = cons.rhoU;
+        this->CellData   [cell].rhoV = cons.rhoV;
+        this->CellData   [cell].rhoE = cons.rhoE;
+        this->CellDataOld[cell].rho  = cons.rho ;
+        this->CellDataOld[cell].rhoU = cons.rhoU;
+        this->CellDataOld[cell].rhoV = cons.rhoV;
+        this->CellDataOld[cell].rhoE = cons.rhoE;
 
         this->Cell2Node[cell][0] = reader.Cell2Node[cell][0];
         this->Cell2Node[cell][1] = reader.Cell2Node[cell][1];
@@ -289,6 +307,7 @@ void GKSSolverPush::readMeshFromMshFile(string filename)
     // ========================================================================
 
     int breakPoint = 0;
+    return true;
 }
 
 void GKSSolverPush::storeDataOld(idType id)
@@ -344,6 +363,8 @@ void GKSSolverPush::applyFlux(idType id, ConservedVariable flux)
         #pragma omp atomic
         this->CellUpdate[ Interface2Cell[id][1] ].rhoE -= flux.rhoE;
     }
+
+    this->InterfaceFlux[id] = flux;
 }
 
 bool GKSSolverPush::isGhostCell(const idType & id)
