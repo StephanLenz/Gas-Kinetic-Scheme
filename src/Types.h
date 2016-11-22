@@ -104,7 +104,8 @@ enum BoundaryConditionType
     periodic,
     periodicGhost,
     inlet,
-    outlet
+    outlet,
+    none
 };
 
 enum CellType

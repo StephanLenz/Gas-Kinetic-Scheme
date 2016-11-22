@@ -127,8 +127,11 @@ public:
 
     virtual ConservedVariable getCellData(idType id);
     virtual ConservedVariable getCellDataOld(idType id);
-
+    
+    virtual Vec2   getCellCenter(idType id);
     virtual double getCellMinDx(idType id);
+
+    virtual BoundaryConditionType getCellBoundaryCondition(idType id);
 
     virtual double getInterfaceArea(idType id);
     virtual double getInterfaceDistance(idType id);

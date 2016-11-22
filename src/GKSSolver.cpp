@@ -41,6 +41,13 @@ void GKSSolver::iterate()
     this->time = 0.0;
 
     this->timeList.push_back(this->time);
+    
+    for( BoundaryCondition& BC : BoundaryConditionList )
+    {
+        BC.setGhostCells(*this);
+    }
+
+    this->writeVTK( string("out/Solver_") + to_string(this->iter) + string(".vtk") );
 
     chrono::high_resolution_clock::time_point startTime = chrono::high_resolution_clock::now();
 
@@ -131,7 +138,7 @@ void GKSSolver::timeStep()
         BC.setGhostCells(*this);
     }
 
-    //#pragma omp parallel for
+    #pragma omp parallel for
     for ( int id = 0; id < numberOfInterfaces; ++id )
     {
         computeFlux(id);  
@@ -888,7 +895,7 @@ void GKSSolver::writeVTK(string filename)
     }
     
     file << "CELL_DATA " << this->numberOfCells << endl;
-    file << "FIELD Lable " << 5 << "\n";
+    file << "FIELD Lable " << 6 << "\n";
     file << "rho 1 " << numberOfCells << " double\n";
     for (int cell = 0; cell < this->numberOfCells; ++cell)
     {
@@ -913,6 +920,11 @@ void GKSSolver::writeVTK(string filename)
     for (int cell = 0; cell < this->numberOfCells; ++cell)
     {
         file << this->getPrim(cell).L << endl;
+    }
+    file << "BC 1 " << numberOfCells << " int\n";
+    for (int cell = 0; cell < this->numberOfCells; ++cell)
+    {
+        file << this->getCellBoundaryCondition(cell) << endl;
     }
 
     file.close();

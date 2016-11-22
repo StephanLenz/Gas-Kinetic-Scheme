@@ -234,9 +234,6 @@ void Cell::applyBoundaryCondition()
             prim.V   = 2.0*boundaryValue.V - primNeighbor.V;
             prim.L   = primNeighbor.L;
 
-            //this->gradientX = this->findNeighborInDomain()->getGradientX();
-            //this->gradientY = this->findNeighborInDomain()->getGradientY();
-
             break;
         }
         // ====================================================================
@@ -248,10 +245,33 @@ void Cell::applyBoundaryCondition()
             prim.U   = 2.0*boundaryValue.U - primNeighbor.U;
             prim.V   = 2.0*boundaryValue.V - primNeighbor.V;
             prim.L   = 2.0*boundaryValue.L - primNeighbor.L;
-
-            //this->gradientX = this->findNeighborInDomain()->getGradientX();
-            //this->gradientY = this->findNeighborInDomain()->getGradientY();
                 
+            break;
+        }
+        // ====================================================================
+        case inlet:
+        {
+            PrimitiveVariable boundaryValue = this->BoundaryContitionPointer->getValue();
+
+            double U_In = 4.0 * boundaryValue.U * this->center.y * ( this->center.y - 1.0 );
+
+            prim.rho = 2.0*boundaryValue.rho - primNeighbor.rho;
+            prim.U   = 2.0*U_In              - primNeighbor.U;
+            prim.V   = 2.0*boundaryValue.V   - primNeighbor.V;
+            prim.L   = 2.0*boundaryValue.L   - primNeighbor.L;
+
+            break;
+        }
+        // ====================================================================
+        case outlet:
+        {
+            PrimitiveVariable boundaryValue = this->BoundaryContitionPointer->getValue();
+
+            prim.rho = primNeighbor.rho;
+            prim.U   = primNeighbor.U;
+            prim.V   = primNeighbor.V;
+            prim.L   = primNeighbor.L;
+
             break;
         }
         // ====================================================================

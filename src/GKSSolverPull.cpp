@@ -232,6 +232,14 @@ double GKSSolverPull::getCellMinDx(idType id)
     return this->CellMinDx[id];
 }
 
+BoundaryConditionType GKSSolverPull::getCellBoundaryCondition(idType id)
+{
+    if(this->CellBoundaryCondition[id] == -1)
+        return none;
+
+    return this->BoundaryConditionList[ this->CellBoundaryCondition[id] ].getType();
+}
+
 double GKSSolverPull::getInterfaceArea(idType id)
 {
     return this->InterfaceArea[id];

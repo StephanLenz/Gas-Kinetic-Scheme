@@ -126,6 +126,8 @@ public:
 
     virtual double getCellMinDx(idType id);
 
+    virtual BoundaryConditionType getCellBoundaryCondition(idType id);
+
     virtual double getInterfaceArea(idType id);
     virtual double getInterfaceDistance(idType id);
 

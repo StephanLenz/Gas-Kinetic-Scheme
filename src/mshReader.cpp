@@ -123,6 +123,8 @@ bool mshReader::readNodes(ifstream & file)
 
         bufferStream >> tmpNode.x >> tmpNode.y;
 
+        //cout << endl << "Read Node " << this->Nodes.size() << " at ( " << tmpNode.x << ", " << tmpNode.y << " )" << endl;
+
         this->Nodes.push_back(tmpNode);
     }
 
@@ -438,10 +440,10 @@ bool mshReader::findPeriodicCells()
                     connection.x = this->FaceCenter[right].x - this->FaceCenter[left].x;
                     connection.y = this->FaceCenter[right].y - this->FaceCenter[left].y;
 
-                    double projection = this->FaceNormal[left].x * connection.x + this->FaceNormal[left].y * connection.y;
+                    double projection = fabs( this->FaceNormal[left].x * connection.x + this->FaceNormal[left].y * connection.y );
                     double distance = sqrt( connection.x * connection.x + connection.y * connection.y );
 
-                    if( fabs( projection - distance ) < 1.0e-12 )
+                    if( fabs( projection - distance ) < 1.0e-10 )
                     {
                         int leftCell, leftEmpty;
                         int rightCell, rightEmpty;
@@ -490,7 +492,7 @@ bool mshReader::findPeriodicCells()
 
             if( Face2Cell[left][0] == -1 || Face2Cell[left][0] == -1 )
             {
-                cout << "Error: No periodic matching Cell found" << endl; return false;
+                cout << "Error: No periodic matching Cell found for face " << left << endl; return false;
             }
         }
     }
@@ -558,6 +560,7 @@ bool mshReader::NodeCheck()
             && fabs( Nodes[node_1].y - Nodes[node_2].y ) < 1.0e-10 )
         {
             cout << "Error: Identical Nodes found: " << node_1 << " and " << node_2 << endl;
+            cout << "dX = " << Nodes[node_1].x << ", " << Nodes[node_2].x << ", Dy = " << Nodes[node_1].y << ", " << Nodes[node_2].y << endl;
             return false;
         }
     }

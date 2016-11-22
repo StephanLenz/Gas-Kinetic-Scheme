@@ -207,7 +207,7 @@ bool GKSSolverPush::readMeshFromMshFile(string filename)
     // ========================================================================
     //              Read BC data
     // ========================================================================
-    for( int currentBC = 0; currentBC < reader.BCs.size();++currentBC )
+    for( int currentBC = 0; currentBC < reader.BCs.size(); ++currentBC )
     {
         if     (reader.BCs[currentBC] == wall)
             this->BoundaryConditionList.push_back( BoundaryCondition(reader.BCs[currentBC], this->fluidParam.rhoReference, 0.0, 0.0, this->fluidParam.lambdaReference ) );
@@ -251,8 +251,8 @@ bool GKSSolverPush::readMeshFromMshFile(string filename)
     {
         PrimitiveVariable prim;
         prim.rho = this->fluidParam.rhoReference;
-        prim.U   = 0.0;//this->fluidParam.uReference;
-        prim.V   = 0.0;//this->fluidParam.vReference;
+        prim.U   = this->fluidParam.uReference;
+        prim.V   = this->fluidParam.vReference;
         prim.L   = this->fluidParam.lambdaReference;
 
         ConservedVariable cons = prim2cons( prim );
@@ -382,9 +382,22 @@ ConservedVariable GKSSolverPush::getCellDataOld(idType id)
     return this->CellDataOld[id];
 }
 
+Vec2 GKSSolverPush::getCellCenter(idType id)
+{
+    return this->CellCenter[id];
+}
+
 double GKSSolverPush::getCellMinDx(idType id)
 {
     return this->CellMinDx[id];
+}
+
+BoundaryConditionType GKSSolverPush::getCellBoundaryCondition(idType id)
+{
+    if(this->CellBoundaryCondition[id] == -1)
+        return none;
+
+    return this->BoundaryConditionList[ this->CellBoundaryCondition[id] ].getType();
 }
 
 double GKSSolverPush::getInterfaceArea(idType id)
