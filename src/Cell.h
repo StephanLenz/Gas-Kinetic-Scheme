@@ -25,6 +25,7 @@ class Interface;
 #include "Types.h"
 #include "BoundaryCondition.h"
 #include <string>
+#include <array>
 
 using namespace std;
 
@@ -146,6 +147,8 @@ public:
 	Node getCenter();
 
     double getMinDx();
+
+    array<double,3> getLSCoeff();
 
     double distance(Node point);
     

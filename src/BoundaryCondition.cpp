@@ -96,9 +96,30 @@ void BoundaryCondition::setGhostCells(GKSSolver & solver)
                 break;
             }
             // ====================================================================
+            case periodicGhost:
+            {
+                prim.rho = primNeighbor.rho;
+                prim.U   = primNeighbor.U;
+                prim.V   = primNeighbor.V;
+                prim.L   = primNeighbor.L;
+
+                break;
+            }
+            // ====================================================================
         }
         
         solver.setData(Cell[i], prim);
+    }
+}
+
+void BoundaryCondition::setGradientGhostCells(GKSSolver & solver)
+{
+    if(this->type != periodicGhost) return;
+
+    #pragma omp parallel for
+    for( int cell = 0; cell < Cell.size(); ++cell )
+    {
+        solver.setCellGradientX( Cell[cell], solver.getCellGradientX( this->NeighborCell[cell] ) );
     }
 }
 

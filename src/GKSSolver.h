@@ -114,11 +114,15 @@ public:
     //              Flux computation subroutines
     // ========================================================================
 
-    virtual void storeDataOld(idType id) = 0;
+    virtual void storeDataOld( idType id ) = 0;
+
+    void computeCellGradient( idType id );
 
     PrimitiveVariable reconstructPrimPiecewiseConstant(const idType id);
 
     ConservedVariable differentiateConsNormal(const idType id, double rho);
+
+    void computeInterfaceGradient( idType id, double rho, ConservedVariable& gradN, ConservedVariable& gradT );
 
     void computeMicroSlope( const PrimitiveVariable& prim, const ConservedVariable& macroSlope, double* microSlope );
 
@@ -157,8 +161,16 @@ public:
     virtual ConservedVariable getCellData(idType id) = 0;
     virtual ConservedVariable getCellDataOld(idType id) = 0;
 
+    virtual ConservedVariable getCellGradientX(idType id) = 0;
+    virtual ConservedVariable getCellGradientY(idType id) = 0;
+
+    virtual idType getCell2Interface( idType cell, idType face ) = 0;
+
+    idType getNeighborCell( idType face, idType askingCell );
+
     virtual Vec2   getCellCenter(idType id) = 0;
     virtual double getCellMinDx(idType id) = 0;
+    virtual array<double,3> getCellLSCoeff(idType id) = 0;
 
     virtual BoundaryConditionType getCellBoundaryCondition(idType id) = 0;
 
@@ -172,6 +184,9 @@ public:
 
     virtual void setData(idType id, ConservedVariable cons) = 0;
     virtual void setData(idType id, PrimitiveVariable prim);
+
+    virtual void setCellGradientX(idType id, ConservedVariable dWdx) = 0;
+    virtual void setCellGradientY(idType id, ConservedVariable dWdy) = 0;
 
     virtual Vec2 getNode(idType node) = 0;
 

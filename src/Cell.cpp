@@ -796,6 +796,15 @@ double Cell::getMinDx()
     return this->minDx;
 }
 
+array<double, 3> Cell::getLSCoeff()
+{
+    array<double,3> tmp;
+    tmp[0] = this->r11;
+    tmp[1] = this->r12;
+    tmp[2] = this->r22;
+    return tmp;
+}
+
 // ============================================================================
 //      This method returns the distance from the cell center of this cell
 //      to the point passed as parameter.

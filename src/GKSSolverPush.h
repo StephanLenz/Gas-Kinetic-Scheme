@@ -52,6 +52,9 @@ private:
 
     vector<ConservedVariable> CellUpdate;
 
+    vector<ConservedVariable> CellGradientX;
+    vector<ConservedVariable> CellGradientY;
+
     vector<ConservedVariable> InterfaceFlux;
 
     // ========================================================================
@@ -73,9 +76,10 @@ private:
 
     vector<Vec2> NodeCenter;
 
-    vector<Vec2> CellCenter;
-    vector<double> CellVolume;
-    vector<double> CellMinDx;
+    vector<Vec2>              CellCenter;
+    vector<double>            CellVolume;
+    vector<double>            CellMinDx;
+    vector< array<double,3> > CellLSCoeff;
 
     vector<Vec2> InterfaceCenter;
     vector<Vec2> InterfaceNormal;
@@ -127,9 +131,15 @@ public:
 
     virtual ConservedVariable getCellData(idType id);
     virtual ConservedVariable getCellDataOld(idType id);
+
+    virtual ConservedVariable getCellGradientX(idType id);
+    virtual ConservedVariable getCellGradientY(idType id);
+
+    virtual idType getCell2Interface( idType cell, idType face );
     
     virtual Vec2   getCellCenter(idType id);
     virtual double getCellMinDx(idType id);
+    virtual array<double,3> getCellLSCoeff(idType id);
 
     virtual BoundaryConditionType getCellBoundaryCondition(idType id);
 
@@ -142,6 +152,9 @@ public:
     virtual Vec2 getInterfaceNormal(idType id);
 
     virtual void setData(idType id, ConservedVariable cons);
+
+    virtual void setCellGradientX(idType id, ConservedVariable dWdx);
+    virtual void setCellGradientY(idType id, ConservedVariable dWdy);
 
     virtual Vec2 getNode(idType node);
 

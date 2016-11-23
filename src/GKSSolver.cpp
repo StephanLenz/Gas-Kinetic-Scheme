@@ -139,6 +139,17 @@ void GKSSolver::timeStep()
     }
 
     #pragma omp parallel for
+    for ( int id = 0; id < numberOfCells; ++id )
+    {
+        computeCellGradient(id);
+    }
+
+    for( BoundaryCondition& BC : BoundaryConditionList )
+    {
+        BC.setGradientGhostCells(*this);
+    }
+
+    #pragma omp parallel for
     for ( int id = 0; id < numberOfInterfaces; ++id )
     {
         computeFlux(id);  
@@ -232,6 +243,7 @@ void GKSSolver::computeFlux(const idType id)
 
     PrimitiveVariable prim;
     ConservedVariable normalGradCons;
+    ConservedVariable tangentialGradCons;
     ConservedVariable timeGrad;
 
     ConservedVariable InterfaceFlux;
@@ -253,7 +265,8 @@ void GKSSolver::computeFlux(const idType id)
     // ========================================================================
     //          compute spacial gradients of the conservative varibles
     // ========================================================================
-    normalGradCons = differentiateConsNormal(id, prim.rho);
+    //normalGradCons = differentiateConsNormal(id, prim.rho);
+    this->computeInterfaceGradient( id, prim.rho, normalGradCons, tangentialGradCons );
     // ========================================================================
     
     // ========================================================================
@@ -261,6 +274,7 @@ void GKSSolver::computeFlux(const idType id)
     // ========================================================================
     global2local(id, prim);
     global2local(id, normalGradCons);
+    global2local(id, tangentialGradCons);
     // ========================================================================
     
     // ========================================================================
@@ -268,6 +282,7 @@ void GKSSolver::computeFlux(const idType id)
     //              a = a1 + a2 u + a3 v + 0.5 a4 (u^2 + v^2 + xi^2)
     // ========================================================================
     this->computeMicroSlope(prim, normalGradCons, a);
+    this->computeMicroSlope(prim, tangentialGradCons, b);
     // ========================================================================
     
     // ========================================================================
@@ -313,6 +328,70 @@ void GKSSolver::computeFlux(const idType id)
     this->applyFlux(id, InterfaceFlux);
 }
 
+void GKSSolver::computeCellGradient(idType id)
+{
+    if( this->isGhostCell(id) )
+    {
+        idType neighborCell = this->getNeighborCell( this->getCell2Interface(id, 0), id);
+
+        double dx = this->getCellCenter( neighborCell ).x - this->getCellCenter( id ).x;
+        double dy = this->getCellCenter( neighborCell ).y - this->getCellCenter( id ).y;
+
+        ConservedVariable dWdx;
+        ConservedVariable dWdy;
+
+        dWdx.rho  = ( this->getCellData( neighborCell ).rho  - this->getCellData( id ).rho  ) / (dx*dx + dy*dy) * dx;
+        dWdx.rhoU = ( this->getCellData( neighborCell ).rhoU - this->getCellData( id ).rhoU ) / (dx*dx + dy*dy) * dx;
+        dWdx.rhoV = ( this->getCellData( neighborCell ).rhoV - this->getCellData( id ).rhoV ) / (dx*dx + dy*dy) * dx;
+        dWdx.rhoE = ( this->getCellData( neighborCell ).rhoE - this->getCellData( id ).rhoE ) / (dx*dx + dy*dy) * dx;
+
+        dWdy.rho  = ( this->getCellData( neighborCell ).rho  - this->getCellData( id ).rho  ) / (dx*dx + dy*dy) * dy;
+        dWdy.rhoU = ( this->getCellData( neighborCell ).rhoU - this->getCellData( id ).rhoU ) / (dx*dx + dy*dy) * dy;
+        dWdy.rhoV = ( this->getCellData( neighborCell ).rhoV - this->getCellData( id ).rhoV ) / (dx*dx + dy*dy) * dy;
+        dWdy.rhoE = ( this->getCellData( neighborCell ).rhoE - this->getCellData( id ).rhoE ) / (dx*dx + dy*dy) * dy;
+
+        this->setCellGradientX( id, dWdx );
+        this->setCellGradientY( id, dWdy );
+
+        return;
+    }
+
+    idType nNeighbors;
+    if   ( this->getCell2Interface(id, 3) == -1  ) nNeighbors = 3;
+    else                                           nNeighbors = 4;
+
+    ConservedVariable tmpCellGradientX;
+    ConservedVariable tmpCellGradientY;
+
+    double r11 = this->getCellLSCoeff(id)[0];
+    double r12 = this->getCellLSCoeff(id)[1];
+    double r22 = this->getCellLSCoeff(id)[2];
+
+    for(int face = 0; face < nNeighbors; ++face)
+    {
+        idType neighborCell = this->getNeighborCell( this->getCell2Interface(id, face), id);
+
+        double dx = this->getCellCenter( neighborCell ).x - this->getCellCenter( id ).x;
+        double dy = this->getCellCenter( neighborCell ).y - this->getCellCenter( id ).y;
+
+        double w1 = dx / (r11*r11) - r12/r11 * ( dy - r12/r11 * dx ) / (r22*r22);
+        double w2 =                            ( dy - r12/r11 * dx ) / (r22*r22);
+
+        tmpCellGradientX.rho  += w1 * ( this->getCellData( neighborCell ).rho  - this->getCellData( id ).rho  );
+        tmpCellGradientX.rhoU += w1 * ( this->getCellData( neighborCell ).rhoU - this->getCellData( id ).rhoU );
+        tmpCellGradientX.rhoV += w1 * ( this->getCellData( neighborCell ).rhoV - this->getCellData( id ).rhoV );
+        tmpCellGradientX.rhoE += w1 * ( this->getCellData( neighborCell ).rhoE - this->getCellData( id ).rhoE );
+        
+        tmpCellGradientX.rho  += w2 * ( this->getCellData( neighborCell ).rho  - this->getCellData( id ).rho  );
+        tmpCellGradientX.rhoU += w2 * ( this->getCellData( neighborCell ).rhoU - this->getCellData( id ).rhoU );
+        tmpCellGradientX.rhoV += w2 * ( this->getCellData( neighborCell ).rhoV - this->getCellData( id ).rhoV );
+        tmpCellGradientX.rhoE += w2 * ( this->getCellData( neighborCell ).rhoE - this->getCellData( id ).rhoE );
+    }
+    
+    this->setCellGradientX( id, tmpCellGradientX );
+    this->setCellGradientY( id, tmpCellGradientY );
+}
+
 PrimitiveVariable GKSSolver::reconstructPrimPiecewiseConstant(const idType id)
 {
     PrimitiveVariable posPrim = cons2prim( this->getCellData( this->getPosCell(id) ) );
@@ -340,6 +419,76 @@ ConservedVariable GKSSolver::differentiateConsNormal(const idType id, double rho
     gradConsNormal.rhoE = ( posCons.rhoE - negCons.rhoE ) / ( this->getInterfaceDistance(id) * rho );
 
     return gradConsNormal;
+}
+
+void GKSSolver::computeInterfaceGradient(idType id, double rho, ConservedVariable & gradN, ConservedVariable & gradT)
+{
+    // ========================================================================
+    // Interpolate Gradients
+    // ========================================================================
+
+    double dx = this->getCellCenter( this->getPosCell(id) ).x - this->getCellCenter( this->getNegCell(id) ).x;
+    double dy = this->getCellCenter( this->getPosCell(id) ).y - this->getCellCenter( this->getNegCell(id) ).y;
+
+    double distance = sqrt( dx*dx + dy*dy );
+
+    ConservedVariable interpolatedGradientX;
+    ConservedVariable interpolatedGradientY;
+
+    interpolatedGradientX.rho  = 0.5 * ( this->getCellGradientX( this->getPosCell( id ) ).rho  + this->getCellGradientX( this->getNegCell( id ) ).rho  );
+    interpolatedGradientX.rhoU = 0.5 * ( this->getCellGradientX( this->getPosCell( id ) ).rhoU + this->getCellGradientX( this->getNegCell( id ) ).rhoU );
+    interpolatedGradientX.rhoV = 0.5 * ( this->getCellGradientX( this->getPosCell( id ) ).rhoV + this->getCellGradientX( this->getNegCell( id ) ).rhoV );
+    interpolatedGradientX.rhoE = 0.5 * ( this->getCellGradientX( this->getPosCell( id ) ).rhoE + this->getCellGradientX( this->getNegCell( id ) ).rhoE );
+    
+    interpolatedGradientY.rho  = 0.5 * ( this->getCellGradientY( this->getPosCell( id ) ).rho  + this->getCellGradientY( this->getNegCell( id ) ).rho  );
+    interpolatedGradientY.rhoU = 0.5 * ( this->getCellGradientY( this->getPosCell( id ) ).rhoU + this->getCellGradientY( this->getNegCell( id ) ).rhoU );
+    interpolatedGradientY.rhoV = 0.5 * ( this->getCellGradientY( this->getPosCell( id ) ).rhoV + this->getCellGradientY( this->getNegCell( id ) ).rhoV );
+    interpolatedGradientY.rhoE = 0.5 * ( this->getCellGradientY( this->getPosCell( id ) ).rhoE + this->getCellGradientY( this->getNegCell( id ) ).rhoE );
+    // ========================================================================
+    
+    // ========================================================================
+    // Decoupling correction as given in Blazeks Book
+    // ========================================================================
+
+    // Eq. 5.71 in Blazek
+    ConservedVariable directionalGradient;
+    directionalGradient.rho  = ( this->getCellData( this->getPosCell( id ) ).rho  - this->getCellData( this->getNegCell( id ) ).rho  ) / distance;
+    directionalGradient.rhoU = ( this->getCellData( this->getPosCell( id ) ).rhoU - this->getCellData( this->getNegCell( id ) ).rhoU ) / distance;
+    directionalGradient.rhoV = ( this->getCellData( this->getPosCell( id ) ).rhoV - this->getCellData( this->getNegCell( id ) ).rhoV ) / distance;
+    directionalGradient.rhoE = ( this->getCellData( this->getPosCell( id ) ).rhoE - this->getCellData( this->getNegCell( id ) ).rhoE ) / distance;
+
+    // Eq. 5.72 in Blazek
+    dx /= distance;
+    dy /= distance;
+
+    ConservedVariable InterfaceGradientX;
+    ConservedVariable InterfaceGradientY;
+
+    // eq. 5.73 in Blazek
+    InterfaceGradientX.rho  = interpolatedGradientX.rho  - ( interpolatedGradientX.rho  * dx + interpolatedGradientY.rho  * dy - directionalGradient.rho  ) * dx;
+    InterfaceGradientX.rhoU = interpolatedGradientX.rhoU - ( interpolatedGradientX.rhoU * dx + interpolatedGradientY.rhoU * dy - directionalGradient.rhoU ) * dx;
+    InterfaceGradientX.rhoV = interpolatedGradientX.rhoV - ( interpolatedGradientX.rhoV * dx + interpolatedGradientY.rhoV * dy - directionalGradient.rhoV ) * dx;
+    InterfaceGradientX.rhoE = interpolatedGradientX.rhoE - ( interpolatedGradientX.rhoE * dx + interpolatedGradientY.rhoE * dy - directionalGradient.rhoE ) * dx;
+
+    InterfaceGradientY.rho  = interpolatedGradientY.rho  - ( interpolatedGradientX.rho  * dx + interpolatedGradientY.rho  * dy - directionalGradient.rho  ) * dy;
+    InterfaceGradientY.rhoU = interpolatedGradientY.rhoU - ( interpolatedGradientX.rhoU * dx + interpolatedGradientY.rhoU * dy - directionalGradient.rhoU ) * dy;
+    InterfaceGradientY.rhoV = interpolatedGradientY.rhoV - ( interpolatedGradientX.rhoV * dx + interpolatedGradientY.rhoV * dy - directionalGradient.rhoV ) * dy;
+    InterfaceGradientY.rhoE = interpolatedGradientY.rhoE - ( interpolatedGradientX.rhoE * dx + interpolatedGradientY.rhoE * dy - directionalGradient.rhoE ) * dy;
+    // ========================================================================
+    
+    // ========================================================================
+    // transformation from global into local coordinatesystem and normalization
+    //    by projection onto normal and tangential vectors
+    // ========================================================================
+    gradN.rho  = (   this->getInterfaceNormal(id).x * InterfaceGradientX.rho  + this->getInterfaceNormal(id).y * InterfaceGradientY.rho  ) / rho;
+    gradN.rhoU = (   this->getInterfaceNormal(id).x * InterfaceGradientX.rhoU + this->getInterfaceNormal(id).y * InterfaceGradientY.rhoU ) / rho;
+    gradN.rhoV = (   this->getInterfaceNormal(id).x * InterfaceGradientX.rhoV + this->getInterfaceNormal(id).y * InterfaceGradientY.rhoV ) / rho;
+    gradN.rhoE = (   this->getInterfaceNormal(id).x * InterfaceGradientX.rhoE + this->getInterfaceNormal(id).y * InterfaceGradientY.rhoE ) / rho;
+
+    gradT.rho  = ( - this->getInterfaceNormal(id).y * InterfaceGradientX.rho  + this->getInterfaceNormal(id).x * InterfaceGradientY.rho  ) / rho;
+    gradT.rhoU = ( - this->getInterfaceNormal(id).y * InterfaceGradientX.rhoU + this->getInterfaceNormal(id).x * InterfaceGradientY.rhoU ) / rho;
+    gradT.rhoV = ( - this->getInterfaceNormal(id).y * InterfaceGradientX.rhoV + this->getInterfaceNormal(id).x * InterfaceGradientY.rhoV ) / rho;
+    gradT.rhoE = ( - this->getInterfaceNormal(id).y * InterfaceGradientX.rhoE + this->getInterfaceNormal(id).x * InterfaceGradientY.rhoE ) / rho;
 }
 
 void GKSSolver::computeMicroSlope(const PrimitiveVariable& prim, const ConservedVariable& macroSlope, double * microSlope)
@@ -930,4 +1079,11 @@ void GKSSolver::writeVTK(string filename)
     file.close();
 
     cout << "done!" << endl;
+}
+
+idType GKSSolver::getNeighborCell(idType face, idType askingCell)
+{
+    if      ( this->getPosCell( face ) == askingCell ) return this->getNegCell( face );
+    else if ( this->getNegCell( face ) == askingCell ) return this->getPosCell( face );
+    return -1;
 }

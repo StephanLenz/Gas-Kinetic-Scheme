@@ -47,6 +47,9 @@ void GKSSolverPush::readMeshFromMeshObject(const GKSMesh& origin)
 
     this->CellUpdate.resize( numberOfCells );
 
+    this->CellGradientX.resize( numberOfCells );
+    this->CellGradientY.resize( numberOfCells );
+
     this->Cell2Node.resize( numberOfCells );
     this->Cell2Interface.resize( numberOfCells );
     this->CellBoundaryCondition.resize( numberOfCells );
@@ -54,6 +57,7 @@ void GKSSolverPush::readMeshFromMeshObject(const GKSMesh& origin)
     this->CellCenter.resize( numberOfCells );
     this->CellVolume.resize( numberOfCells );
     this->CellMinDx.resize( numberOfCells );
+    this->CellLSCoeff.resize( numberOfCells );
 
     this->InterfaceFlux.resize( numberOfInterfaces );
 
@@ -79,7 +83,10 @@ void GKSSolverPush::readMeshFromMeshObject(const GKSMesh& origin)
             if( currentBC == currentCell->getBoundaryConditionPointer() )
             {
                 this->BoundaryConditionList.back().addCell( currentCell->getID() - 1 );
-                this->BoundaryConditionList.back().addNeighborCell( currentCell->findNeighborInDomain()->getID() - 1 );
+                if( currentBC->getType() == periodicGhost )
+                    this->BoundaryConditionList.back().addNeighborCell( currentCell->getNeighborCell(1)->getID() - 1 );
+                else
+                    this->BoundaryConditionList.back().addNeighborCell( currentCell->findNeighborInDomain()->getID() - 1 );
             }
         }
     }
@@ -112,9 +119,10 @@ void GKSSolverPush::readMeshFromMeshObject(const GKSMesh& origin)
                 this->Cell2Interface[currentCell->getID()-1][i] = -1;
         }
 
-        this->CellCenter[currentCell->getID()-1] = currentCell->getCenter();
-        this->CellVolume[currentCell->getID()-1] = currentCell->getVolume();
-        this->CellMinDx [currentCell->getID()-1] = currentCell->getMinDx();
+        this->CellCenter [currentCell->getID()-1] = currentCell->getCenter();
+        this->CellVolume [currentCell->getID()-1] = currentCell->getVolume();
+        this->CellMinDx  [currentCell->getID()-1] = currentCell->getMinDx();
+        this->CellLSCoeff[currentCell->getID()-1] = currentCell->getLSCoeff();
 
         this->CellBoundaryCondition[currentCell->getID()-1] = -1;
         for( int i = 0; i < origin.BoundaryConditionList.size(); ++i)
@@ -183,6 +191,9 @@ bool GKSSolverPush::readMeshFromMshFile(string filename)
 
     this->CellUpdate.resize( numberOfCells );
 
+    this->CellGradientX.resize( numberOfCells );
+    this->CellGradientY.resize( numberOfCells );
+
     this->Cell2Node.resize( numberOfCells );
     this->Cell2Interface.resize( numberOfCells );
     this->CellBoundaryCondition.resize( numberOfCells );
@@ -190,6 +201,7 @@ bool GKSSolverPush::readMeshFromMshFile(string filename)
     this->CellCenter.resize( numberOfCells );
     this->CellVolume.resize( numberOfCells );
     this->CellMinDx.resize( numberOfCells );
+    this->CellLSCoeff.resize( numberOfCells );
 
     this->InterfaceFlux.resize( numberOfInterfaces );
 
@@ -257,28 +269,17 @@ bool GKSSolverPush::readMeshFromMshFile(string filename)
 
         ConservedVariable cons = prim2cons( prim );
 
-        this->CellData   [cell].rho  = cons.rho ;
-        this->CellData   [cell].rhoU = cons.rhoU;
-        this->CellData   [cell].rhoV = cons.rhoV;
-        this->CellData   [cell].rhoE = cons.rhoE;
-        this->CellDataOld[cell].rho  = cons.rho ;
-        this->CellDataOld[cell].rhoU = cons.rhoU;
-        this->CellDataOld[cell].rhoV = cons.rhoV;
-        this->CellDataOld[cell].rhoE = cons.rhoE;
+        this->CellData   [cell]  = cons;
+        this->CellDataOld[cell]  = cons;
 
-        this->Cell2Node[cell][0] = reader.Cell2Node[cell][0];
-        this->Cell2Node[cell][1] = reader.Cell2Node[cell][1];
-        this->Cell2Node[cell][2] = reader.Cell2Node[cell][2];
-        this->Cell2Node[cell][3] = reader.Cell2Node[cell][3];
+        this->Cell2Node[cell] = reader.Cell2Node[cell];
 
-        this->Cell2Interface[cell][0] = reader.Cell2Face[cell][0];
-        this->Cell2Interface[cell][1] = reader.Cell2Face[cell][1];
-        this->Cell2Interface[cell][2] = reader.Cell2Face[cell][2];
-        this->Cell2Interface[cell][3] = reader.Cell2Face[cell][3];
+        this->Cell2Interface[cell] = reader.Cell2Face[cell];
 
-        this->CellCenter[cell] = reader.CellCenter[cell];
-        this->CellVolume[cell] = reader.CellVolume[cell];
-        this->CellMinDx [cell] = reader.CellMinDx[cell];
+        this->CellCenter [cell] = reader.CellCenter [cell];
+        this->CellVolume [cell] = reader.CellVolume [cell];
+        this->CellMinDx  [cell] = reader.CellMinDx  [cell];
+        this->CellLSCoeff[cell] = reader.CellLSCoeff[cell];
 
         this->CellBoundaryCondition[cell] = reader.Cell2BC[cell];
     }
@@ -382,6 +383,21 @@ ConservedVariable GKSSolverPush::getCellDataOld(idType id)
     return this->CellDataOld[id];
 }
 
+ConservedVariable GKSSolverPush::getCellGradientX(idType id)
+{
+    return this->CellGradientX[id];
+}
+
+ConservedVariable GKSSolverPush::getCellGradientY(idType id)
+{
+    return this->CellGradientY[id];
+}
+
+idType GKSSolverPush::getCell2Interface(idType cell, idType face)
+{
+    return this->Cell2Interface[cell][face];
+}
+
 Vec2 GKSSolverPush::getCellCenter(idType id)
 {
     return this->CellCenter[id];
@@ -390,6 +406,11 @@ Vec2 GKSSolverPush::getCellCenter(idType id)
 double GKSSolverPush::getCellMinDx(idType id)
 {
     return this->CellMinDx[id];
+}
+
+array<double, 3> GKSSolverPush::getCellLSCoeff(idType id)
+{
+    return this->CellLSCoeff[id];
 }
 
 BoundaryConditionType GKSSolverPush::getCellBoundaryCondition(idType id)
@@ -428,6 +449,16 @@ Vec2 GKSSolverPush::getInterfaceNormal(idType id)
 void GKSSolverPush::setData(idType id, ConservedVariable cons)
 {
     this->CellData[id] = cons;
+}
+
+void GKSSolverPush::setCellGradientX(idType id, ConservedVariable dWdx)
+{
+    this->CellGradientX[id] = dWdx;
+}
+
+void GKSSolverPush::setCellGradientY(idType id, ConservedVariable dWdy)
+{
+    this->CellGradientY[id] = dWdy;
 }
 
 Vec2 GKSSolverPush::getNode(idType node)

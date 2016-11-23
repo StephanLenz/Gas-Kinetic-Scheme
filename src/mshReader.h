@@ -25,25 +25,26 @@ public:
     vector<Vec2> Nodes;
     
     vector< CellType >      Cell2Type;
-    vector< array<int,4> >  Cell2Node;
-    vector< array<int,4> >  Cell2Face;
-    vector< int >           Cell2BC;
+    vector< array<idType,4> >  Cell2Node;
+    vector< array<idType,4> >  Cell2Face;
+    vector< idType >           Cell2BC;
                             
-    vector< array<int,2> >  Face2Cell;
-    vector< array<int,2> >  Face2Node;
-    vector< int >           Face2BC;
+    vector< array<idType,2> >  Face2Cell;
+    vector< array<idType,2> >  Face2Node;
+    vector< idType >           Face2BC;
     vector< array<bool,2> > Face2CellAdd;
 
     vector<Vec2>   CellCenter;
     vector<double> CellVolume;
     vector<double> CellMinDx;
+    vector< array<double,3> > CellLSCoeff;
 
     vector<Vec2>   FaceCenter;
     vector<Vec2>   FaceNormal;
     vector<double> FaceDistance;
     vector<double> FaceArea;
 
-    vector< int >    BCIDs;
+    vector< idType >    BCIDs;
     vector< BoundaryConditionType > BCs;
 
 public:
@@ -62,11 +63,13 @@ public:
 
     bool newCell(string buffer, CellType type);
 
-    bool linkExistingFaces(array<int,4> tmpCell2Node, array<int,4>& tmpCell2Face, int CellID, CellType type);
+    bool linkExistingFaces(array<idType,4> tmpCell2Node, array<idType,4>& tmpCell2Face, idType CellID, CellType type);
 
-    bool createMissingFaces(array<int,4> tmpCell2Node, array<int,4>& tmpCell2Face, int CellID, CellType type);
+    bool createMissingFaces(array<idType,4> tmpCell2Node, array<idType,4>& tmpCell2Face, idType CellID, CellType type);
 
     void computeCellGeometry();
+
+    void computeCellLSCoeff();
 
     void computeFaceGeometry();
 
@@ -80,18 +83,22 @@ public:
 
     bool FaceCheck();
 
+    // ================================ Util ==================================
+
     template <typename T>
-    int findIndex(vector<T> _vector, T _value);
+    idType findIndex(vector<T> _vector, T _value);
 
-    double normalDistanceFace2Cell( int face, int cell );
+    double normalDistanceFace2Cell( idType face, idType cell );
 
-    double normalDistanceFace2Point( int face, Vec2 point );
+    double normalDistanceFace2Point( idType face, Vec2 point );
+
+    idType getNeighborCell( idType face, idType askingCell );
 };
 
 #endif
 
 template<typename T>
-inline int mshReader::findIndex(vector<T> _vector, T _value)
+inline idType mshReader::findIndex(vector<T> _vector, T _value)
 {
     return find( _vector.begin(), _vector.end(), _value ) - _vector.begin();
 }

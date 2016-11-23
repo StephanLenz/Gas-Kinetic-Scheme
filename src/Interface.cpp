@@ -562,10 +562,10 @@ void Interface::computeInternalFlux(double dt)
     // ========================================================================
     //          compute spacial gradients of the conservative varibles
     // ========================================================================
-    this->differentiateConsNormal(normalGradCons, prim);
+    //this->differentiateConsNormal(normalGradCons, prim);
     //this->differentiateConsNormal(normalGradConsTest, prim);
     //this->differentiateConsNormalThreePoint(normalGradCons, prim);
-    //this->differentiateConsLeastSquare(normalGradCons, tangentialGradCons, prim);
+    this->differentiateConsLeastSquare(normalGradCons, tangentialGradCons, prim);
     // ========================================================================
     
     // ========================================================================

@@ -32,6 +32,8 @@ public:
 
     void setGhostCells(GKSSolver& solver);
 
+    void setGradientGhostCells(GKSSolver& solver);
+
     string toString();
 };
 
