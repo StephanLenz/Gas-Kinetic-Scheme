@@ -223,7 +223,11 @@ bool GKSSolverPush::readMeshFromMshFile(string filename)
     {
         if     (reader.BCs[currentBC] == wall)
             this->BoundaryConditionList.push_back( BoundaryCondition(reader.BCs[currentBC], this->fluidParam.rhoReference, 0.0, 0.0, this->fluidParam.lambdaReference ) );
+        else if(reader.BCs[currentBC] == isothermalWall)
+            this->BoundaryConditionList.push_back( BoundaryCondition(reader.BCs[currentBC], this->fluidParam.rhoReference, 0.0, 0.0, this->fluidParam.lambdaReference ) );
         else if(reader.BCs[currentBC] == periodic)
+            this->BoundaryConditionList.push_back( BoundaryCondition(reader.BCs[currentBC], 0.0, 0.0, 0.0, 0.0 ) );
+        else if(reader.BCs[currentBC] == periodicGhost)
             this->BoundaryConditionList.push_back( BoundaryCondition(reader.BCs[currentBC], 0.0, 0.0, 0.0, 0.0 ) );
         else if(reader.BCs[currentBC] == outlet)
             this->BoundaryConditionList.push_back( BoundaryCondition(reader.BCs[currentBC], 0.0, 0.0, 0.0, 0.0 ) );
@@ -237,6 +241,10 @@ bool GKSSolverPush::readMeshFromMshFile(string filename)
                 this->BoundaryConditionList.back().addCell( cell );
 
                 idType NeighborCell;
+
+                if( reader.BCs[ currentBC ] == periodicGhost )
+                    NeighborCell = reader.Face2Cell[  ]
+
                 if( reader.Face2Cell[ reader.Cell2Face[cell][0] ][0] != cell )
                     NeighborCell = reader.Face2Cell[ reader.Cell2Face[cell][0] ][0];
                 else

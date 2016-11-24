@@ -77,6 +77,8 @@ public:
 
     bool findPeriodicCells();
 
+    idType findPeriodicInterface( idType face );
+
     void createGhostCells();
 
     bool NodeCheck();

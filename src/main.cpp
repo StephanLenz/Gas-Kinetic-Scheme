@@ -174,23 +174,23 @@ int main(int argc, char* argv[])
         //GKSSolver* solverAOS  = new GKSSolverAOS (param, fluidParam);
 
         //solverPull->readMeshFromMeshObject(*mesh);
-        solverPush->readMeshFromMeshObject(*mesh);
+        //solverPush->readMeshFromMeshObject(*mesh);
         //solverSOA->readMeshFromMeshObject(*mesh);
         //solverAOS->readMeshFromMeshObject(*mesh);
 
-        //if( ! solverPush->readMeshFromMshFile("msh/MiniSquare.msh") )
-        //{
-        //    system("pause");
-        //    return false;
-        //}
+        if( ! solverPush->readMeshFromMshFile("msh/CylinderChannelQuad.msh") )
+        {
+            system("pause");
+            return false;
+        }
 
-        //solverPush->writeVTK("out/Mesh.vtk");
-        //solverPush->writeInterfaceVTK("out/Connectivity.vtk");
+        solverPush->writeVTK("out/Mesh.vtk");
+        solverPush->writeInterfaceVTK("out/Connectivity.vtk");
 
         //mesh->iterate();
 
         //solverPull->iterate();
-        solverPush->iterate();
+        //solverPush->iterate();
         //solverSOA->iterate();
         //solverAOS->iterate();
 
@@ -211,11 +211,11 @@ int main(int argc, char* argv[])
         // ====================================================================
 
 
-        mesh->writeTimeSteps("out/timeSteps.dat");
-        mesh->writeTime("out/time.dat");
-        mesh->writeResultFields("out/ResultFields.dat");
-        mesh->writeOverviewFile("out/OverviewFile.dat");
-        mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
+        //mesh->writeTimeSteps("out/timeSteps.dat");
+        //mesh->writeTime("out/time.dat");
+        //mesh->writeResultFields("out/ResultFields.dat");
+        //mesh->writeOverviewFile("out/OverviewFile.dat");
+        //mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
 
         // ========== Poiseuille Convergence Study ============================
         //ostringstream filename;

@@ -84,10 +84,12 @@ bool mshReader::readPhysicalNames(ifstream& file)
 
         type = type.substr(1, type.length()-2 );
 
-        if     ( type.compare("periodic") == 0 ) this->BCs.push_back(periodic);
-        else if( type.compare("wall")     == 0 ) this->BCs.push_back(wall);
-        else if( type.compare("inlet")    == 0 ) this->BCs.push_back(inlet);
-        else if( type.compare("outlet")   == 0 ) this->BCs.push_back(outlet);
+        if     ( type.compare("periodic")       == 0 ) this->BCs.push_back(periodic);
+        else if( type.compare("periodicGhost")  == 0 ) this->BCs.push_back(periodicGhost);
+        else if( type.compare("wall")           == 0 ) this->BCs.push_back(wall);
+        else if( type.compare("isothermalWall") == 0 ) this->BCs.push_back(isothermalWall);
+        else if( type.compare("inlet")          == 0 ) this->BCs.push_back(inlet);
+        else if( type.compare("outlet")         == 0 ) this->BCs.push_back(outlet);
         else { cout << "Error: Wrong BC" << endl; return false; }
     }
 
@@ -269,14 +271,14 @@ bool mshReader::linkExistingFaces(array<idType, 4> tmpCell2Node, array<idType, 4
             if      ( this->Face2Node[face][0] == tmpCell2Node[ cellNode%nNodes ] && this->Face2Node[face][1] == tmpCell2Node[ (cellNode+1)%nNodes ] )
             {
                 tmpCell2Face[cellNode] = face;
-                this->Face2Cell   [face][0] = CellID;
-                this->Face2CellAdd[face][0] = true;
+                this->Face2Cell   [face][1] = CellID;
+                this->Face2CellAdd[face][1] = true;
             }
             else if ( this->Face2Node[face][1] == tmpCell2Node[ cellNode%nNodes ] && this->Face2Node[face][0] == tmpCell2Node[ (cellNode+1)%nNodes ] )
             {
                 tmpCell2Face[cellNode] = face;
-                this->Face2Cell   [face][1] = CellID;
-                this->Face2CellAdd[face][1] = true;
+                this->Face2Cell   [face][0] = CellID;
+                this->Face2CellAdd[face][0] = true;
             }  
         }
     }
@@ -364,6 +366,8 @@ void mshReader::computeCellLSCoeff()
 
     for( idType cell = 0; cell < this->Cell2Node.size(); ++cell )
     {
+        if(Cell2BC[cell] != -1) continue;
+
         idType nNeighbors;
         if      ( this->Cell2Type[cell] == tri  ) nNeighbors = 3;
         else if ( this->Cell2Type[cell] == quad ) nNeighbors = 4;
@@ -460,77 +464,85 @@ bool mshReader::findPeriodicCells()
     cout << "Find periodic Cell:";
     for(idType left = 0; left < Face2Node.size(); ++left)
     {
-        if( this->Face2BC[left] == -1 ) continue;
-        if( this->BCs[ Face2BC[left] ] == periodic && ( this->Face2Cell[left][0] != -1 || this->Face2Cell[left][1] != -1 ) )
+        if( this->BCs[ this->Face2BC[left] ] != periodic ) continue;
+
+        idType right = this->findPeriodicInterface(left);
+
+        if( right == -1 ) 
         {
-            for(idType right = 0; right < Face2Node.size(); ++right)
-            {
-                if( BCs[ Face2BC[right] ] == periodic && left != right )
-                {
-                    Vec2 connection;
-
-                    connection.x = this->FaceCenter[right].x - this->FaceCenter[left].x;
-                    connection.y = this->FaceCenter[right].y - this->FaceCenter[left].y;
-
-                    double projection = fabs( this->FaceNormal[left].x * connection.x + this->FaceNormal[left].y * connection.y );
-                    double distance = sqrt( connection.x * connection.x + connection.y * connection.y );
-
-                    if( fabs( projection - distance ) < 1.0e-10 )
-                    {
-                        idType leftCell, leftEmpty;
-                        idType rightCell, rightEmpty;
-
-                        if      (this->Face2Cell[left][0] != -1)
-                        {
-                            leftCell  = this->Face2Cell[left][0];
-                            leftEmpty = 1;
-                        }
-                        else if (this->Face2Cell[left][1] != -1)
-                        {
-                            leftCell  = this->Face2Cell[left][1];
-                            leftEmpty = 0;
-                        }
-                        else
-                        {
-                            cout << "Error: Left Cell already has two Neighbors" << endl; return false;
-                        }
-
-                        if      (this->Face2Cell[right][0] != -1)
-                        {
-                            rightCell  = this->Face2Cell[right][0];
-                            rightEmpty = 1;
-                        }
-                        else if (this->Face2Cell[right][1] != -1)
-                        {
-                            rightCell  = this->Face2Cell[right][1];
-                            rightEmpty = 0;
-                        }
-                        else
-                        {
-                            cout << "Error: Right Cell already has two Neighbors" << endl; return false;
-                        }
-
-                        this->Face2Cell[left ][leftEmpty ] = rightCell;
-                        this->Face2Cell[right][rightEmpty] = leftCell;
-
-                        double distance = this->FaceDistance[left] + this->FaceDistance[right];
-                        this->FaceDistance[left ] = distance;
-                        this->FaceDistance[right] = distance;
-
-                        break;
-                    }
-                }
-            }
-
-            if( Face2Cell[left][0] == -1 || Face2Cell[left][0] == -1 )
-            {
-                cout << "Error: No periodic matching Cell found for face " << left << endl; return false;
-            }
+            cout << "Error: No periodic matching Cell found for face " << left << endl; return false;
         }
+
+        idType leftCell, leftEmpty;
+        idType rightCell, rightEmpty;
+
+        if      (this->Face2Cell[left][0] != -1)
+        {
+            leftCell  = this->Face2Cell[left][0];
+            leftEmpty = 1;
+        }
+        else if (this->Face2Cell[left][1] != -1)
+        {
+            leftCell  = this->Face2Cell[left][1];
+            leftEmpty = 0;
+        }
+        else
+        {
+            cout << "Error: Left Interface already has two Neighbors" << endl; return false;
+        }
+
+        if      (this->Face2Cell[right][0] != -1)
+        {
+            rightCell  = this->Face2Cell[right][0];
+            rightEmpty = 1;
+        }
+        else if (this->Face2Cell[right][1] != -1)
+        {
+            rightCell  = this->Face2Cell[right][1];
+            rightEmpty = 0;
+        }
+        else
+        {
+            cout << "Error: Right Interface already has two Neighbors" << endl; return false;
+        }
+
+        this->Face2Cell[left ][leftEmpty ] = rightCell;
+        this->Face2Cell[right][rightEmpty] = leftCell;
+
+        double distance = this->FaceDistance[left] + this->FaceDistance[right];
+        this->FaceDistance[left ] = distance;
+        this->FaceDistance[right] = distance;
     }
 
     cout << " done!" << endl;
     return true;
+}
+
+idType mshReader::findPeriodicInterface(idType face)
+{
+    if( this->BCs[ Face2BC[face] ] == periodic && ( this->Face2Cell[face][0] != -1 || this->Face2Cell[face][1] != -1 ) )
+    {
+        for(idType right = 0; right < Face2Node.size(); ++right)
+        {
+            if( BCs[ Face2BC[right] ] == periodic && face != right )
+            {
+                Vec2 connection;
+
+                connection.x = this->FaceCenter[right].x - this->FaceCenter[face].x;
+                connection.y = this->FaceCenter[right].y - this->FaceCenter[face].y;
+
+                double projection = fabs( this->FaceNormal[face].x * connection.x + this->FaceNormal[face].y * connection.y );
+                double distance = sqrt( connection.x * connection.x + connection.y * connection.y );
+
+                if( fabs( projection - distance ) < 1.0e-10 )
+                {
+                    return right;
+                }
+            }
+        }
+    }
+
+    return -1;
 }
 
 void mshReader::createGhostCells()
