@@ -259,7 +259,7 @@ void GKSSolver::computeFlux(const idType id)
     // ========================================================================
     //          interpolated primitive variables at the interface
     // ========================================================================
-    prim = reconstructPrimPiecewiseConstant(id);
+    prim = this->reconstructPrimPiecewiseConstant(id);
     // ========================================================================
     
     // ========================================================================
@@ -272,9 +272,9 @@ void GKSSolver::computeFlux(const idType id)
     // ========================================================================
     //          Momentum Transformation in local coordinate system
     // ========================================================================
-    global2local(id, prim);
-    global2local(id, normalGradCons);
-    global2local(id, tangentialGradCons);
+    this->global2local(id, prim);
+    this->global2local(id, normalGradCons);
+    this->global2local(id, tangentialGradCons);
     // ========================================================================
     
     // ========================================================================
@@ -295,7 +295,7 @@ void GKSSolver::computeFlux(const idType id)
     //          compute time derivative and temporal micro slopes
     //              A = A1 + A2 u + A3 v + 0.5 A4 (u^2 + v^2 + xi^2)
     // ========================================================================
-    timeGrad = computeTimeDerivative(MomentU, MomentV, MomentXi, a, b);
+    timeGrad = this->computeTimeDerivative(MomentU, MomentV, MomentXi, a, b);
 
     this->computeMicroSlope(prim, timeGrad, A);
     // ========================================================================
@@ -321,7 +321,7 @@ void GKSSolver::computeFlux(const idType id)
     // ========================================================================
     //          transform momentum Flux components back to global system
     // ========================================================================
-    local2global( id, InterfaceFlux );
+    this->local2global( id, InterfaceFlux );
     // ========================================================================
     //#pragma omp ordered
     //#pragma omp critical
@@ -382,10 +382,10 @@ void GKSSolver::computeCellGradient(idType id)
         tmpCellGradientX.rhoV += w1 * ( this->getCellData( neighborCell ).rhoV - this->getCellData( id ).rhoV );
         tmpCellGradientX.rhoE += w1 * ( this->getCellData( neighborCell ).rhoE - this->getCellData( id ).rhoE );
         
-        tmpCellGradientX.rho  += w2 * ( this->getCellData( neighborCell ).rho  - this->getCellData( id ).rho  );
-        tmpCellGradientX.rhoU += w2 * ( this->getCellData( neighborCell ).rhoU - this->getCellData( id ).rhoU );
-        tmpCellGradientX.rhoV += w2 * ( this->getCellData( neighborCell ).rhoV - this->getCellData( id ).rhoV );
-        tmpCellGradientX.rhoE += w2 * ( this->getCellData( neighborCell ).rhoE - this->getCellData( id ).rhoE );
+        tmpCellGradientY.rho  += w2 * ( this->getCellData( neighborCell ).rho  - this->getCellData( id ).rho  );
+        tmpCellGradientY.rhoU += w2 * ( this->getCellData( neighborCell ).rhoU - this->getCellData( id ).rhoU );
+        tmpCellGradientY.rhoV += w2 * ( this->getCellData( neighborCell ).rhoV - this->getCellData( id ).rhoV );
+        tmpCellGradientY.rhoE += w2 * ( this->getCellData( neighborCell ).rhoE - this->getCellData( id ).rhoE );
     }
     
     this->setCellGradientX( id, tmpCellGradientX );
@@ -458,22 +458,22 @@ void GKSSolver::computeInterfaceGradient(idType id, double rho, ConservedVariabl
     directionalGradient.rhoE = ( this->getCellData( this->getPosCell( id ) ).rhoE - this->getCellData( this->getNegCell( id ) ).rhoE ) / distance;
 
     // Eq. 5.72 in Blazek
-    dx /= distance;
-    dy /= distance;
+    double tx = dx / distance;
+    double ty = dy / distance;
 
     ConservedVariable InterfaceGradientX;
     ConservedVariable InterfaceGradientY;
 
     // eq. 5.73 in Blazek
-    InterfaceGradientX.rho  = interpolatedGradientX.rho  - ( interpolatedGradientX.rho  * dx + interpolatedGradientY.rho  * dy - directionalGradient.rho  ) * dx;
-    InterfaceGradientX.rhoU = interpolatedGradientX.rhoU - ( interpolatedGradientX.rhoU * dx + interpolatedGradientY.rhoU * dy - directionalGradient.rhoU ) * dx;
-    InterfaceGradientX.rhoV = interpolatedGradientX.rhoV - ( interpolatedGradientX.rhoV * dx + interpolatedGradientY.rhoV * dy - directionalGradient.rhoV ) * dx;
-    InterfaceGradientX.rhoE = interpolatedGradientX.rhoE - ( interpolatedGradientX.rhoE * dx + interpolatedGradientY.rhoE * dy - directionalGradient.rhoE ) * dx;
+    InterfaceGradientX.rho  = interpolatedGradientX.rho  - ( interpolatedGradientX.rho  * tx + interpolatedGradientY.rho  * ty - directionalGradient.rho  ) * tx;
+    InterfaceGradientX.rhoU = interpolatedGradientX.rhoU - ( interpolatedGradientX.rhoU * tx + interpolatedGradientY.rhoU * ty - directionalGradient.rhoU ) * tx;
+    InterfaceGradientX.rhoV = interpolatedGradientX.rhoV - ( interpolatedGradientX.rhoV * tx + interpolatedGradientY.rhoV * ty - directionalGradient.rhoV ) * tx;
+    InterfaceGradientX.rhoE = interpolatedGradientX.rhoE - ( interpolatedGradientX.rhoE * tx + interpolatedGradientY.rhoE * ty - directionalGradient.rhoE ) * tx;
 
-    InterfaceGradientY.rho  = interpolatedGradientY.rho  - ( interpolatedGradientX.rho  * dx + interpolatedGradientY.rho  * dy - directionalGradient.rho  ) * dy;
-    InterfaceGradientY.rhoU = interpolatedGradientY.rhoU - ( interpolatedGradientX.rhoU * dx + interpolatedGradientY.rhoU * dy - directionalGradient.rhoU ) * dy;
-    InterfaceGradientY.rhoV = interpolatedGradientY.rhoV - ( interpolatedGradientX.rhoV * dx + interpolatedGradientY.rhoV * dy - directionalGradient.rhoV ) * dy;
-    InterfaceGradientY.rhoE = interpolatedGradientY.rhoE - ( interpolatedGradientX.rhoE * dx + interpolatedGradientY.rhoE * dy - directionalGradient.rhoE ) * dy;
+    InterfaceGradientY.rho  = interpolatedGradientY.rho  - ( interpolatedGradientX.rho  * tx + interpolatedGradientY.rho  * ty - directionalGradient.rho  ) * ty;
+    InterfaceGradientY.rhoU = interpolatedGradientY.rhoU - ( interpolatedGradientX.rhoU * tx + interpolatedGradientY.rhoU * ty - directionalGradient.rhoU ) * ty;
+    InterfaceGradientY.rhoV = interpolatedGradientY.rhoV - ( interpolatedGradientX.rhoV * tx + interpolatedGradientY.rhoV * ty - directionalGradient.rhoV ) * ty;
+    InterfaceGradientY.rhoE = interpolatedGradientY.rhoE - ( interpolatedGradientX.rhoE * tx + interpolatedGradientY.rhoE * ty - directionalGradient.rhoE ) * ty;
     // ========================================================================
     
     // ========================================================================
@@ -1074,6 +1074,77 @@ void GKSSolver::writeVTK(string filename)
     for (int cell = 0; cell < this->numberOfCells; ++cell)
     {
         file << this->getCellBoundaryCondition(cell) << endl;
+    }
+
+    file.close();
+
+    cout << "done!" << endl;
+}
+
+void GKSSolver::writeInterfaceVTK(string filename)
+{
+    cout << "Wrinting file " << filename << " ... ";
+	// open file stream
+	ofstream file;
+    file.precision(15);
+	file.open(filename.c_str());
+
+	if (!file.is_open()) {
+		cout << " File cound not be opened.\n\nERROR!\n\n\n";
+		return;
+	}
+    
+    // write VTK Header
+    file << "# vtk DataFile Version 1.0\n";
+    file << "by Stephan Lenz\n";
+    file << "ASCII\n";
+    file << "DATASET UNSTRUCTURED_GRID\n";
+    
+    file << "POINTS " << this->numberOfInterfaces << " double\n";
+    for(int face = 0; face < this->numberOfInterfaces; ++face)
+    {
+        file << this->getInterfaceCenter(face).x << " " << this->getInterfaceCenter(face).y << " 0.0" << endl;
+    }
+
+    file << "CELLS " << this->numberOfInterfaces << " " << 2 * this->numberOfInterfaces << endl;
+    for (int cell = 0; cell < this->numberOfInterfaces; ++cell)
+    {
+        file << "1 " << cell << endl;
+    }
+
+    file << "CELL_TYPES " << this->numberOfInterfaces << endl;
+    for (int cell = 0; cell < this->numberOfInterfaces; ++cell)
+    {
+        file << "1" << endl;
+    }
+
+    file << "POINT_DATA " << this->numberOfInterfaces << endl;
+    file << "FIELD Lable 1\n";
+
+    file << "Area 1 " << this->numberOfInterfaces << " double\n";
+    for ( int face = 0; face < this->numberOfInterfaces; ++face )
+    {
+        file << this->getInterfaceArea(face) << endl;
+    }
+
+    file << "VECTORS normal double\n";
+    for ( int face = 0; face < this->numberOfInterfaces; ++face )
+    {
+        file << this->getInterfaceNormal(face).x << " " << this->getInterfaceNormal(face).y << " 0.0" << endl;
+    }
+
+    file << "VECTORS posCell double\n";
+    for ( int face = 0; face < this->numberOfInterfaces; ++face )
+    {
+        file << this->getCellCenter( this->getPosCell(face) ).x - this->getInterfaceCenter(face).x << " " 
+             << this->getCellCenter( this->getPosCell(face) ).y - this->getInterfaceCenter(face).y << " 0.0" << endl;
+    }
+
+    file << "VECTORS negCell double\n";
+    for ( int face = 0; face < this->numberOfInterfaces; ++face )
+    {
+        file << this->getCellCenter( this->getNegCell(face) ).x - this->getInterfaceCenter(face).x << " " 
+             << this->getCellCenter( this->getNegCell(face) ).y - this->getInterfaceCenter(face).y << " 0.0" << endl;
     }
 
     file.close();

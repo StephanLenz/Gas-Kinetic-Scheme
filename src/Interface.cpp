@@ -95,10 +95,10 @@ Interface::Interface(Cell* negCell, Cell* posCell, bool negAdd, bool posAdd, Nod
     // ========================================================================
     //      -----[1]-------
     //            |             The normal is computed such that it points
-    //            |   n         to the right when the one follows the
+    //            |   n         to the left when the one follows the
     //            |----->       vector  from the first to the second node.
     //    negCell | posCell     
-    //            |             n = (N1 - N0) x (0 0 1)
+    //            |             n = (0 0 1) x (N1 - N0)
     //      -----[0]-------    
     // ========================================================================        
     this->normal.x = - ( this->nodes[1]->y - this->nodes[0]->y ) / area;

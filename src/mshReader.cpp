@@ -46,6 +46,7 @@ bool mshReader::readMsh(string filename)
     if( ! this->findPeriodicCells() )     return false;
 
     this->createGhostCells();
+    this->computeCellLSCoeff();
 
     if( ! this->FaceCheck() )             return false;
 
@@ -268,14 +269,14 @@ bool mshReader::linkExistingFaces(array<idType, 4> tmpCell2Node, array<idType, 4
             if      ( this->Face2Node[face][0] == tmpCell2Node[ cellNode%nNodes ] && this->Face2Node[face][1] == tmpCell2Node[ (cellNode+1)%nNodes ] )
             {
                 tmpCell2Face[cellNode] = face;
-                this->Face2Cell   [face][1] = CellID;
-                this->Face2CellAdd[face][1] = true;
+                this->Face2Cell   [face][0] = CellID;
+                this->Face2CellAdd[face][0] = true;
             }
             else if ( this->Face2Node[face][1] == tmpCell2Node[ cellNode%nNodes ] && this->Face2Node[face][0] == tmpCell2Node[ (cellNode+1)%nNodes ] )
             {
                 tmpCell2Face[cellNode] = face;
-                this->Face2Cell   [face][0] = CellID;
-                this->Face2CellAdd[face][0] = true;
+                this->Face2Cell   [face][1] = CellID;
+                this->Face2CellAdd[face][1] = true;
             }  
         }
     }

@@ -92,8 +92,8 @@ int main(int argc, char* argv[])
 
         FluidParameter fluidParam;
 
-        int    nx = 32;          // number of cells in x direction
-        int    ny = 32;         // number of cells in y direction
+        int    nx = 16;          // number of cells in x direction
+        int    ny = 16;         // number of cells in y direction
         double Re = 10.0;        // Reynolds number
         double u0 = 0.1;        // Velocits in the mid of the channel
         double T  = 300.0;
@@ -178,11 +178,14 @@ int main(int argc, char* argv[])
         //solverSOA->readMeshFromMeshObject(*mesh);
         //solverAOS->readMeshFromMeshObject(*mesh);
 
-        //if( ! solverPush->readMeshFromMshFile("msh/CylinderChannelQuadFine.msh") )
+        //if( ! solverPush->readMeshFromMshFile("msh/MiniSquare.msh") )
         //{
         //    system("pause");
         //    return false;
         //}
+
+        //solverPush->writeVTK("out/Mesh.vtk");
+        //solverPush->writeInterfaceVTK("out/Connectivity.vtk");
 
         //mesh->iterate();
 

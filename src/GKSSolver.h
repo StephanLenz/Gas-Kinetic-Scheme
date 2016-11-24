@@ -181,6 +181,7 @@ public:
     virtual idType getNegCell(idType id) = 0;
 
     virtual Vec2 getInterfaceNormal(idType id) = 0;
+    virtual Vec2 getInterfaceCenter(idType id) = 0;
 
     virtual void setData(idType id, ConservedVariable cons) = 0;
     virtual void setData(idType id, PrimitiveVariable prim);
@@ -195,6 +196,8 @@ public:
     virtual PrimitiveVariable  getPrim(idType id);
 
     void writeVTK( string filename );
+
+    void writeInterfaceVTK( string filename );
 };
 
 #endif

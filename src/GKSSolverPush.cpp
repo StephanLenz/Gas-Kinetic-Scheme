@@ -446,6 +446,11 @@ Vec2 GKSSolverPush::getInterfaceNormal(idType id)
     return this->InterfaceNormal[id];
 }
 
+Vec2 GKSSolverPush::getInterfaceCenter(idType id)
+{
+    return this->InterfaceCenter[id];
+}
+
 void GKSSolverPush::setData(idType id, ConservedVariable cons)
 {
     this->CellData[id] = cons;

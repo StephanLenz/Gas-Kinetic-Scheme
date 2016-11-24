@@ -120,6 +120,7 @@ void BoundaryCondition::setGradientGhostCells(GKSSolver & solver)
     for( int cell = 0; cell < Cell.size(); ++cell )
     {
         solver.setCellGradientX( Cell[cell], solver.getCellGradientX( this->NeighborCell[cell] ) );
+        solver.setCellGradientY( Cell[cell], solver.getCellGradientY( this->NeighborCell[cell] ) );
     }
 }
 

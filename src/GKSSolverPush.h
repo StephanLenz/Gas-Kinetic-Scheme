@@ -150,6 +150,7 @@ public:
     virtual idType getNegCell(idType id);
 
     virtual Vec2 getInterfaceNormal(idType id);
+    virtual Vec2 getInterfaceCenter(idType id);
 
     virtual void setData(idType id, ConservedVariable cons);
 
