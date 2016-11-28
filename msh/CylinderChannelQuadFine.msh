@@ -3,7 +3,7 @@ $MeshFormat
 $EndMeshFormat
 $PhysicalNames
 3
-1 1 "periodic"
+1 1 "periodicGhost"
 1 2 "wall"
 2 3 "domain"
 $EndPhysicalNames

@@ -102,12 +102,12 @@ int main(int argc, char* argv[])
         fluidParam.K = 1.0;                                                   // internal degrees of freedom
         fluidParam.nu = (u0*param.L)/Re;                                    // kinematic viskosity
         fluidParam.R = 200.0;                                               // specific gas constant
-        fluidParam.Force.x = 0.0;//(u0*8.0*fluidParam.nu) / (param.L*param.L);    // acceleration in x direction [m/s^2]
+        fluidParam.Force.x = (u0*8.0*fluidParam.nu) / (param.L*param.L);    // acceleration in x direction [m/s^2]
         fluidParam.Force.y = 0.0;                                           // acceleration in y direction [m/s^2]
         fluidParam.BoussinesqForce.x = 0.0;                                 // acceleration only allpied to density variations [m/s^2]
         fluidParam.BoussinesqForce.y = 0.0;                                 // acceleration only allpied to density variations [m/s^2]
         fluidParam.rhoReference = 1.0;                                      // reference density
-        fluidParam.uReference   = u0;
+        fluidParam.uReference   = 0.03;
         fluidParam.vReference   = 0.0;
         fluidParam.lambdaReference = 1.0 / (2.0 * fluidParam.R * T);        // reference temperature
         fluidParam.Pr = 1.0;                                                // Prandl number 
@@ -178,7 +178,8 @@ int main(int argc, char* argv[])
         //solverSOA->readMeshFromMeshObject(*mesh);
         //solverAOS->readMeshFromMeshObject(*mesh);
 
-        if( ! solverPush->readMeshFromMshFile("msh/SquareQuadGradedPeriodicGhostIsothermalWall32.msh") )
+        //if( ! solverPush->readMeshFromMshFile("msh/SquareQuadGradedPeriodicGhostIsothermalWall32.msh") )
+        if( ! solverPush->readMeshFromMshFile("msh/CylinderChannelQuadFine.msh") )
         {
             system("pause");
             return false;
@@ -190,7 +191,7 @@ int main(int argc, char* argv[])
         //mesh->iterate();
 
         //solverPull->iterate();
-        //solverPush->iterate();
+        solverPush->iterate();
         //solverSOA->iterate();
         //solverAOS->iterate();
 

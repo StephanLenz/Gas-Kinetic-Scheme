@@ -271,14 +271,14 @@ bool mshReader::linkExistingFaces(array<idType, 4> tmpCell2Node, array<idType, 4
             if      ( this->Face2Node[face][0] == tmpCell2Node[ cellNode%nNodes ] && this->Face2Node[face][1] == tmpCell2Node[ (cellNode+1)%nNodes ] )
             {
                 tmpCell2Face[cellNode] = face;
-                this->Face2Cell   [face][1] = CellID;
-                this->Face2CellAdd[face][1] = true;
+                this->Face2Cell   [face][0] = CellID;
+                this->Face2CellAdd[face][0] = true;
             }
             else if ( this->Face2Node[face][1] == tmpCell2Node[ cellNode%nNodes ] && this->Face2Node[face][0] == tmpCell2Node[ (cellNode+1)%nNodes ] )
             {
                 tmpCell2Face[cellNode] = face;
-                this->Face2Cell   [face][0] = CellID;
-                this->Face2CellAdd[face][0] = true;
+                this->Face2Cell   [face][1] = CellID;
+                this->Face2CellAdd[face][1] = true;
             }  
         }
     }
@@ -289,7 +289,7 @@ bool mshReader::linkExistingFaces(array<idType, 4> tmpCell2Node, array<idType, 4
 bool mshReader::createMissingFaces(array<idType, 4> tmpCell2Node, array<idType, 4>& tmpCell2Face, idType CellID, CellType type)
 {
     idType nFaces;
-    if     (type == tri)   nFaces = 3;
+    if     (type == tri)  nFaces = 3;
     else if(type == quad) nFaces = 4;
 
     for( idType cellFace = 0; cellFace < nFaces; ++cellFace )
@@ -302,8 +302,8 @@ bool mshReader::createMissingFaces(array<idType, 4> tmpCell2Node, array<idType, 
             Face2Node.push_back(tmpFace2Node);
 
             array<idType,2> tmpFace2Cell;
-            tmpFace2Cell[0] = -1;
-            tmpFace2Cell[1] = CellID;
+            tmpFace2Cell[0] = CellID;
+            tmpFace2Cell[1] = -1;
             Face2Cell.push_back(tmpFace2Cell);
 
             array<bool,2> tmpFace2CellAdd = {true, true};
@@ -464,7 +464,9 @@ bool mshReader::findPeriodicCells()
     cout << "Find periodic Cell:";
     for(idType left = 0; left < Face2Node.size(); ++left)
     {
-        if( this->BCs[ this->Face2BC[left] ] != periodic ) continue;
+        if( this->Face2BC[left] == -1 || this->BCs[ this->Face2BC[left] ] != periodic ) continue;
+
+        if( this->Face2Cell[left][0] != -1 || this->Face2Cell[left][1] != -1 ) continue;
 
         idType right = this->findPeriodicInterface(left);
 
@@ -520,24 +522,21 @@ bool mshReader::findPeriodicCells()
 
 idType mshReader::findPeriodicInterface(idType face)
 {
-    if( this->BCs[ Face2BC[face] ] == periodic && ( this->Face2Cell[face][0] != -1 || this->Face2Cell[face][1] != -1 ) )
+    for(idType right = 0; right < Face2Node.size(); ++right)
     {
-        for(idType right = 0; right < Face2Node.size(); ++right)
+        if( this->BCs[ Face2BC[right] ] == this->BCs[ Face2BC[face] ] && face != right )
         {
-            if( BCs[ Face2BC[right] ] == periodic && face != right )
+            Vec2 connection;
+
+            connection.x = this->FaceCenter[right].x - this->FaceCenter[face].x;
+            connection.y = this->FaceCenter[right].y - this->FaceCenter[face].y;
+
+            double projection = fabs( this->FaceNormal[face].x * connection.x + this->FaceNormal[face].y * connection.y );
+            double distance = sqrt( connection.x * connection.x + connection.y * connection.y );
+
+            if( fabs( projection - distance ) < 1.0e-10 )
             {
-                Vec2 connection;
-
-                connection.x = this->FaceCenter[right].x - this->FaceCenter[face].x;
-                connection.y = this->FaceCenter[right].y - this->FaceCenter[face].y;
-
-                double projection = fabs( this->FaceNormal[face].x * connection.x + this->FaceNormal[face].y * connection.y );
-                double distance = sqrt( connection.x * connection.x + connection.y * connection.y );
-
-                if( fabs( projection - distance ) < 1.0e-10 )
-                {
-                    return right;
-                }
+                return right;
             }
         }
     }
@@ -554,8 +553,8 @@ void mshReader::createGhostCells()
         else if (this->Face2Cell[face][1] == -1) emptyFace2Cell = 1;
         else continue;
 
-        Vec2 vector( ( (emptyFace2Cell == 1)?(3.0):(-3.0) ) * this->FaceDistance[face] * this->FaceNormal[face].x,
-                     ( (emptyFace2Cell == 1)?(3.0):(-3.0) ) * this->FaceDistance[face] * this->FaceNormal[face].y );
+        Vec2 vector( ( (emptyFace2Cell == 0)?(3.0):(-3.0) ) * this->FaceDistance[face] * this->FaceNormal[face].x,
+                     ( (emptyFace2Cell == 0)?(3.0):(-3.0) ) * this->FaceDistance[face] * this->FaceNormal[face].y );
 
         this->Nodes.push_back( Vec2( this->FaceCenter[face].x + vector.x,
                                      this->FaceCenter[face].y + vector.y ) );
@@ -585,7 +584,8 @@ void mshReader::createGhostCells()
         this->Cell2Face.push_back(newCell2Face);
         this->Cell2BC.push_back(this->Face2BC[face]);
 
-        this->CellCenter.push_back(Vec2(0.0,0.0));
+        this->CellCenter.push_back( Vec2( this->FaceCenter[face].x + vector.x / 3.0, 
+                                          this->FaceCenter[face].y + vector.y / 3.0) );
         this->CellVolume.push_back(0.0);
         this->CellMinDx.push_back(0.0);
 
