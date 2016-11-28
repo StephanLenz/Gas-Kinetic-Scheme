@@ -96,18 +96,18 @@ int main(int argc, char* argv[])
         int    ny = 16;         // number of cells in y direction
         double Re = 10.0;        // Reynolds number
         double u0 = 0.1;        // Velocits in the mid of the channel
-        double T  = 300.0;
+        double T  = 1.0;
         param.L = 1;          // reference length for Re number
 
         fluidParam.K = 1.0;                                                   // internal degrees of freedom
-        fluidParam.nu = (u0*param.L)/Re;                                    // kinematic viskosity
+        fluidParam.nu = 0.01;//(u0*param.L)/Re;                                    // kinematic viskosity
         fluidParam.R = 200.0;                                               // specific gas constant
-        fluidParam.Force.x = (u0*8.0*fluidParam.nu) / (param.L*param.L);    // acceleration in x direction [m/s^2]
+        fluidParam.Force.x = 0.0;//(u0*8.0*fluidParam.nu) / (param.L*param.L);    // acceleration in x direction [m/s^2]
         fluidParam.Force.y = 0.0;                                           // acceleration in y direction [m/s^2]
         fluidParam.BoussinesqForce.x = 0.0;                                 // acceleration only allpied to density variations [m/s^2]
         fluidParam.BoussinesqForce.y = 0.0;                                 // acceleration only allpied to density variations [m/s^2]
         fluidParam.rhoReference = 1.0;                                      // reference density
-        fluidParam.uReference   = 0.03;
+        fluidParam.uReference   = 3.5;
         fluidParam.vReference   = 0.0;
         fluidParam.lambdaReference = 1.0 / (2.0 * fluidParam.R * T);        // reference temperature
         fluidParam.Pr = 1.0;                                                // Prandl number 
@@ -179,7 +179,7 @@ int main(int argc, char* argv[])
         //solverAOS->readMeshFromMeshObject(*mesh);
 
         //if( ! solverPush->readMeshFromMshFile("msh/SquareQuadGradedPeriodicGhostIsothermalWall32.msh") )
-        if( ! solverPush->readMeshFromMshFile("msh/CylinderChannelQuadFine.msh") )
+        if( ! solverPush->readMeshFromMshFile("msh/CylinderInletOutletWallQuadFine.msh") )
         {
             system("pause");
             return false;

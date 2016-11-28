@@ -76,9 +76,16 @@ void BoundaryCondition::setGhostCells(GKSSolver & solver)
             // ====================================================================
             case inlet:
             {
-                double U_In = 4.0 * this->value.U * solver.getCellCenter( this->NeighborCell[i] ).y * ( 1.0 - solver.getCellCenter( this->NeighborCell[i] ).y );
+                //double U_In = 4.0 * this->value.U * solver.getCellCenter( this->NeighborCell[i] ).y * ( 1.0 - solver.getCellCenter( this->NeighborCell[i] ).y );
+                double y = solver.getCellCenter( this->NeighborCell[i] ).y;
+                double U_In = this->value.U * ( - 4.0 * y * y  + 1.0 );
 
-                prim.rho = 2.0*this->value.rho - primNeighbor.rho;
+                //prim.rho = 2.0*this->value.rho - primNeighbor.rho;
+                //prim.U   = 2.0*U_In            - primNeighbor.U;
+                //prim.V   = 2.0*this->value.V   - primNeighbor.V;
+                //prim.L   = 2.0*this->value.L   - primNeighbor.L;
+                
+                prim.rho = primNeighbor.rho * ( 2.0*this->value.L - primNeighbor.L ) / primNeighbor.L;
                 prim.U   = 2.0*U_In            - primNeighbor.U;
                 prim.V   = 2.0*this->value.V   - primNeighbor.V;
                 prim.L   = 2.0*this->value.L   - primNeighbor.L;

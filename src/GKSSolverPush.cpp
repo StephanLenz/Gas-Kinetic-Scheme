@@ -276,8 +276,8 @@ bool GKSSolverPush::readMeshFromMshFile(string filename)
     {
         PrimitiveVariable prim;
         prim.rho = this->fluidParam.rhoReference;
-        prim.U   = this->fluidParam.uReference;
-        prim.V   = this->fluidParam.vReference;
+        prim.U   = 0.0;//this->fluidParam.uReference;
+        prim.V   = 0.0;//this->fluidParam.vReference;
         prim.L   = this->fluidParam.lambdaReference;
 
         ConservedVariable cons = prim2cons( prim );
