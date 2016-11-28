@@ -243,9 +243,14 @@ bool GKSSolverPush::readMeshFromMshFile(string filename)
                 idType NeighborCell;
 
                 if( reader.BCs[ currentBC ] == periodicGhost )
-                    NeighborCell = reader.Face2Cell[  ]
-
-                if( reader.Face2Cell[ reader.Cell2Face[cell][0] ][0] != cell )
+                {
+                    idType periodicFace = reader.findPeriodicInterface( reader.Cell2Face[cell][0] );
+                    if( reader.Cell2BC[ reader.Face2Cell[periodicFace][0] ] == -1)
+                        NeighborCell = reader.Face2Cell[periodicFace][0];
+                    else
+                        NeighborCell = reader.Face2Cell[periodicFace][1];
+                }
+                else if( reader.Face2Cell[ reader.Cell2Face[cell][0] ][0] != cell )
                     NeighborCell = reader.Face2Cell[ reader.Cell2Face[cell][0] ][0];
                 else
                     NeighborCell = reader.Face2Cell[ reader.Cell2Face[cell][0] ][1];

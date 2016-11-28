@@ -178,7 +178,7 @@ int main(int argc, char* argv[])
         //solverSOA->readMeshFromMeshObject(*mesh);
         //solverAOS->readMeshFromMeshObject(*mesh);
 
-        if( ! solverPush->readMeshFromMshFile("msh/CylinderChannelQuad.msh") )
+        if( ! solverPush->readMeshFromMshFile("msh/SquareQuadGradedPeriodicGhostIsothermalWall32.msh") )
         {
             system("pause");
             return false;
