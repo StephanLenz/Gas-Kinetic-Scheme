@@ -1044,7 +1044,7 @@ void GKSSolver::writeVTK(string filename)
     }
     
     file << "CELL_DATA " << this->numberOfCells << endl;
-    file << "FIELD Lable " << 6 << "\n";
+    file << "FIELD Lable " << 7 << "\n";
     file << "rho 1 " << numberOfCells << " double\n";
     for (int cell = 0; cell < this->numberOfCells; ++cell)
     {
@@ -1064,6 +1064,11 @@ void GKSSolver::writeVTK(string filename)
     for (int cell = 0; cell < this->numberOfCells; ++cell)
     {
         file << 1.0 / ( 2.0 * this->fluidParam.R * this->getPrim(cell).L ) << endl;
+    }
+    file << "p 1 " << numberOfCells << " double\n";
+    for (int cell = 0; cell < this->numberOfCells; ++cell)
+    {
+        file << this->getPrim(cell).rho / ( 2.0 * this->getPrim(cell).L ) << endl;
     }
     file << "Lambda 1 " << numberOfCells << " double\n";
     for (int cell = 0; cell < this->numberOfCells; ++cell)

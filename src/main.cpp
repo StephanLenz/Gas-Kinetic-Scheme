@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
         param.ghostOutput = true;                      // include ghost cells in VTK files
         param.csvOutput   = false;                       // output csv files for postprocessing
 
-        param.numberOfIterations = 10000000;            // maximal number of Iterations
+        param.numberOfIterations = 2000000;            // maximal number of Iterations
         param.outputIntervalVTK  = 10000;              // Output interval for VTK Files (and .dat files)
         param.outputInterval     = 10000;              // Output interval for Output on the screen
 
@@ -100,14 +100,14 @@ int main(int argc, char* argv[])
         param.L = 1;          // reference length for Re number
 
         fluidParam.K = 1.0;                                                   // internal degrees of freedom
-        fluidParam.nu = 0.01;//(u0*param.L)/Re;                                    // kinematic viskosity
+        fluidParam.nu = 0.001;//(u0*param.L)/Re;                                    // kinematic viskosity
         fluidParam.R = 200.0;                                               // specific gas constant
         fluidParam.Force.x = 0.0;//(u0*8.0*fluidParam.nu) / (param.L*param.L);    // acceleration in x direction [m/s^2]
         fluidParam.Force.y = 0.0;                                           // acceleration in y direction [m/s^2]
         fluidParam.BoussinesqForce.x = 0.0;                                 // acceleration only allpied to density variations [m/s^2]
         fluidParam.BoussinesqForce.y = 0.0;                                 // acceleration only allpied to density variations [m/s^2]
         fluidParam.rhoReference = 1.0;                                      // reference density
-        fluidParam.uReference   = 3.5;
+        fluidParam.uReference   = 0.3;
         fluidParam.vReference   = 0.0;
         fluidParam.lambdaReference = 1.0 / (2.0 * fluidParam.R * T);        // reference temperature
         fluidParam.Pr = 1.0;                                                // Prandl number 
@@ -179,7 +179,7 @@ int main(int argc, char* argv[])
         //solverAOS->readMeshFromMeshObject(*mesh);
 
         //if( ! solverPush->readMeshFromMshFile("msh/SquareQuadGradedPeriodicGhostIsothermalWall32.msh") )
-        if( ! solverPush->readMeshFromMshFile("msh/CylinderInletOutletWallQuadFine.msh") )
+        if( ! solverPush->readMeshFromMshFile("msh/TurekBenchmark2G.mesh.3.msh") )
         {
             system("pause");
             return false;
