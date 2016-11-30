@@ -20,11 +20,7 @@
 #define GKSSolverPush_H
 
 #include "GKSSolver.h"
-#include "GKSMesh.h"
-#include "Cell.h"
-#include "Interface.h"
 #include "BoundaryCondition.h"
-#include "InterfaceBC.h"
 #include "Types.h"
 #include <vector>
 #include <array>
@@ -103,10 +99,6 @@ public:
     //              Communication methods
     // ========================================================================
 
-    virtual void readMeshFromMeshObject( const GKSMesh& origin );
-
-    virtual void writeDataToMeshObject( const GKSMesh& target );
-
     virtual bool readMeshFromMshFile( string filename );
 
     // ========================================================================
@@ -141,7 +133,7 @@ public:
     virtual double getCellMinDx(idType id);
     virtual array<double,3> getCellLSCoeff(idType id);
 
-    virtual BoundaryConditionType getCellBoundaryCondition(idType id);
+    virtual int getCellBoundaryCondition(idType id);
 
     virtual double getInterfaceArea(idType id);
     virtual double getInterfaceDistance(idType id);

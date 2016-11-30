@@ -1,9 +1,6 @@
 
 #include "GKSSolverPush.h"
-#include "Cell.h"
-#include "Interface.h"
 #include "BoundaryCondition.h"
-#include "InterfaceBC.h"
 #include "Types.h"
 #include "mshReader.h"
 #include <vector>
@@ -26,147 +23,6 @@ GKSSolverPush::GKSSolverPush(Parameters param, FluidParameter fluidParam)
 
 GKSSolverPush::~GKSSolverPush()
 {
-}
-
-void GKSSolverPush::readMeshFromMeshObject(const GKSMesh& origin)
-{
-    this->numberOfNodes        = origin.NodeList.size();
-
-    this->numberOfCells        = origin.CellList.size();
-
-    this->numberOfInterfaces   = origin.InterfaceList.size();
-
-    // ========================================================================
-    //              Allocate Memory
-    // ========================================================================
-
-    this->NodeCenter.resize( numberOfNodes );
-
-    this->CellData.resize( numberOfCells );
-    this->CellDataOld.resize( numberOfCells );
-
-    this->CellUpdate.resize( numberOfCells );
-
-    this->CellGradientX.resize( numberOfCells );
-    this->CellGradientY.resize( numberOfCells );
-
-    this->Cell2Node.resize( numberOfCells );
-    this->Cell2Interface.resize( numberOfCells );
-    this->CellBoundaryCondition.resize( numberOfCells );
-
-    this->CellCenter.resize( numberOfCells );
-    this->CellVolume.resize( numberOfCells );
-    this->CellMinDx.resize( numberOfCells );
-    this->CellLSCoeff.resize( numberOfCells );
-
-    this->InterfaceFlux.resize( numberOfInterfaces );
-
-    this->Interface2Node.resize( numberOfInterfaces );
-    this->Interface2Cell.resize( numberOfInterfaces );
-
-    this->InterfaceCenter.resize( numberOfInterfaces );
-    this->InterfaceNormal.resize( numberOfInterfaces );
-    this->InterfaceArea.resize( numberOfInterfaces );
-    this->InterfaceDistance.resize( numberOfInterfaces );
-    this->Interface2CellCenterDistance.resize( numberOfInterfaces );
-
-    this->InterfaceAdd2Cell.resize( numberOfInterfaces );
-
-    // ========================================================================
-    //              Read BC data
-    // ========================================================================
-    for( BoundaryCondition* currentBC: origin.BoundaryConditionList )
-    {
-        this->BoundaryConditionList.push_back(*currentBC);
-        for(Cell* currentCell : origin.CellList)
-        {
-            if( currentBC == currentCell->getBoundaryConditionPointer() )
-            {
-                this->BoundaryConditionList.back().addCell( currentCell->getID() - 1 );
-                if( currentBC->getType() == periodicGhost )
-                    this->BoundaryConditionList.back().addNeighborCell( currentCell->getNeighborCell(1)->getID() - 1 );
-                else
-                    this->BoundaryConditionList.back().addNeighborCell( currentCell->findNeighborInDomain()->getID() - 1 );
-            }
-        }
-    }
-
-    // ========================================================================
-    //              Read Node data
-    // ========================================================================
-    for( Node* currentNode : origin.NodeList )
-    {
-        this->NodeCenter[currentNode->ID-1] = *currentNode;
-    }
-    // ========================================================================
-
-    // ========================================================================
-    //              Read Cell data
-    // ========================================================================
-    for( Cell* currentCell : origin.CellList )
-    {
-        this->CellData   [currentCell->getID()-1] = currentCell->getCons();
-        this->CellDataOld[currentCell->getID()-1] = currentCell->getConsOld();
-
-        for( int i = 0; i < 4; i++)
-            this->Cell2Node[currentCell->getID()-1][i] = currentCell->getNode(i).ID-1;
-
-        for( int i = 0; i < 4; i++)
-        {
-            if(currentCell->getInterface(i) != NULL)
-                this->Cell2Interface[currentCell->getID()-1][i] = currentCell->getInterface(i)->getID()-1;
-            else
-                this->Cell2Interface[currentCell->getID()-1][i] = -1;
-        }
-
-        this->CellCenter [currentCell->getID()-1] = currentCell->getCenter();
-        this->CellVolume [currentCell->getID()-1] = currentCell->getVolume();
-        this->CellMinDx  [currentCell->getID()-1] = currentCell->getMinDx();
-        this->CellLSCoeff[currentCell->getID()-1] = currentCell->getLSCoeff();
-
-        this->CellBoundaryCondition[currentCell->getID()-1] = -1;
-        for( int i = 0; i < origin.BoundaryConditionList.size(); ++i)
-        {
-            if( origin.BoundaryConditionList[i] == currentCell->getBoundaryConditionPointer() )
-            {
-                this->CellBoundaryCondition[currentCell->getID()-1] = i;
-                break;
-            }
-        }
-    }
-    // ========================================================================
-
-    // ========================================================================
-    //              Read Interface data
-    // ========================================================================
-    for( Interface* currentInterface : origin.InterfaceList )
-    {
-        for( int i = 0; i < 2; i++)
-            this->Interface2Node[currentInterface->getID()-1][i] = currentInterface->getNode(i)->ID-1;
-
-        for( int i = 0; i < 2; i++)
-            this->Interface2Cell[currentInterface->getID()-1][i] = currentInterface->getCell(i)->getID()-1;
-
-        this->InterfaceCenter[currentInterface->getID()-1]   = currentInterface->getCenter();
-        this->InterfaceNormal[currentInterface->getID()-1]   = currentInterface->getNormal();
-        this->InterfaceArea[currentInterface->getID()-1]     = currentInterface->getArea();
-        this->InterfaceDistance[currentInterface->getID()-1] = currentInterface->getDistance2CellCenter(0) + currentInterface->getDistance2CellCenter(1);
-
-        for( int i = 0; i < 2; i++)
-            this->Interface2CellCenterDistance[currentInterface->getID()-1][i] = currentInterface->getDistance2CellCenter(i);
-
-        this->InterfaceAdd2Cell[currentInterface->getID()-1][0] = currentInterface->posAdd;
-        this->InterfaceAdd2Cell[currentInterface->getID()-1][1] = currentInterface->negAdd;
-    }
-    // ========================================================================
-
-    int breakPoint = 0;
-}
-
-void GKSSolverPush::writeDataToMeshObject(const GKSMesh & target)
-{
-    for( Cell* currentCell : target.CellList )
-        currentCell->setCons( this->CellData[ currentCell->getID()-1 ] );
 }
 
 bool GKSSolverPush::readMeshFromMshFile(string filename)
@@ -222,23 +78,21 @@ bool GKSSolverPush::readMeshFromMshFile(string filename)
     for( int currentBC = 0; currentBC < reader.BCs.size(); ++currentBC )
     {
         if     (reader.BCs[currentBC] == wall)
-            this->BoundaryConditionList.push_back( BoundaryCondition(reader.BCs[currentBC], this->fluidParam.rhoReference, 0.0, 0.0, this->fluidParam.lambdaReference ) );
+            this->BoundaryConditionList.push_back( new bcWall( 0.0, 0.0) );
         else if(reader.BCs[currentBC] == isothermalWall)
-            this->BoundaryConditionList.push_back( BoundaryCondition(reader.BCs[currentBC], this->fluidParam.rhoReference, 0.0, 0.0, this->fluidParam.lambdaReference ) );
-        else if(reader.BCs[currentBC] == periodic)
-            this->BoundaryConditionList.push_back( BoundaryCondition(reader.BCs[currentBC], 0.0, 0.0, 0.0, 0.0 ) );
+            this->BoundaryConditionList.push_back( new bcIsothermalWall( 0.0, 0.0, this->fluidParam.lambdaReference ) );
         else if(reader.BCs[currentBC] == periodicGhost)
-            this->BoundaryConditionList.push_back( BoundaryCondition(reader.BCs[currentBC], 0.0, 0.0, 0.0, 0.0 ) );
+            this->BoundaryConditionList.push_back( new bcPeriodicGhost( ) );
         else if(reader.BCs[currentBC] == outlet)
-            this->BoundaryConditionList.push_back( BoundaryCondition(reader.BCs[currentBC], 0.0, 0.0, 0.0, 0.0 ) );
+            this->BoundaryConditionList.push_back( new bcOutflow( ) );
         else if(reader.BCs[currentBC] == inlet)
-            this->BoundaryConditionList.push_back( BoundaryCondition(reader.BCs[currentBC], this->fluidParam.rhoReference, this->fluidParam.uReference, this->fluidParam.vReference, this->fluidParam.lambdaReference ) );
+            this->BoundaryConditionList.push_back( new bcInflowParabolic( this->fluidParam.uReference, this->fluidParam.vReference, this->fluidParam.lambdaReference, Vec2(0.0, 0.0), Vec2(0.0, 0.41) ) );
 
         for(idType cell = 0; cell < reader.Cell2Node.size(); ++cell)
         {
             if( currentBC == reader.Cell2BC[cell] )
             {
-                this->BoundaryConditionList.back().addCell( cell );
+                this->BoundaryConditionList.back()->addCell( cell );
 
                 idType NeighborCell;
 
@@ -255,7 +109,7 @@ bool GKSSolverPush::readMeshFromMshFile(string filename)
                 else
                     NeighborCell = reader.Face2Cell[ reader.Cell2Face[cell][0] ][1];
 
-                this->BoundaryConditionList.back().addNeighborCell( NeighborCell );
+                this->BoundaryConditionList.back()->addNeighborCell( NeighborCell );
             }
         }
     }
@@ -426,12 +280,9 @@ array<double, 3> GKSSolverPush::getCellLSCoeff(idType id)
     return this->CellLSCoeff[id];
 }
 
-BoundaryConditionType GKSSolverPush::getCellBoundaryCondition(idType id)
+int GKSSolverPush::getCellBoundaryCondition(idType id)
 {
-    if(this->CellBoundaryCondition[id] == -1)
-        return none;
-
-    return this->BoundaryConditionList[ this->CellBoundaryCondition[id] ].getType();
+    return this->CellBoundaryCondition[id];
 }
 
 double GKSSolverPush::getInterfaceArea(idType id)

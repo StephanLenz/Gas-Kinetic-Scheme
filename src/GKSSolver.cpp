@@ -1,9 +1,6 @@
 
 #include "GKSSolver.h"
-#include "Cell.h"
-#include "Interface.h"
 #include "BoundaryCondition.h"
-#include "InterfaceBC.h"
 #include "Types.h"
 #include <vector>
 #include <array>
@@ -29,7 +26,8 @@ GKSSolver::GKSSolver(Parameters param, FluidParameter fluidParam)
 
 GKSSolver::~GKSSolver()
 {
-}
+    for( BoundaryCondition* bc : this->BoundaryConditionList ) delete bc;
+}  
 
 // ============================================================================
 //      This method perform the iteration and controls the solution process. 
@@ -42,9 +40,9 @@ void GKSSolver::iterate()
 
     this->timeList.push_back(this->time);
     
-    for( BoundaryCondition& BC : BoundaryConditionList )
+    for( BoundaryCondition* BC : BoundaryConditionList )
     {
-        BC.setGhostCells(*this);
+        BC->setGhostCells(*this);
     }
 
     this->writeVTK( string("out/Solver_") + to_string(this->iter) + string(".vtk") );
@@ -133,9 +131,9 @@ void GKSSolver::timeStep()
         if ( !isGhostCell(id) ) applyForcing(id);
     }
     
-    for( BoundaryCondition& BC : BoundaryConditionList )
+    for( BoundaryCondition* BC : BoundaryConditionList )
     {
-        BC.setGhostCells(*this);
+        BC->setGhostCells(*this);
     }
 
     #pragma omp parallel for
@@ -144,9 +142,9 @@ void GKSSolver::timeStep()
         computeCellGradient(id);
     }
 
-    for( BoundaryCondition& BC : BoundaryConditionList )
+    for( BoundaryCondition* BC : BoundaryConditionList )
     {
-        BC.setGradientGhostCells(*this);
+        BC->setGradientGhostCells(*this);
     }
 
     #pragma omp parallel for

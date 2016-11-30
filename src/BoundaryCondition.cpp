@@ -2,34 +2,6 @@
 #include "GKSSolver.h"
 #include <sstream>
 
-BoundaryCondition::BoundaryCondition()
-{
-}
-
-BoundaryCondition::BoundaryCondition( BoundaryConditionType type,
-                                      double rho, double U, double V, double L)
-{
-    this->type = type;
-    this->value.rho = rho;
-    this->value.U = U;
-    this->value.V = V;
-    this->value.L = L;
-}
-
-BoundaryCondition::~BoundaryCondition()
-{
-}
-
-BoundaryConditionType BoundaryCondition::getType()
-{
-    return this->type;
-}
-
-PrimitiveVariable BoundaryCondition::getValue()
-{
-    return value;
-}
-
 void BoundaryCondition::addCell(idType id)
 {
     this->Cell.push_back(id);
@@ -43,82 +15,130 @@ void BoundaryCondition::addNeighborCell(idType id)
 }
 
 void BoundaryCondition::setGhostCells(GKSSolver & solver)
-{
+{    
     #pragma omp parallel for
-    for( int i = 0; i < Cell.size(); ++i )
+    for( int cell = 0; cell < Cell.size(); ++cell )
     {
-
-        PrimitiveVariable primNeighbor = solver.getPrim( NeighborCell[i] );
-        PrimitiveVariable prim;
-
-        switch ( this->type )
-        {
-            // ====================================================================
-            case wall:
-            {
-                prim.rho = primNeighbor.rho;
-                prim.U   = 2.0*this->value.U - primNeighbor.U;
-                prim.V   = 2.0*this->value.V - primNeighbor.V;
-                prim.L   = primNeighbor.L;
-
-                break;
-            }
-            // ====================================================================
-            case isothermalWall:
-            {
-                prim.rho = primNeighbor.rho * ( 2.0*this->value.L - primNeighbor.L ) / primNeighbor.L;
-                prim.U   = 2.0*this->value.U - primNeighbor.U;
-                prim.V   = 2.0*this->value.V - primNeighbor.V;
-                prim.L   = 2.0*this->value.L - primNeighbor.L;
-                
-                break;
-            }
-            // ====================================================================
-            case inlet:
-            {
-                //double U_In = 4.0 * this->value.U * solver.getCellCenter( this->NeighborCell[i] ).y * ( 1.0 - solver.getCellCenter( this->NeighborCell[i] ).y );
-                double y = solver.getCellCenter( this->NeighborCell[i] ).y;
-                //double U_In = this->value.U * ( - 4.0 * y * y  + 1.0 );
-                double U_In = 4.0 * this->value.U * y * ( 0.41 - y ) / ( 0.41 * 0.41 );
-
-                prim.rho = primNeighbor.rho * ( 2.0*this->value.L - primNeighbor.L ) / primNeighbor.L;
-                prim.U   = 2.0*U_In            - primNeighbor.U;
-                prim.V   = 2.0*this->value.V   - primNeighbor.V;
-                prim.L   = 2.0*this->value.L   - primNeighbor.L;
-
-                break;
-            }
-            // ====================================================================
-            case outlet:
-            {
-                prim.rho = primNeighbor.rho;
-                prim.U   = primNeighbor.U;
-                prim.V   = primNeighbor.V;
-                prim.L   = primNeighbor.L;
-
-                break;
-            }
-            // ====================================================================
-            case periodicGhost:
-            {
-                prim.rho = primNeighbor.rho;
-                prim.U   = primNeighbor.U;
-                prim.V   = primNeighbor.V;
-                prim.L   = primNeighbor.L;
-
-                break;
-            }
-            // ====================================================================
-        }
-        
-        solver.setData(Cell[i], prim);
+        this->setGhostCell(solver, cell);
     }
 }
 
-void BoundaryCondition::setGradientGhostCells(GKSSolver & solver)
-{
-    if(this->type != periodicGhost) return;
+// ============================================================================
 
+bcWall::bcWall(double U, double V) : U(U), V(V) {}
+
+bcIsothermalWall::bcIsothermalWall(double U, double V, double L) : U(U), V(V), L(L) {}
+
+bcPeriodicGhost::bcPeriodicGhost() {}
+
+bcInflowParabolic::bcInflowParabolic(double U, double V, double L, Vec2 p0, Vec2 p1)
+                                    : U(U), V(V), L(L), p0(p0), p1(p1) {}
+
+bcInflowUniform::bcInflowUniform(double U, double V, double L) : U(U), V(V), L(L) {}
+
+bcOutflow::bcOutflow() {}
+
+// ============================================================================
+
+void bcWall::setGhostCell(GKSSolver & solver, idType cell)
+{
+    PrimitiveVariable primNeighbor = solver.getPrim( NeighborCell[cell] );
+    PrimitiveVariable prim;
+
+    prim.rho = primNeighbor.rho;
+    prim.U   = 2.0*this->U - primNeighbor.U;
+    prim.V   = 2.0*this->V - primNeighbor.V;
+    prim.L   = primNeighbor.L;
+        
+    solver.setData(Cell[cell], prim);
+}
+
+void bcIsothermalWall::setGhostCell(GKSSolver & solver, idType cell)
+{
+    PrimitiveVariable primNeighbor = solver.getPrim( NeighborCell[cell] );
+    PrimitiveVariable prim;
+
+    prim.rho = primNeighbor.rho * ( 2.0*this->L - primNeighbor.L ) / primNeighbor.L;
+    prim.U   = 2.0*this->U - primNeighbor.U;
+    prim.V   = 2.0*this->V - primNeighbor.V;
+    prim.L   = 2.0*this->L - primNeighbor.L;
+        
+    solver.setData(Cell[cell], prim);
+}
+
+void bcPeriodicGhost::setGhostCell(GKSSolver & solver, idType cell)
+{
+    PrimitiveVariable primNeighbor = solver.getPrim( NeighborCell[cell] );
+    PrimitiveVariable prim;
+    
+    prim.rho = primNeighbor.rho;
+    prim.U   = primNeighbor.U;
+    prim.V   = primNeighbor.V;
+    prim.L   = primNeighbor.L;
+        
+    solver.setData(Cell[cell], prim);
+}
+
+void bcInflowParabolic::setGhostCell(GKSSolver & solver, idType cell)
+{
+    PrimitiveVariable primNeighbor = solver.getPrim( NeighborCell[cell] );
+    PrimitiveVariable prim;
+
+    Vec2 bcVector( this->p1.x - p0.x, this->p1.y - p0.y );
+
+    double H = sqrt( bcVector.x * bcVector.x + bcVector.y * bcVector.y );
+
+    Vec2 cellCenter = solver.getCellCenter( this->NeighborCell[cell] );
+    
+    Vec2 cellVector( cellCenter.x - this->p0.x, cellCenter.y - this->p0.y );
+
+    double z = ( cellVector.x * bcVector.x + cellVector.y * bcVector.y ) / ( H * H );
+
+    double U_Inflow = 4.0 * this->U * z * ( 1.0 - z );
+    double V_Inflow = 4.0 * this->V * z * ( 1.0 - z );
+
+    prim.rho = primNeighbor.rho * ( 2.0*this->L - primNeighbor.L ) / primNeighbor.L;
+    prim.U   = 2.0*U_Inflow - primNeighbor.U;
+    prim.V   = 2.0*V_Inflow - primNeighbor.V;
+    prim.L   = 2.0*this->L  - primNeighbor.L;
+        
+    solver.setData(Cell[cell], prim);
+}
+
+void bcInflowUniform::setGhostCell(GKSSolver & solver, idType cell)
+{
+    PrimitiveVariable primNeighbor = solver.getPrim( NeighborCell[cell] );
+    PrimitiveVariable prim;
+
+    prim.rho = primNeighbor.rho * ( 2.0*this->L - primNeighbor.L ) / primNeighbor.L;
+    prim.U   = 2.0*this->U - primNeighbor.U;
+    prim.V   = 2.0*this->V - primNeighbor.V;
+    prim.L   = 2.0*this->L - primNeighbor.L;
+        
+    solver.setData(Cell[cell], prim);
+}
+
+void bcOutflow::setGhostCell(GKSSolver & solver, idType cell)
+{
+    PrimitiveVariable primNeighbor = solver.getPrim( NeighborCell[cell] );
+    PrimitiveVariable prim;
+
+    prim.rho = primNeighbor.rho;
+    prim.U   = primNeighbor.U;
+    prim.V   = primNeighbor.V;
+    prim.L   = primNeighbor.L;
+        
+    solver.setData(Cell[cell], prim);
+}
+
+// ============================================================================
+
+void bcWall::setGradientGhostCells(GKSSolver & solver) {return;}
+
+void bcIsothermalWall::setGradientGhostCells(GKSSolver & solver) {return;}
+
+void bcPeriodicGhost::setGradientGhostCells(GKSSolver & solver)
+{
     #pragma omp parallel for
     for( int cell = 0; cell < Cell.size(); ++cell )
     {
@@ -127,14 +147,8 @@ void BoundaryCondition::setGradientGhostCells(GKSSolver & solver)
     }
 }
 
-std::string BoundaryCondition::toString()
-{
-    std::stringstream tmp;
-    if      ( this->type == wall )
-        tmp << "Wall, U = " << this->value.U << ", V = " << this->value.V;
-    else if ( this->type == isothermalWall )
-        tmp << "Isothermal Wall, U = " << this->value.U << ", V = " << this->value.V << ", lambda = " << this->value.L;
-    else if ( this->type == periodic )
-        tmp << "Periodic Boundary";
-    return tmp.str();
-}
+void bcInflowParabolic::setGradientGhostCells(GKSSolver & solver) {return;}
+
+void bcInflowUniform::setGradientGhostCells(GKSSolver & solver) {return;}
+
+void bcOutflow::setGradientGhostCells(GKSSolver & solver) {return;}

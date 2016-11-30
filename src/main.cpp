@@ -12,11 +12,7 @@
 //
 // ============================================================================
 
-#include "GKSSolverPull.h"
 #include "GKSSolverPush.h"
-#include "GKSSolverSOA.h"
-#include "GKSSolverAOS.h"
-#include "GKSMesh.h"
 #include "BoundaryCondition.h"
 #include "mshReader.h"
 #include <iostream>
@@ -86,14 +82,7 @@ int main(int argc, char* argv[])
         //                  Fluid and domain parameters
         // ========================================================================
 
-        // domain size in [m] for mesh generation
-        double H = 1.0;
-        double W = 1.0;
-
         FluidParameter fluidParam;
-
-        int    nx = 16;          // number of cells in x direction
-        int    ny = 16;         // number of cells in y direction
         double Re = 10.0;        // Reynolds number
         double u0 = 0.1;        // Velocits in the mid of the channel
         double T  = 1.0;
@@ -111,35 +100,6 @@ int main(int argc, char* argv[])
         fluidParam.vReference   = 0.0;
         fluidParam.lambdaReference = 1.0 / (2.0 * fluidParam.R * T);        // reference temperature
         fluidParam.Pr = 1.0;                                                // Prandl number 
-                                              // reference temperature [K]
-        // ========================================================================
-        //                  Definition of boundary conditions
-        // ========================================================================
-
-        GKSMesh* mesh = new GKSMesh(param, fluidParam);
-
-        // Define Boundary Conditions
-        //    -----------
-        //    |    3    |
-        //    | 0     2 |
-        //    |    1    |
-        //    -----------
-        mesh->addBoundaryCondition(periodicGhost, fluidParam.rhoReference, 0.0, 0.0, fluidParam.lambdaReference);
-        mesh->addBoundaryCondition(wall,          fluidParam.rhoReference, 0.0, 0.0, fluidParam.lambdaReference);
-        mesh->addBoundaryCondition(periodicGhost, fluidParam.rhoReference, 0.0, 0.0, fluidParam.lambdaReference);
-        mesh->addBoundaryCondition(wall,          fluidParam.rhoReference, u0 , 0.0, fluidParam.lambdaReference);
-
-        // Generate the Mesh
-        mesh->generateRectMeshGraded(compressible, W, H, nx, ny, 1.0, 1.0);
-
-        // Set initial condition
-        mesh->initMeshConstant(1.0, 0.0, 0.0, fluidParam.lambdaReference);
-        //mesh->initMeshConstant(1.0, 1.0, 0.0, lambda);
-        //mesh->initMeshParabularVelocity(1.0, u0, 0.0, lambda);
-        //mesh->initMeshStepVelocity(1.0, u0, 0.0, lambda);
-
-
-        //*/
         
         // ============================================================================================================
         // ============================================================================================================
@@ -164,22 +124,11 @@ int main(int argc, char* argv[])
         //              Run the actual simulation
         // ====================================================================
         // ====================================================================
-        //mesh->iterate();
-        // ====================================================================
-        // ====================================================================
 
-        //GKSSolver* solverPull = new GKSSolverPull(param, fluidParam);
         GKSSolver* solverPush = new GKSSolverPush(param, fluidParam);
-        //GKSSolver* solverSOA  = new GKSSolverSOA (param, fluidParam);
-        //GKSSolver* solverAOS  = new GKSSolverAOS (param, fluidParam);
-
-        //solverPull->readMeshFromMeshObject(*mesh);
-        //solverPush->readMeshFromMeshObject(*mesh);
-        //solverSOA->readMeshFromMeshObject(*mesh);
-        //solverAOS->readMeshFromMeshObject(*mesh);
 
         //if( ! solverPush->readMeshFromMshFile("msh/SquareQuadGradedPeriodicGhostIsothermalWall32.msh") )
-        if( ! solverPush->readMeshFromMshFile("msh/TurekBenchmark2G.mesh.3.msh") )
+        if( ! solverPush->readMeshFromMshFile("msh/TurekBenchmark/TurekBenchmark2G.mesh.3.msh") )
         {
             system("pause");
             return false;
@@ -261,7 +210,6 @@ int main(int argc, char* argv[])
         // ====================================================================
 
         system("pause");
-        delete mesh;
         //delete solverPull;
         //delete solverPush;
         //delete solverSOA;

@@ -19,11 +19,7 @@
 #ifndef GKSSolver_H
 #define GKSSolver_H
 
-#include "GKSMesh.h"
-#include "Cell.h"
-#include "Interface.h"
 #include "BoundaryCondition.h"
-#include "InterfaceBC.h"
 #include "Types.h"
 #include <vector>
 #include <array>
@@ -45,7 +41,7 @@ protected:
     idType numberOfCells;
     idType numberOfInterfaces;
 
-    vector<BoundaryCondition> BoundaryConditionList;
+    vector<BoundaryCondition*> BoundaryConditionList;
 
     // ========================================================================
     //              Fluid Parameters
@@ -85,10 +81,6 @@ public:
     // ========================================================================
     //              Communication methods
     // ========================================================================
-
-    virtual void readMeshFromMeshObject( const GKSMesh& origin ) = 0;
-
-    virtual void writeDataToMeshObject( const GKSMesh& target ) = 0;
 
     virtual bool readMeshFromMshFile( string filename ) = 0;
 
@@ -172,7 +164,7 @@ public:
     virtual double getCellMinDx(idType id) = 0;
     virtual array<double,3> getCellLSCoeff(idType id) = 0;
 
-    virtual BoundaryConditionType getCellBoundaryCondition(idType id) = 0;
+    virtual int getCellBoundaryCondition(idType id) = 0;
 
     virtual double getInterfaceArea(idType id) = 0;
     virtual double getInterfaceDistance(idType id) = 0;

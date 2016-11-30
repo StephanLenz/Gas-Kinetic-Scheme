@@ -9,32 +9,83 @@ using namespace std;
 
 class BoundaryCondition
 {
-private:
-    BoundaryConditionType type;
-    PrimitiveVariable value;
-
+protected:
     vector<idType> Cell;
     vector<idType> NeighborCell;
 
 public:
-    BoundaryCondition();
-    BoundaryCondition(  BoundaryConditionType type,
-                        double rho, double U, double V, double T);
-    ~BoundaryCondition();
-
-    BoundaryConditionType getType();
-
-    PrimitiveVariable getValue();
-
     void addCell(idType id);
-
     void addNeighborCell(idType id);
 
-    void setGhostCells(GKSSolver& solver);
+    void setGhostCells( GKSSolver& solver );
 
-    void setGradientGhostCells(GKSSolver& solver);
+    virtual void setGhostCell(GKSSolver& solver, idType cell) = 0;
+    virtual void setGradientGhostCells(GKSSolver& solver) = 0;
+};
 
-    string toString();
+class bcWall : public BoundaryCondition
+{
+private:
+    double U;
+    double V;
+public:
+    bcWall( double U, double V );
+    virtual void setGhostCell(GKSSolver& solver, idType cell);
+    virtual void setGradientGhostCells(GKSSolver& solver);
+};
+
+class bcIsothermalWall : public BoundaryCondition
+{
+private:
+    double U;
+    double V;
+    double L;
+public:
+    bcIsothermalWall( double U, double V, double L );
+    virtual void setGhostCell(GKSSolver& solver, idType cell);
+    virtual void setGradientGhostCells(GKSSolver& solver);
+};
+
+class bcPeriodicGhost : public BoundaryCondition
+{
+public:
+    bcPeriodicGhost( );
+    virtual void setGhostCell(GKSSolver& solver, idType cell);
+    virtual void setGradientGhostCells(GKSSolver& solver);
+};
+
+class bcInflowParabolic : public BoundaryCondition
+{
+private:
+    double U;
+    double V;
+    double L;
+    Vec2 p0;
+    Vec2 p1;
+public:
+    bcInflowParabolic( double U, double V, double L, Vec2 p0, Vec2 p1 );
+    virtual void setGhostCell(GKSSolver& solver, idType cell);
+    virtual void setGradientGhostCells(GKSSolver& solver);
+};
+
+class bcInflowUniform : public BoundaryCondition
+{
+private:
+    double U;
+    double V;
+    double L;
+public:
+    bcInflowUniform( double U, double V, double L );
+    virtual void setGhostCell(GKSSolver& solver, idType cell);
+    virtual void setGradientGhostCells(GKSSolver& solver);
+};
+
+class bcOutflow : public BoundaryCondition
+{
+public:
+    bcOutflow( );
+    virtual void setGhostCell(GKSSolver& solver, idType cell);
+    virtual void setGradientGhostCells(GKSSolver& solver);
 };
 
 #endif
