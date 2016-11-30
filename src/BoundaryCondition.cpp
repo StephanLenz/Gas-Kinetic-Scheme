@@ -85,11 +85,6 @@ void BoundaryCondition::setGhostCells(GKSSolver & solver)
                 prim.U   = 2.0*U_In            - primNeighbor.U;
                 prim.V   = 2.0*this->value.V   - primNeighbor.V;
                 prim.L   = 2.0*this->value.L   - primNeighbor.L;
-                
-                //prim.rho = 2.0*this->value.rho - primNeighbor.rho;
-                //prim.U   = 2.0*U_In            - primNeighbor.U;
-                //prim.V   = 2.0*this->value.V   - primNeighbor.V;
-                //prim.L   = primNeighbor.L * ( 2.0*this->value.rho - primNeighbor.rho ) / primNeighbor.rho;
 
                 break;
             }
