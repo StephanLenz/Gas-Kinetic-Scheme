@@ -119,6 +119,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\BoundaryCondition.cpp" />
+    <ClCompile Include="src\FaceAnalyzer.cpp" />
     <ClCompile Include="src\GKSSolver.cpp" />
     <ClCompile Include="src\GKSSolverPush.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -126,6 +127,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\BoundaryCondition.h" />
+    <ClInclude Include="src\FaceAnalyzer.h" />
     <ClInclude Include="src\GKSSolver.h" />
     <ClInclude Include="src\GKSSolverPush.h" />
     <ClInclude Include="src\mshReader.h" />

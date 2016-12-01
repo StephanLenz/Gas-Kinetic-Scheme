@@ -17,6 +17,8 @@ mshReader::~mshReader()
 bool mshReader::readProblem(string problemName)
 {
     if( ! this->readBoundaryConditions( problemName + string( ".gksbc" ) ) ) return false;
+    
+    if( ! this->readFaceAnalyzers( problemName + string( ".gksanalyze" ) ) ) return false;
 
     if( ! this->readMsh( problemName + string( ".msh" ) ) ) return false;
 
@@ -96,6 +98,50 @@ bool mshReader::readBoundaryConditions(string filename)
     return true;
 }
 
+bool mshReader::readFaceAnalyzers(string filename)
+{
+    cout << "Start reading: " << filename << endl;
+    ifstream file;
+    file.open(filename);
+
+    if ( !file.is_open() ) {
+        cout << " File cound not be opened.\n\nERROR!\n\n\n";
+        return false;
+    }
+
+    string buffer;
+
+    while( getline(file, buffer) )
+    {
+        stringstream bufferStream(buffer);
+        
+        string name, type;
+        bufferStream >> name;
+
+        if( name.compare("#") == 0 ) continue;
+
+        bufferStream >> type;
+
+        if     ( type.compare("dragLift") == 0 )
+        {
+            this->FaceAnalyzers.push_back( new DragAndLiftCalculator( ) );
+        }
+        else
+        {
+            cout << "Error: Invalid FaceAnalyzer " << type << endl;
+            return false;
+        }
+
+        FaceAnalyzerNames.push_back(name);
+    }
+
+    file.close();
+
+    cout << "Complete FaceAnalyzers read!" << endl;
+
+    return true;
+}
+
 bool mshReader::readMsh(string filename)
 {
     cout << "Start reading: " << filename << endl;
@@ -116,6 +162,8 @@ bool mshReader::readMsh(string filename)
     if( ! this->readPhysicalNames(file) ) return false;
 
     this->matchPhysicalNamesWithBCs();
+
+    this->matchPhysicalNamesWithFaceAnalyzers();
 
     if( ! this->readNodes(file) )         return false;
 
@@ -286,6 +334,9 @@ bool mshReader::newFace(string buffer)
     this->Face2CellAdd.push_back(tmpFace2CellAdd);
     
     this->Face2PhysicalName.push_back( findIndex( this->PhysicalNameIDs, PhysicalNameID ) );
+
+    if( this->PhysicalNames2FaceAnalyzers[ findIndex( this->PhysicalNameIDs, PhysicalNameID ) ] != -1 )
+        this->FaceAnalyzers[ this->PhysicalNames2FaceAnalyzers[ findIndex( this->PhysicalNameIDs, PhysicalNameID ) ] ]->addFace( this->Face2Node.size() );
 
     return true;
 }
@@ -617,13 +668,32 @@ void mshReader::createGhostCells()
 
 bool mshReader::matchPhysicalNamesWithBCs()
 {
-    for( int pn = 0; pn < this->PhysicalNames.size(); ++ pn )
+    for( int pn = 0; pn < this->PhysicalNames.size(); ++pn )
     {
-        for( int bc = 0; bc < this->BCs.size(); ++ bc )
+        for( int bc = 0; bc < this->BCs.size(); ++bc )
         {
             if( this->BCNames[bc] == this->PhysicalNames[pn] )
             {
                 this->PhysicalNames2BCs.push_back( bc );
+            }
+        }
+    }
+
+    return true;
+}
+
+bool mshReader::matchPhysicalNamesWithFaceAnalyzers()
+{
+    this->PhysicalNames2FaceAnalyzers.resize( this->PhysicalNames.size() );
+    for( int pn = 0; pn < this->PhysicalNames.size(); ++pn )
+    {
+        this->PhysicalNames2FaceAnalyzers[pn] = -1;
+        for( int fa = 0; fa < this->FaceAnalyzers.size(); ++fa )
+        {
+            if( this->FaceAnalyzerNames[fa] == this->PhysicalNames[pn] )
+            {
+                this->PhysicalNames2FaceAnalyzers[pn] = fa;
+                break;
             }
         }
     }

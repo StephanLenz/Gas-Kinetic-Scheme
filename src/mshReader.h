@@ -1,6 +1,7 @@
 
 #include "Types.h"
 #include "BoundaryCondition.h"
+#include "FaceAnalyzer.h"
 #include <vector>
 #include <array>
 #include <fstream>
@@ -41,6 +42,10 @@ public:
     vector< idType > PhysicalNameIDs;
     vector< string > PhysicalNames;
     vector< idType > PhysicalNames2BCs;
+    vector< idType > PhysicalNames2FaceAnalyzers;
+
+    vector< FaceAnalyzer* > FaceAnalyzers;
+    vector< string >        FaceAnalyzerNames;
 
 public:
     mshReader();
@@ -49,6 +54,8 @@ public:
     bool readProblem( string problemName );
 
     bool readBoundaryConditions( string filename );
+
+    bool readFaceAnalyzers( string filename );
 
     bool readMsh(string filename);
 
@@ -79,6 +86,8 @@ public:
     void createGhostCells();
 
     bool matchPhysicalNamesWithBCs();
+
+    bool matchPhysicalNamesWithFaceAnalyzers();
 
     bool NodeCheck();
 

@@ -20,6 +20,7 @@
 #define GKSSolver_H
 
 #include "BoundaryCondition.h"
+#include "FaceAnalyzer.h"
 #include "Types.h"
 #include <vector>
 #include <array>
@@ -42,6 +43,7 @@ protected:
     idType numberOfInterfaces;
 
     vector<BoundaryCondition*> BoundaryConditionList;
+    vector<FaceAnalyzer*> FaceAnalyzerList;
 
     // ========================================================================
     //              Fluid Parameters

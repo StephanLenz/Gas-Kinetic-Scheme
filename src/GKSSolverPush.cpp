@@ -74,6 +74,7 @@ bool GKSSolverPush::readProblem(string filename)
     this->InterfaceAdd2Cell.resize( numberOfInterfaces );
 
     this->BoundaryConditionList.resize( reader.BCs.size() );
+    this->FaceAnalyzerList.resize( reader.FaceAnalyzers.size() );
 
     // ========================================================================
     //              Read BC data
@@ -81,6 +82,14 @@ bool GKSSolverPush::readProblem(string filename)
     for( int currentBC = 0; currentBC < reader.BCs.size(); ++currentBC )
     {
         this->BoundaryConditionList[currentBC] = reader.BCs[currentBC];
+    }
+
+    // ========================================================================
+    //              Read FA data
+    // ========================================================================
+    for( int currentFA = 0; currentFA < reader.BCs.size(); ++currentFA )
+    {
+        this->FaceAnalyzerList[currentFA] = reader.FaceAnalyzers[currentFA];
     }
 
     // ========================================================================
