@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
         fluidParam.Pr = 1.0;
 
         fluidParam.rhoReference = 1.0;
-        fluidParam.uReference   = 0.3;
+        fluidParam.uReference   = 1.5;
         fluidParam.vReference   = 0.0;
         fluidParam.lambdaReference = 1.0 / (2.0 * fluidParam.R * 1.0);
 

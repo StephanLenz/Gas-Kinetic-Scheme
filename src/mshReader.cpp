@@ -124,7 +124,10 @@ bool mshReader::readFaceAnalyzers(string filename)
 
         if     ( type.compare("dragLift") == 0 )
         {
-            this->FaceAnalyzers.push_back( new DragAndLiftCalculator( ) );
+            double U;
+            double D;
+            bufferStream >> U >> D;
+            this->FaceAnalyzers.push_back( new DragAndLiftCalculator( U, D ) );
         }
         else
         {
@@ -336,7 +339,7 @@ bool mshReader::newFace(string buffer)
     this->Face2PhysicalName.push_back( findIndex( this->PhysicalNameIDs, PhysicalNameID ) );
 
     if( this->PhysicalNames2FaceAnalyzers[ findIndex( this->PhysicalNameIDs, PhysicalNameID ) ] != -1 )
-        this->FaceAnalyzers[ this->PhysicalNames2FaceAnalyzers[ findIndex( this->PhysicalNameIDs, PhysicalNameID ) ] ]->addFace( this->Face2Node.size() );
+        this->FaceAnalyzers[ this->PhysicalNames2FaceAnalyzers[ findIndex( this->PhysicalNameIDs, PhysicalNameID ) ] ]->addFace( this->Face2Node.size()-1 );
 
     return true;
 }

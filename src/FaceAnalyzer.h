@@ -16,6 +16,7 @@ public:
     void addFace(idType id);
     virtual void analyze( GKSSolver& solver ) = 0;
     virtual void print( ) = 0;
+    virtual void write( string filename ) = 0;
 };
 
 class DragAndLiftCalculator : public FaceAnalyzer
@@ -23,10 +24,15 @@ class DragAndLiftCalculator : public FaceAnalyzer
 private:
     double drag;
     double lift;
+    double U;
+    double D;
 public:
-    DragAndLiftCalculator( );
+    DragAndLiftCalculator( double U, double D );
     virtual void analyze( GKSSolver& solver );
     virtual void print();
+    virtual void write( string filename, double t );
+private:
+    ConservedVariable computeTimeAveragedFlux( GKSSolver& solver, idType face );
 };
 
 #endif

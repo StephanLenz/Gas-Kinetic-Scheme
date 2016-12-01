@@ -1,2 +1,2 @@
-#        type    
-cylinder dragLift
+#        type     U   D
+cylinder dragLift 1.0 0.1

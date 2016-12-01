@@ -47,6 +47,8 @@ void GKSSolver::iterate()
 
     this->writeVTK( string("out/Solver_") + to_string(this->iter) + string(".vtk") );
 
+    ofstream dragLiftFile; dragLiftFile.open( "out/DragLift.dat", fstream::trunc ); dragLiftFile.close();
+
     chrono::high_resolution_clock::time_point startTime = chrono::high_resolution_clock::now();
 
     // ========================================================================
@@ -82,6 +84,13 @@ void GKSSolver::iterate()
             cout << "r_rhoV = " << residual.rhoV << "\t ";
             cout << "r_rhoE = " << residual.rhoE << "\t ";
             cout << endl;
+
+            for( FaceAnalyzer* currentFaceAnalyzer : this->FaceAnalyzerList )
+            {
+                currentFaceAnalyzer->analyze(*this);
+                currentFaceAnalyzer->print();
+                currentFaceAnalyzer->write( "out/DragLift.dat", this->time );
+            }
 
             this->convergenceHistory.push_back(residual);
 
@@ -997,6 +1006,16 @@ PrimitiveVariable GKSSolver::getPrim(idType id)
     return cons2prim( this->getCellData(id) );
 }
 
+double GKSSolver::getDt()
+{
+    return this->dt;
+}
+
+FluidParameter GKSSolver::getFluidParam()
+{
+    return this->fluidParam;
+}
+
 void GKSSolver::writeVTK(string filename)
 {
     cout << "Wrinting file " << filename << " ... ";
@@ -1127,7 +1146,13 @@ void GKSSolver::writeInterfaceVTK(string filename)
     }
 
     file << "POINT_DATA " << this->numberOfInterfaces << endl;
-    file << "FIELD Lable 1\n";
+    file << "FIELD Lable 2\n";
+
+    file << "ID 1 " << this->numberOfInterfaces << " double\n";
+    for ( int face = 0; face < this->numberOfInterfaces; ++face )
+    {
+        file << face << endl;
+    }
 
     file << "Area 1 " << this->numberOfInterfaces << " double\n";
     for ( int face = 0; face < this->numberOfInterfaces; ++face )

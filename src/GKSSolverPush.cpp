@@ -87,7 +87,7 @@ bool GKSSolverPush::readProblem(string filename)
     // ========================================================================
     //              Read FA data
     // ========================================================================
-    for( int currentFA = 0; currentFA < reader.BCs.size(); ++currentFA )
+    for( int currentFA = 0; currentFA < reader.FaceAnalyzers.size(); ++currentFA )
     {
         this->FaceAnalyzerList[currentFA] = reader.FaceAnalyzers[currentFA];
     }

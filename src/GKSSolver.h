@@ -189,6 +189,9 @@ public:
 
     virtual PrimitiveVariable  getPrim(idType id);
 
+    double getDt();
+    FluidParameter getFluidParam();
+
     void writeVTK( string filename );
 
     void writeInterfaceVTK( string filename );
