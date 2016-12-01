@@ -1,0 +1,4 @@
+#        type           
+periodic periodicGhost
+#        type            U    V    L
+wall     isothermalWall  0.0  0.0  0.0025

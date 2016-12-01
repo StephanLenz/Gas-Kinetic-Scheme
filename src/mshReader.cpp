@@ -553,7 +553,7 @@ idType mshReader::findPeriodicInterface(idType face)
             double projection = fabs( this->FaceNormal[face].x * connection.x + this->FaceNormal[face].y * connection.y );
             double distance = sqrt( connection.x * connection.x + connection.y * connection.y );
 
-            if( fabs( projection - distance ) < 1.0e-10 )
+            if( fabs( projection - distance ) < 1.0e-6 )
             {
                 return right;
             }

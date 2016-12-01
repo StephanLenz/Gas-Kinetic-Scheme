@@ -85,18 +85,20 @@ int main(int argc, char* argv[])
         FluidParameter fluidParam;
         param.L = 1;          // reference length for Re number
 
-        fluidParam.K = 1.0;                                                   // internal degrees of freedom
-        fluidParam.nu = 0.001;//(u0*param.L)/Re;                                    // kinematic viskosity
-        fluidParam.R = 200.0;                                               // specific gas constant
-        fluidParam.Force.x = 0.0;//(u0*8.0*fluidParam.nu) / (param.L*param.L);    // acceleration in x direction [m/s^2]
-        fluidParam.Force.y = 0.0;                                           // acceleration in y direction [m/s^2]
-        fluidParam.BoussinesqForce.x = 0.0;                                 // acceleration only allpied to density variations [m/s^2]
-        fluidParam.BoussinesqForce.y = 0.0;                                 // acceleration only allpied to density variations [m/s^2]
-        fluidParam.rhoReference = 1.0;                                      // reference density
+        fluidParam.K = 1.0;                                                   
+        fluidParam.nu = 0.001;//(u0*param.L)/Re;                              
+        fluidParam.R = 200.0;
+        fluidParam.Pr = 1.0;
+
+        fluidParam.rhoReference = 1.0;
         fluidParam.uReference   = 0.3;
         fluidParam.vReference   = 0.0;
-        fluidParam.lambdaReference = 1.0 / (2.0 * fluidParam.R * 1.0);        // reference temperature
-        fluidParam.Pr = 1.0;                                                // Prandl number 
+        fluidParam.lambdaReference = 1.0 / (2.0 * fluidParam.R * 1.0);
+
+        fluidParam.Force.x = 0.1;//(u0*8.0*fluidParam.nu) / (param.L*param.L);
+        fluidParam.Force.y = 0.0;
+        fluidParam.BoussinesqForce.x = 0.0;
+        fluidParam.BoussinesqForce.y = 0.0;
         
         // ============================================================================================================
         // ============================================================================================================
@@ -111,7 +113,9 @@ int main(int argc, char* argv[])
 
         GKSSolver* solverPush = new GKSSolverPush(param, fluidParam);
 
-        if( ! solverPush->readProblem("msh/TurekBenchmark/TurekBenchmark.mesh.4") )
+        //if( ! solverPush->readProblem("msh/TurekBenchmark/TurekBenchmark.mesh.4") )
+        if( ! solverPush->readProblem("msh/TurekPeriodic/TurekPeriodic.mesh") )
+        //if( ! solverPush->readProblem("msh/Channel/Channel_64x32") )
         {
             system("pause");
             return false;

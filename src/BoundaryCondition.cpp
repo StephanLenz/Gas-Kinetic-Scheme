@@ -48,10 +48,14 @@ void bcPeriodicGhost::findNeighborCells(mshReader & reader)
         idType face = reader.Cell2Face[ this->Cell[cell] ][0];
         idType periodicFace = reader.findPeriodicInterface( face );
 
+        idType NeighborCell;
+
         if( reader.Cell2BC[ reader.Face2Cell[periodicFace][0] ] == -1)
-            this->NeighborCell[cell] = reader.Face2Cell[periodicFace][0];
+            NeighborCell = reader.Face2Cell[periodicFace][0];
         else
-            this->NeighborCell[cell] = reader.Face2Cell[periodicFace][1];
+            NeighborCell = reader.Face2Cell[periodicFace][1];
+
+        this->NeighborCell[cell] = NeighborCell;
     }
 }
 
