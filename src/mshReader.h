@@ -1,5 +1,6 @@
 
 #include "Types.h"
+#include "BoundaryCondition.h"
 #include <vector>
 #include <array>
 #include <fstream>
@@ -11,17 +12,7 @@ using namespace std;
 
 class mshReader
 {
-    //struct Vec2 { 
-    //    double x; 
-    //    double y; 
-    //    Vec2(double x, double y):x(x),y(y){} 
-    //    Vec2():x(0.0),y(0.0){}
-    //};
-
-    //enum BCtype { periodicLeft, periodicRight, wall};
-
 public:
-
     vector<Vec2> Nodes;
     
     vector< CellType >      Cell2Type;
@@ -31,7 +22,7 @@ public:
                             
     vector< array<idType,2> >  Face2Cell;
     vector< array<idType,2> >  Face2Node;
-    vector< idType >           Face2BC;
+    vector< idType >           Face2PhysicalName;
     vector< array<bool,2> > Face2CellAdd;
 
     vector<Vec2>   CellCenter;
@@ -44,12 +35,20 @@ public:
     vector<double> FaceDistance;
     vector<double> FaceArea;
 
-    vector< idType >    BCIDs;
-    vector< BoundaryConditionType > BCs;
+    vector< BoundaryCondition* > BCs;
+    vector< string > BCNames;
+
+    vector< idType > PhysicalNameIDs;
+    vector< string > PhysicalNames;
+    vector< idType > PhysicalNames2BCs;
 
 public:
     mshReader();
     ~mshReader();
+
+    bool readProblem( string problemName );
+
+    bool readBoundaryConditions( string filename );
 
     bool readMsh(string filename);
 
@@ -75,11 +74,11 @@ public:
 
     void computeCellMinDx();
 
-    bool findPeriodicCells();
-
     idType findPeriodicInterface( idType face );
 
     void createGhostCells();
+
+    bool matchPhysicalNamesWithBCs();
 
     bool NodeCheck();
 

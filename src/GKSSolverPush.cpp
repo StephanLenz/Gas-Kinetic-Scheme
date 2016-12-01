@@ -25,10 +25,11 @@ GKSSolverPush::~GKSSolverPush()
 {
 }
 
-bool GKSSolverPush::readMeshFromMshFile(string filename)
+bool GKSSolverPush::readProblem(string filename)
 {
     mshReader reader;
-    if( ! reader.readMsh(filename) ) return false;
+
+    if( ! reader.readProblem(filename) ) return false;
     
     this->numberOfNodes        = reader.Nodes.size();
 
@@ -72,46 +73,14 @@ bool GKSSolverPush::readMeshFromMshFile(string filename)
 
     this->InterfaceAdd2Cell.resize( numberOfInterfaces );
 
+    this->BoundaryConditionList.resize( reader.BCs.size() );
+
     // ========================================================================
     //              Read BC data
     // ========================================================================
     for( int currentBC = 0; currentBC < reader.BCs.size(); ++currentBC )
     {
-        if     (reader.BCs[currentBC] == wall)
-            this->BoundaryConditionList.push_back( new bcWall( 0.0, 0.0) );
-        else if(reader.BCs[currentBC] == isothermalWall)
-            this->BoundaryConditionList.push_back( new bcIsothermalWall( 0.0, 0.0, this->fluidParam.lambdaReference ) );
-        else if(reader.BCs[currentBC] == periodicGhost)
-            this->BoundaryConditionList.push_back( new bcPeriodicGhost( ) );
-        else if(reader.BCs[currentBC] == outlet)
-            this->BoundaryConditionList.push_back( new bcOutflow( ) );
-        else if(reader.BCs[currentBC] == inlet)
-            this->BoundaryConditionList.push_back( new bcInflowParabolic( this->fluidParam.uReference, this->fluidParam.vReference, this->fluidParam.lambdaReference, Vec2(0.0, 0.0), Vec2(0.0, 0.41) ) );
-
-        for(idType cell = 0; cell < reader.Cell2Node.size(); ++cell)
-        {
-            if( currentBC == reader.Cell2BC[cell] )
-            {
-                this->BoundaryConditionList.back()->addCell( cell );
-
-                idType NeighborCell;
-
-                if( reader.BCs[ currentBC ] == periodicGhost )
-                {
-                    idType periodicFace = reader.findPeriodicInterface( reader.Cell2Face[cell][0] );
-                    if( reader.Cell2BC[ reader.Face2Cell[periodicFace][0] ] == -1)
-                        NeighborCell = reader.Face2Cell[periodicFace][0];
-                    else
-                        NeighborCell = reader.Face2Cell[periodicFace][1];
-                }
-                else if( reader.Face2Cell[ reader.Cell2Face[cell][0] ][0] != cell )
-                    NeighborCell = reader.Face2Cell[ reader.Cell2Face[cell][0] ][0];
-                else
-                    NeighborCell = reader.Face2Cell[ reader.Cell2Face[cell][0] ][1];
-
-                this->BoundaryConditionList.back()->addNeighborCell( NeighborCell );
-            }
-        }
+        this->BoundaryConditionList[currentBC] = reader.BCs[currentBC];
     }
 
     // ========================================================================

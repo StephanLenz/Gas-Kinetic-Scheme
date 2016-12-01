@@ -1,5 +1,6 @@
 #include "BoundaryCondition.h"
 #include "GKSSolver.h"
+#include "mshReader.h"
 #include <sstream>
 
 void BoundaryCondition::addCell(idType id)
@@ -8,10 +9,18 @@ void BoundaryCondition::addCell(idType id)
     this->Cell.shrink_to_fit();
 }
 
-void BoundaryCondition::addNeighborCell(idType id)
+void BoundaryCondition::findNeighborCells(mshReader& reader)
 {
-    this->NeighborCell.push_back(id);
-    this->NeighborCell.shrink_to_fit();
+    this->NeighborCell.resize( this->Cell.size() );
+    for( int cell = 0; cell < this->Cell.size(); ++cell )
+    {
+        idType face = reader.Cell2Face[ this->Cell[cell] ][0];
+
+        if( reader.Cell2BC[ reader.Face2Cell[ face ][0] ] == -1 )
+            this->NeighborCell[cell] = reader.Face2Cell[ face ][0];
+        else
+            this->NeighborCell[cell] = reader.Face2Cell[ face ][1];
+    }
 }
 
 void BoundaryCondition::setGhostCells(GKSSolver & solver)
@@ -30,6 +39,21 @@ bcWall::bcWall(double U, double V) : U(U), V(V) {}
 bcIsothermalWall::bcIsothermalWall(double U, double V, double L) : U(U), V(V), L(L) {}
 
 bcPeriodicGhost::bcPeriodicGhost() {}
+
+void bcPeriodicGhost::findNeighborCells(mshReader & reader)
+{
+    this->NeighborCell.resize( this->Cell.size() );
+    for( int cell = 0; cell < this->Cell.size(); ++cell )
+    {
+        idType face = reader.Cell2Face[ this->Cell[cell] ][0];
+        idType periodicFace = reader.findPeriodicInterface( face );
+
+        if( reader.Cell2BC[ reader.Face2Cell[periodicFace][0] ] == -1)
+            this->NeighborCell[cell] = reader.Face2Cell[periodicFace][0];
+        else
+            this->NeighborCell[cell] = reader.Face2Cell[periodicFace][1];
+    }
+}
 
 bcInflowParabolic::bcInflowParabolic(double U, double V, double L, Vec2 p0, Vec2 p1)
                                     : U(U), V(V), L(L), p0(p0), p1(p1) {}

@@ -82,7 +82,7 @@ public:
     //              Communication methods
     // ========================================================================
 
-    virtual bool readMeshFromMshFile( string filename ) = 0;
+    virtual bool readProblem( string filename ) = 0;
 
     // ========================================================================
     //              Simulation Control

@@ -1,4 +1,5 @@
 #include "Types.h"
+class mshReader;
 class GKSSolver;
 #include <string>
 #include <vector>
@@ -15,7 +16,7 @@ protected:
 
 public:
     void addCell(idType id);
-    void addNeighborCell(idType id);
+    virtual void findNeighborCells( mshReader& reader );
 
     void setGhostCells( GKSSolver& solver );
 
@@ -50,6 +51,7 @@ class bcPeriodicGhost : public BoundaryCondition
 {
 public:
     bcPeriodicGhost( );
+    virtual void findNeighborCells( mshReader& reader );
     virtual void setGhostCell(GKSSolver& solver, idType cell);
     virtual void setGradientGhostCells(GKSSolver& solver);
 };

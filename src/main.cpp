@@ -83,9 +83,6 @@ int main(int argc, char* argv[])
         // ========================================================================
 
         FluidParameter fluidParam;
-        double Re = 10.0;        // Reynolds number
-        double u0 = 0.1;        // Velocits in the mid of the channel
-        double T  = 1.0;
         param.L = 1;          // reference length for Re number
 
         fluidParam.K = 1.0;                                                   // internal degrees of freedom
@@ -96,9 +93,9 @@ int main(int argc, char* argv[])
         fluidParam.BoussinesqForce.x = 0.0;                                 // acceleration only allpied to density variations [m/s^2]
         fluidParam.BoussinesqForce.y = 0.0;                                 // acceleration only allpied to density variations [m/s^2]
         fluidParam.rhoReference = 1.0;                                      // reference density
-        fluidParam.uReference   = 1.5;
+        fluidParam.uReference   = 0.3;
         fluidParam.vReference   = 0.0;
-        fluidParam.lambdaReference = 1.0 / (2.0 * fluidParam.R * T);        // reference temperature
+        fluidParam.lambdaReference = 1.0 / (2.0 * fluidParam.R * 1.0);        // reference temperature
         fluidParam.Pr = 1.0;                                                // Prandl number 
         
         // ============================================================================================================
@@ -111,24 +108,10 @@ int main(int argc, char* argv[])
         // ============================================================================================================
         // ============================================================================================================
 
-        //cout << mesh->toString();
-
-        //mesh->writeMeshAsText("out/Mesh.txt");
-
-        //mesh->writeVTKFile("out/InitialState.vtk");
-        //mesh->writeVTKFileFlux("out/InitialStateFlux.vtk");
-        //mesh->writeGambitNeutralFile("out/SineDistortedMesh.neu");
-
-        // ====================================================================
-        // ====================================================================
-        //              Run the actual simulation
-        // ====================================================================
-        // ====================================================================
 
         GKSSolver* solverPush = new GKSSolverPush(param, fluidParam);
 
-        //if( ! solverPush->readMeshFromMshFile("msh/SquareQuadGradedPeriodicGhostIsothermalWall32.msh") )
-        if( ! solverPush->readMeshFromMshFile("msh/TurekBenchmark/TurekBenchmark2G.mesh.3.msh") )
+        if( ! solverPush->readProblem("msh/TurekBenchmark/TurekBenchmark.mesh.4") )
         {
             system("pause");
             return false;
@@ -137,82 +120,9 @@ int main(int argc, char* argv[])
         solverPush->writeVTK("out/Mesh.vtk");
         solverPush->writeInterfaceVTK("out/Connectivity.vtk");
 
-        //mesh->iterate();
-
-        //solverPull->iterate();
         solverPush->iterate();
-        //solverSOA->iterate();
-        //solverAOS->iterate();
-
-        //solverPull->writeDataToMeshObject(*mesh);
-        //mesh->writeVTKFile( "out/solverPull.vtk" );
-
-        //solverPush->writeDataToMeshObject(*mesh);
-        //mesh->writeVTKFile( "out/solverPush.vtk" );
-        //
-        //solverSOA->writeDataToMeshObject(*mesh);
-        //mesh->writeVTKFile( "out/solverSOA.vtk" );
-        //
-        //solverAOS->writeDataToMeshObject(*mesh);
-        //mesh->writeVTKFile( "out/solverAOS.vtk" );
-
-        // ====================================================================
-        //              Output several files
-        // ====================================================================
-
-
-        //mesh->writeTimeSteps("out/timeSteps.dat");
-        //mesh->writeTime("out/time.dat");
-        //mesh->writeResultFields("out/ResultFields.dat");
-        //mesh->writeOverviewFile("out/OverviewFile.dat");
-        //mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
-
-        // ========== Poiseuille Convergence Study ============================
-        //ostringstream filename;
-        //filename << "out/" << ny;
-        //mesh->writeVelocityProfile(            ( filename.str() + "/VelocityProfile.dat" )    , 0.25);
-        //mesh->writeResultFields(               ( filename.str() + "/ResultFields.dat" )            );
-        //mesh->writeConvergenceHistory(         ( filename.str() + "/ConvergenceHistory.dat" )      );
-        //mesh->writeOverviewFile(               ( filename.str() + "/OverviewFile.dat" )            );
-        //mesh->writeVTKFile(                    ( filename.str() + "/ResultFields.vtk" )            );
-        // ====================================================================
-
-        // ========== Thermal Couette Convergence Study =======================
-        //ostringstream filename;
-        //filename << "out/ConvergenceStudyThermalCouette/" << ny;
-        //mesh->writeTemperatureProfile(         ( filename.str() + "/TemperatureProfile.dat" )       , 0.5);
-        //mesh->writeOverviewFile(               ( filename.str() + "/OverviewFile.dat" )                  );
-        //mesh->writeVTKFile(                    ( filename.str() + "/ResultFields.vtk" )                  );
-        // ====================================================================
-        
-        // ====================================================================
-        //ostringstream filename;
-        //filename << "out/Ra1e" << i + 3;
-        //mesh->writeOverviewFile(  ( filename.str() + "/OverviewFile.dat" )     );
-        //mesh->writeTimeSteps(     ( filename.str() + "/TimeSteps.dat"    )     );
-        //mesh->writeVTKFile(       ( filename.str() + "/ResultFields.vtk" )     );
-        //mesh->writeVelocityU(     ( filename.str() + "/VelocityU.dat" )        );
-        //mesh->writeVelocityV(     ( filename.str() + "/VelocityV.dat" )        );
-        // ====================================================================
-        
-        // ====================================================================
-        //mesh->writeResultFields("out/ResultFields.dat");
-        //mesh->writeOverviewFile("out/OverviewFile.dat");
-        //mesh->writeConvergenceHistory("out/ConvergenceHistory.dat");
-        ////mesh->writePressureGradientProfile("out/PressureGradientProfile.dat", 0.5);
-        ////mesh->writeVelocityProfile("out/VelocityProfile.dat", 0.5);
-        //mesh->writeTemperatureProfile("out/TemperatureProfile.dat", 0.5);
-        //mesh->writeTimeSteps("out/TimeSteps.dat");
-        ////mesh->writeVelocityU("out/VelocityU.dat");
-        ////mesh->writeVelocityV("out/VelocityV.dat");
-        ////mesh->writeTemperature("out/Temperature.dat");
-        ////mesh->writeDensity("out/Density.dat");
-        // ====================================================================
 
         system("pause");
-        //delete solverPull;
-        //delete solverPush;
-        //delete solverSOA;
-        //delete solverAOS;
+        delete solverPush;
     }
 }

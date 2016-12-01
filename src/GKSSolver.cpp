@@ -1042,7 +1042,12 @@ void GKSSolver::writeVTK(string filename)
     }
     
     file << "CELL_DATA " << this->numberOfCells << endl;
-    file << "FIELD Lable " << 7 << "\n";
+    file << "FIELD Lable " << 8 << "\n";
+    file << "CellID 1 " << numberOfCells << " int\n";
+    for (int cell = 0; cell < this->numberOfCells; ++cell)
+    {
+        file << cell << endl;
+    }
     file << "rho 1 " << numberOfCells << " double\n";
     for (int cell = 0; cell < this->numberOfCells; ++cell)
     {

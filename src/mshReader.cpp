@@ -14,6 +14,88 @@ mshReader::~mshReader()
 {
 }
 
+bool mshReader::readProblem(string problemName)
+{
+    if( ! this->readBoundaryConditions( problemName + string( ".gksbc" ) ) ) return false;
+
+    if( ! this->readMsh( problemName + string( ".msh" ) ) ) return false;
+
+    return true;
+}
+
+bool mshReader::readBoundaryConditions(string filename)
+{
+    cout << "Start reading: " << filename << endl;
+    ifstream file;
+    file.open(filename);
+
+    if ( !file.is_open() ) {
+        cout << " File cound not be opened.\n\nERROR!\n\n\n";
+        return false;
+    }
+
+    string buffer;
+
+    while( getline(file, buffer) )
+    {
+        stringstream bufferStream(buffer);
+        
+        string name, type;
+        bufferStream >> name;
+
+        if( name.compare("#") == 0 ) continue;
+
+        bufferStream >> type;
+
+        if     ( type.compare("wall") == 0 )
+        {
+            double U, V;
+            bufferStream >> U >> V;
+            this->BCs.push_back( new bcWall( U, V ) );
+        }
+        else if( type.compare("isothermalWall") == 0 )
+        {
+            double U, V, T;
+            bufferStream >> U >> V >> T;
+            this->BCs.push_back( new bcIsothermalWall( U, V, T ) );
+        }
+        else if( type.compare("periodicGhost") == 0 )
+        {
+            this->BCs.push_back( new bcPeriodicGhost( ) );
+        }
+        else if( type.compare("inflowParabolic") == 0 )
+        {
+            double U, V, T;
+            Vec2 p0, p1;
+            bufferStream >> U >> V >> T >> p0.x >> p0.y >> p1.x >> p1.y;
+            this->BCs.push_back( new bcInflowParabolic( U, V, T, p0, p1 ) );
+        }
+        else if( type.compare("inflowUniform") == 0 )
+        {
+            double U, V, T;
+            bufferStream >> U >> V >> T;
+            this->BCs.push_back( new bcInflowUniform( U, V, T ) );
+        }
+        else if( type.compare("outflow") == 0 )
+        {
+            this->BCs.push_back( new bcOutflow( ) );
+        }
+        else
+        {
+            cout << "Error: Invalid Boundary Condition " << type << endl;
+            return false;
+        }
+
+        BCNames.push_back(name);
+    }
+
+    file.close();
+
+    cout << "Complete BoundaryConditions read!" << endl;
+
+    return true;
+}
+
 bool mshReader::readMsh(string filename)
 {
     cout << "Start reading: " << filename << endl;
@@ -33,6 +115,8 @@ bool mshReader::readMsh(string filename)
 
     if( ! this->readPhysicalNames(file) ) return false;
 
+    this->matchPhysicalNamesWithBCs();
+
     if( ! this->readNodes(file) )         return false;
 
     if( ! this->NodeCheck() )             return false;
@@ -43,12 +127,15 @@ bool mshReader::readMsh(string filename)
     this->computeFaceGeometry();
     this->computeCellMinDx();
 
-    if( ! this->findPeriodicCells() )     return false;
-
     this->createGhostCells();
     this->computeCellLSCoeff();
 
+    for( BoundaryCondition* bc : this->BCs )
+        bc->findNeighborCells(*this);
+
     if( ! this->FaceCheck() )             return false;
+
+    file.close();
 
     cout << "Complete Mesh read!" << endl;
 
@@ -73,24 +160,17 @@ bool mshReader::readPhysicalNames(ifstream& file)
         stringstream bufferStream(buffer);
         
         idType PhysicalNameType, ID;
-        string type;
+        string name;
 
         bufferStream >> PhysicalNameType;
         if(PhysicalNameType != 1) continue;
 
-        bufferStream >> ID >> type;
+        bufferStream >> ID >> name;
 
-        this->BCIDs.push_back(ID);
+        name = name.substr( 1, name.length()-2 );
 
-        type = type.substr(1, type.length()-2 );
-
-        if     ( type.compare("periodic")       == 0 ) this->BCs.push_back(periodic);
-        else if( type.compare("periodicGhost")  == 0 ) this->BCs.push_back(periodicGhost);
-        else if( type.compare("wall")           == 0 ) this->BCs.push_back(wall);
-        else if( type.compare("isothermalWall") == 0 ) this->BCs.push_back(isothermalWall);
-        else if( type.compare("inlet")          == 0 ) this->BCs.push_back(inlet);
-        else if( type.compare("outlet")         == 0 ) this->BCs.push_back(outlet);
-        else { cout << "Error: Wrong BC" << endl; return false; }
+        this->PhysicalNameIDs.push_back(ID);
+        this->PhysicalNames.push_back(name);
     }
 
     getline(file, buffer);
@@ -178,17 +258,17 @@ bool mshReader::newFace(string buffer)
     stringstream bufferStream(buffer);
 
     idType ID;
-    idType BCID;
+    idType PhysicalNameID;
     idType N1, N2;
     idType tmp;
 
-    bufferStream >> ID >> tmp >> tmp >> BCID >> tmp >> N1 >> N2;
+    bufferStream >> ID >> tmp >> tmp >> PhysicalNameID >> tmp >> N1 >> N2;
     
     for(idType i = 0; i < this->Face2Node.size(); ++i)
         if (  ( this->Face2Node[i][0] == N1-1 && this->Face2Node[i][1] == N2-1 )
            || ( this->Face2Node[i][1] == N1-1 && this->Face2Node[i][0] == N2-1 ) )
         {
-            this->Face2BC[i] = findIndex( this->BCIDs, BCID );
+            this->Face2PhysicalName[i] = findIndex( this->PhysicalNameIDs, PhysicalNameID );
             return true;
         }
 
@@ -205,7 +285,7 @@ bool mshReader::newFace(string buffer)
     array<bool,2> tmpFace2CellAdd = {false, false};
     this->Face2CellAdd.push_back(tmpFace2CellAdd);
     
-    this->Face2BC.push_back( findIndex( this->BCIDs, BCID ) );
+    this->Face2PhysicalName.push_back( findIndex( this->PhysicalNameIDs, PhysicalNameID ) );
 
     return true;
 }
@@ -309,7 +389,7 @@ bool mshReader::createMissingFaces(array<idType, 4> tmpCell2Node, array<idType, 
             array<bool,2> tmpFace2CellAdd = {true, true};
             this->Face2CellAdd.push_back(tmpFace2CellAdd);
 
-            Face2BC.push_back(-1);
+            Face2PhysicalName.push_back(-1);
 
             tmpCell2Face[cellFace] = Face2Cell.size()-1;
         }  
@@ -459,72 +539,11 @@ void mshReader::computeCellMinDx()
     cout << " done!" << endl;
 }
 
-bool mshReader::findPeriodicCells()
-{
-    cout << "Find periodic Cell:";
-    for(idType left = 0; left < Face2Node.size(); ++left)
-    {
-        if( this->Face2BC[left] == -1 || this->BCs[ this->Face2BC[left] ] != periodic ) continue;
-
-        if( this->Face2Cell[left][0] != -1 || this->Face2Cell[left][1] != -1 ) continue;
-
-        idType right = this->findPeriodicInterface(left);
-
-        if( right == -1 ) 
-        {
-            cout << "Error: No periodic matching Cell found for face " << left << endl; return false;
-        }
-
-        idType leftCell, leftEmpty;
-        idType rightCell, rightEmpty;
-
-        if      (this->Face2Cell[left][0] != -1)
-        {
-            leftCell  = this->Face2Cell[left][0];
-            leftEmpty = 1;
-        }
-        else if (this->Face2Cell[left][1] != -1)
-        {
-            leftCell  = this->Face2Cell[left][1];
-            leftEmpty = 0;
-        }
-        else
-        {
-            cout << "Error: Left Interface already has two Neighbors" << endl; return false;
-        }
-
-        if      (this->Face2Cell[right][0] != -1)
-        {
-            rightCell  = this->Face2Cell[right][0];
-            rightEmpty = 1;
-        }
-        else if (this->Face2Cell[right][1] != -1)
-        {
-            rightCell  = this->Face2Cell[right][1];
-            rightEmpty = 0;
-        }
-        else
-        {
-            cout << "Error: Right Interface already has two Neighbors" << endl; return false;
-        }
-
-        this->Face2Cell[left ][leftEmpty ] = rightCell;
-        this->Face2Cell[right][rightEmpty] = leftCell;
-
-        double distance = this->FaceDistance[left] + this->FaceDistance[right];
-        this->FaceDistance[left ] = distance;
-        this->FaceDistance[right] = distance;
-    }
-
-    cout << " done!" << endl;
-    return true;
-}
-
 idType mshReader::findPeriodicInterface(idType face)
 {
     for(idType right = 0; right < Face2Node.size(); ++right)
     {
-        if( this->BCs[ Face2BC[right] ] == this->BCs[ Face2BC[face] ] && face != right )
+        if( this->BCs[ Face2PhysicalName[right] ] == this->BCs[ Face2PhysicalName[face] ] && face != right )
         {
             Vec2 connection;
 
@@ -582,7 +601,7 @@ void mshReader::createGhostCells()
         this->Cell2Type.push_back(tri);
         this->Cell2Node.push_back(newCell2Node);
         this->Cell2Face.push_back(newCell2Face);
-        this->Cell2BC.push_back(this->Face2BC[face]);
+        this->Cell2BC.push_back( this->PhysicalNames2BCs[ this->Face2PhysicalName[face] ] );
 
         this->CellCenter.push_back( Vec2( this->FaceCenter[face].x + vector.x / 3.0, 
                                           this->FaceCenter[face].y + vector.y / 3.0) );
@@ -591,7 +610,25 @@ void mshReader::createGhostCells()
 
         this->Face2Cell[face][emptyFace2Cell] = Cell2Node.size()-1;
         this->FaceDistance[face] *= 2.0;
+
+        this->BCs[ this->PhysicalNames2BCs[ this->Face2PhysicalName[face] ] ]->addCell( this->Cell2Node.size()-1 );
     }
+}
+
+bool mshReader::matchPhysicalNamesWithBCs()
+{
+    for( int pn = 0; pn < this->PhysicalNames.size(); ++ pn )
+    {
+        for( int bc = 0; bc < this->BCs.size(); ++ bc )
+        {
+            if( this->BCNames[bc] == this->PhysicalNames[pn] )
+            {
+                this->PhysicalNames2BCs.push_back( bc );
+            }
+        }
+    }
+
+    return true;
 }
 
 bool mshReader::NodeCheck()
