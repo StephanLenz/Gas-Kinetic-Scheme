@@ -49,6 +49,7 @@ void GKSSolver::iterate()
     outputWriter::writeCellVTK( string("out/Solver_") + to_string(this->iter) + string(".vtk"), *this);
 
     outputWriter::initFile( "out/DragLift.dat" );
+    outputWriter::initFile( "out/SolverConvHistory.dat" );
 
     chrono::high_resolution_clock::time_point startTime = chrono::high_resolution_clock::now();
 
@@ -93,9 +94,11 @@ void GKSSolver::iterate()
                 currentFaceAnalyzer->write( "out/DragLift.dat", this->time );
             }
 
-            this->convergenceHistory.push_back(residual);
+            //this->convergenceHistory.push_back(residual);
 
             outputWriter::writeOverview( "out/SolverOverview.txt", *this );
+
+            outputWriter::writeConvergenceHistory( "out/SolverConvHistory.dat", *this );
 
             if ( this->isConverged(residual) )
             {

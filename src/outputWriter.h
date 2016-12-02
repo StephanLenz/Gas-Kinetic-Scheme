@@ -38,6 +38,8 @@ public:
     static bool open(ofstream& file, string filename);
 
     static void writeOverview(string filename, GKSSolver& solver);
+
+    static void writeConvergenceHistory(string filename, GKSSolver& solver);
 };
 
 #endif

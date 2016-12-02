@@ -242,3 +242,17 @@ void outputWriter::writeOverview(string filename, GKSSolver & solver)
 
 cout << "done!" << endl;
 }
+
+void outputWriter::writeConvergenceHistory(string filename, GKSSolver& solver)
+{
+    ofstream file;
+    file.open( filename.c_str(), std::fstream::app );
+
+    ConservedVariable residual = solver.getL2GlobalResidual();
+    file << residual.rho  << ' '
+         << residual.rhoU << ' '
+         << residual.rhoV << ' '
+         << residual.rhoE << endl;
+
+    file.close();
+}
