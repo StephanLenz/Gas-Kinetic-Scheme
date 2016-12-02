@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
 
         param.numberOfIterations = 200000000;            // maximal number of Iterations
         param.outputIntervalVTK  = 10000;              // Output interval for VTK Files (and .dat files)
-        param.outputInterval     = 10000;              // Output interval for Output on the screen
+        param.outputInterval     = 1000;              // Output interval for Output on the screen
 
         // Abortion criteria for the different conserved variables
         // These are thresholds for relative residual changes

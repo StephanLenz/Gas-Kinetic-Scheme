@@ -58,7 +58,7 @@ void DragAndLiftCalculator::write(string filename, double t)
 		return;
 	}
 
-    file << this->drag << ' ' << this->lift << endl;
+    file << t << ' ' << this->drag << ' ' << this->lift << endl;
 
     file.close();
 
