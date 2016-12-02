@@ -135,6 +135,7 @@ public:
     ConservedVariable getL2GlobalResidual();
 
     double getMaxVelocity();
+    double getMaxMa();
 
     // ========================================================================
     //              Util
@@ -190,11 +191,16 @@ public:
     virtual PrimitiveVariable  getPrim(idType id);
 
     double getDt();
+    double getTime();
+    double getComputationTime();
+    double getIter();
+
     FluidParameter getFluidParam();
-
-    void writeVTK( string filename );
-
-    void writeInterfaceVTK( string filename );
+    Parameters     getParameters();
+    
+    virtual idType getNumberOfNodes() = 0;
+    virtual idType getNumberOfCells() = 0;
+    virtual idType getNumberOfInterfaces() = 0;
 };
 
 #endif

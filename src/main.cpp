@@ -15,6 +15,7 @@
 #include "GKSSolverPush.h"
 #include "BoundaryCondition.h"
 #include "mshReader.h"
+#include "outputWriter.h"
 #include <iostream>
 #include <sstream>
 #include <chrono>
@@ -113,7 +114,7 @@ int main(int argc, char* argv[])
 
         GKSSolver* solverPush = new GKSSolverPush(param, fluidParam);
 
-        if( ! solverPush->readProblem("msh/TurekBenchmark/TurekBenchmark.mesh.4") )
+        if( ! solverPush->readProblem("msh/TurekBenchmark/TurekBenchmark.mesh.fine") )
         //if( ! solverPush->readProblem("msh/TurekPeriodic/TurekPeriodic.mesh") )
         //if( ! solverPush->readProblem("msh/Channel/Channel_64x32") )
         {
@@ -121,8 +122,8 @@ int main(int argc, char* argv[])
             return false;
         }
 
-        solverPush->writeVTK("out/Mesh.vtk");
-        solverPush->writeInterfaceVTK("out/Connectivity.vtk");
+        outputWriter::writeCellVTK("out/Mesh.vtk", *solverPush);
+        outputWriter::writeFaceVTK("out/Connectivity.vtk", *solverPush);
 
         solverPush->iterate();
 

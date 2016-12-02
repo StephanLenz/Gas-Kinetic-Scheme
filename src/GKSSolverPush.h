@@ -150,6 +150,10 @@ public:
     virtual void setCellGradientY(idType id, ConservedVariable dWdy);
 
     virtual Vec2 getNode(idType node);
+    
+    virtual idType getNumberOfNodes();
+    virtual idType getNumberOfCells();
+    virtual idType getNumberOfInterfaces();
 
     virtual array<idType,4> getCell2Node(idType cell);
 };

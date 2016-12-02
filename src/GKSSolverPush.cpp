@@ -313,6 +313,21 @@ Vec2 GKSSolverPush::getNode(idType node)
     return this->NodeCenter[node];
 }
 
+idType GKSSolverPush::getNumberOfNodes()
+{
+    return this->numberOfNodes;
+}
+
+idType GKSSolverPush::getNumberOfCells()
+{
+    return this->numberOfCells;
+}
+
+idType GKSSolverPush::getNumberOfInterfaces()
+{
+    return this->numberOfInterfaces;
+}
+
 array<idType, 4> GKSSolverPush::getCell2Node(idType cell)
 {
     return this->Cell2Node[cell];

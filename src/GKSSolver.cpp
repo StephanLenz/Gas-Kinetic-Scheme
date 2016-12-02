@@ -1,6 +1,7 @@
 
 #include "GKSSolver.h"
 #include "BoundaryCondition.h"
+#include "outputWriter.h"
 #include "Types.h"
 #include <vector>
 #include <array>
@@ -45,9 +46,9 @@ void GKSSolver::iterate()
         BC->setGhostCells(*this);
     }
 
-    this->writeVTK( string("out/Solver_") + to_string(this->iter) + string(".vtk") );
+    outputWriter::writeCellVTK( string("out/Solver_") + to_string(this->iter) + string(".vtk"), *this);
 
-    ofstream dragLiftFile; dragLiftFile.open( "out/DragLift.dat", fstream::trunc ); dragLiftFile.close();
+    outputWriter::initFile( "out/DragLift.dat" );
 
     chrono::high_resolution_clock::time_point startTime = chrono::high_resolution_clock::now();
 
@@ -94,6 +95,8 @@ void GKSSolver::iterate()
 
             this->convergenceHistory.push_back(residual);
 
+            outputWriter::writeOverview( "out/SolverOverview.txt", *this );
+
             if ( this->isConverged(residual) )
             {
                 cout << endl << " ========== Simulation converged! ==========" << endl;
@@ -101,9 +104,7 @@ void GKSSolver::iterate()
                 cout << "Timesteps: " << this->iter << endl;
                 cout << "Time: " << this->time << endl;
 
-                //this->writeOutputFiles();
-
-                this->writeVTK("out/SolverResult.vtk");
+                outputWriter::writeCellVTK("out/SolverResult.vtk", *this);
 
                 break;
             }
@@ -111,7 +112,7 @@ void GKSSolver::iterate()
         // ====================================================================
         if ( this->iter % this->param.outputIntervalVTK == 0 )
         {
-            this->writeVTK( string("out/Solver_") + to_string(this->iter) + string(".vtk") );
+            outputWriter::writeCellVTK( string("out/Solver_") + to_string(this->iter) + string(".vtk"), *this );
         }
     }
     // ========================================================================
@@ -916,6 +917,26 @@ double GKSSolver::getMaxVelocity()
     return maxVelocity;
 }
 
+double GKSSolver::getMaxMa()
+{
+    double maxMa = 0.0;
+    double localVelocity;
+    double localMa;
+    for ( int id = 0; id < this->numberOfCells; ++id )
+    {
+        if ( ! isGhostCell(id) )
+        {
+            PrimitiveVariable prim = cons2prim( this->getCellData(id) );
+            localVelocity = sqrt( prim.U * prim.U 
+                                + prim.V * prim.V );
+            localMa = localVelocity * sqrt( 2.0 * prim.L );
+            maxMa = max(maxMa, localMa);
+        }
+    }
+
+    return maxMa;
+}
+
 PrimitiveVariable GKSSolver::cons2prim(ConservedVariable& cons)
 {
     PrimitiveVariable prim;
@@ -1011,178 +1032,29 @@ double GKSSolver::getDt()
     return this->dt;
 }
 
+double GKSSolver::getTime()
+{
+    return this->time;
+}
+
+double GKSSolver::getComputationTime()
+{
+    return this->computationTime;
+}
+
+double GKSSolver::getIter()
+{
+    return this->iter;
+}
+
 FluidParameter GKSSolver::getFluidParam()
 {
     return this->fluidParam;
 }
 
-void GKSSolver::writeVTK(string filename)
+Parameters GKSSolver::getParameters()
 {
-    cout << "Wrinting file " << filename << " ... ";
-	// open file stream
-	ofstream file;
-    file.precision(15);
-	file.open(filename.c_str());
-
-	if (!file.is_open()) {
-		cout << " File cound not be opened.\n\nERROR!\n\n\n";
-		return;
-	}
-    
-    // write VTK Header
-    file << "# vtk DataFile Version 1.0\n";
-    file << "by Stephan Lenz\n";
-    file << "ASCII\n";
-    file << "DATASET UNSTRUCTURED_GRID\n";
-    
-    file << "POINTS " << this->numberOfNodes << " double\n";
-    for(int node = 0; node < this->numberOfNodes; ++node)
-    {
-        file << this->getNode(node).x << " " << this->getNode(node).y << " 0.0" << endl;
-    }
-
-    file << "CELLS " << numberOfCells << " " << 5 * numberOfCells << endl;
-    for (int cell = 0; cell < this->numberOfCells; ++cell)
-    {
-        file << "4 " << this->getCell2Node(cell)[0] << " "
-                     << this->getCell2Node(cell)[1] << " "
-                     << this->getCell2Node(cell)[2] << " ";
-
-        if( -1 == this->getCell2Node(cell)[3] )
-            file << this->getCell2Node(cell)[2] << endl;
-        else
-            file << this->getCell2Node(cell)[3] << endl;
-    }
-
-    file << "CELL_TYPES " << numberOfCells << endl;
-    for (int cell = 0; cell < this->numberOfCells; ++cell)
-    {
-        file << "9" << endl;
-    }
-    
-    file << "CELL_DATA " << this->numberOfCells << endl;
-    file << "FIELD Lable " << 8 << "\n";
-    file << "CellID 1 " << numberOfCells << " int\n";
-    for (int cell = 0; cell < this->numberOfCells; ++cell)
-    {
-        file << cell << endl;
-    }
-    file << "rho 1 " << numberOfCells << " double\n";
-    for (int cell = 0; cell < this->numberOfCells; ++cell)
-    {
-        file << this->getPrim(cell).rho << endl;
-    }
-    file << "U 1 " << numberOfCells << " double\n";
-    for (int cell = 0; cell < this->numberOfCells; ++cell)
-    {
-        file << this->getPrim(cell).U << endl;
-    }
-    file << "V 1 " << numberOfCells << " double\n";
-    for (int cell = 0; cell < this->numberOfCells; ++cell)
-    {
-        file << this->getPrim(cell).V << endl;
-    }
-    file << "T 1 " << numberOfCells << " double\n";
-    for (int cell = 0; cell < this->numberOfCells; ++cell)
-    {
-        file << 1.0 / ( 2.0 * this->fluidParam.R * this->getPrim(cell).L ) << endl;
-    }
-    file << "p 1 " << numberOfCells << " double\n";
-    for (int cell = 0; cell < this->numberOfCells; ++cell)
-    {
-        file << this->getPrim(cell).rho / ( 2.0 * this->getPrim(cell).L ) << endl;
-    }
-    file << "Lambda 1 " << numberOfCells << " double\n";
-    for (int cell = 0; cell < this->numberOfCells; ++cell)
-    {
-        file << this->getPrim(cell).L << endl;
-    }
-    file << "BC 1 " << numberOfCells << " int\n";
-    for (int cell = 0; cell < this->numberOfCells; ++cell)
-    {
-        file << this->getCellBoundaryCondition(cell) << endl;
-    }
-
-    file.close();
-
-    cout << "done!" << endl;
-}
-
-void GKSSolver::writeInterfaceVTK(string filename)
-{
-    cout << "Wrinting file " << filename << " ... ";
-	// open file stream
-	ofstream file;
-    file.precision(15);
-	file.open(filename.c_str());
-
-	if (!file.is_open()) {
-		cout << " File cound not be opened.\n\nERROR!\n\n\n";
-		return;
-	}
-    
-    // write VTK Header
-    file << "# vtk DataFile Version 1.0\n";
-    file << "by Stephan Lenz\n";
-    file << "ASCII\n";
-    file << "DATASET UNSTRUCTURED_GRID\n";
-    
-    file << "POINTS " << this->numberOfInterfaces << " double\n";
-    for(int face = 0; face < this->numberOfInterfaces; ++face)
-    {
-        file << this->getInterfaceCenter(face).x << " " << this->getInterfaceCenter(face).y << " 0.0" << endl;
-    }
-
-    file << "CELLS " << this->numberOfInterfaces << " " << 2 * this->numberOfInterfaces << endl;
-    for (int cell = 0; cell < this->numberOfInterfaces; ++cell)
-    {
-        file << "1 " << cell << endl;
-    }
-
-    file << "CELL_TYPES " << this->numberOfInterfaces << endl;
-    for (int cell = 0; cell < this->numberOfInterfaces; ++cell)
-    {
-        file << "1" << endl;
-    }
-
-    file << "POINT_DATA " << this->numberOfInterfaces << endl;
-    file << "FIELD Lable 2\n";
-
-    file << "ID 1 " << this->numberOfInterfaces << " double\n";
-    for ( int face = 0; face < this->numberOfInterfaces; ++face )
-    {
-        file << face << endl;
-    }
-
-    file << "Area 1 " << this->numberOfInterfaces << " double\n";
-    for ( int face = 0; face < this->numberOfInterfaces; ++face )
-    {
-        file << this->getInterfaceArea(face) << endl;
-    }
-
-    file << "VECTORS normal double\n";
-    for ( int face = 0; face < this->numberOfInterfaces; ++face )
-    {
-        file << this->getInterfaceNormal(face).x << " " << this->getInterfaceNormal(face).y << " 0.0" << endl;
-    }
-
-    file << "VECTORS posCell double\n";
-    for ( int face = 0; face < this->numberOfInterfaces; ++face )
-    {
-        file << this->getCellCenter( this->getPosCell(face) ).x - this->getInterfaceCenter(face).x << " " 
-             << this->getCellCenter( this->getPosCell(face) ).y - this->getInterfaceCenter(face).y << " 0.0" << endl;
-    }
-
-    file << "VECTORS negCell double\n";
-    for ( int face = 0; face < this->numberOfInterfaces; ++face )
-    {
-        file << this->getCellCenter( this->getNegCell(face) ).x - this->getInterfaceCenter(face).x << " " 
-             << this->getCellCenter( this->getNegCell(face) ).y - this->getInterfaceCenter(face).y << " 0.0" << endl;
-    }
-
-    file.close();
-
-    cout << "done!" << endl;
+    return this->param;
 }
 
 idType GKSSolver::getNeighborCell(idType face, idType askingCell)
