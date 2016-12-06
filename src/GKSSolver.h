@@ -67,6 +67,7 @@ protected:
     vector<ConservedVariable> convergenceHistory;
 
     long long computationTime;
+    double CellUpdatesPerSecond;
 
 // ====================================================================================================================
 // ====================================================================================================================
@@ -194,6 +195,7 @@ public:
     double getTime();
     double getComputationTime();
     double getIter();
+    double getCellUpdatesPerSecond();
 
     FluidParameter getFluidParam();
     Parameters     getParameters();

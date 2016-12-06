@@ -84,8 +84,10 @@ public:
 
 class bcOutflow : public BoundaryCondition
 {
+private:
+    double p;
 public:
-    bcOutflow( );
+    bcOutflow( double p );
     virtual void setGhostCell(GKSSolver& solver, idType cell);
     virtual void setGradientGhostCells(GKSSolver& solver);
 };

@@ -80,7 +80,9 @@ bool mshReader::readBoundaryConditions(string filename)
         }
         else if( type.compare("outflow") == 0 )
         {
-            this->BCs.push_back( new bcOutflow( ) );
+            double p;
+            bufferStream >> p;
+            this->BCs.push_back( new bcOutflow( p ) );
         }
         else
         {

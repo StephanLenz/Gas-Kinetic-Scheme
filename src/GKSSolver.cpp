@@ -77,10 +77,16 @@ void GKSSolver::iterate()
         {
             this->dtList.push_back(this->dt);
             this->timeList.push_back(this->time);
+    
+            chrono::high_resolution_clock::time_point endTime = chrono::high_resolution_clock::now();
+            this->computationTime = chrono::duration_cast<chrono::seconds>( endTime - startTime ).count();
+
+            this->CellUpdatesPerSecond = this->getNumberOfCells()*this->iter / this->computationTime;
 
             ConservedVariable residual = this->getL2GlobalResidual();
 
             cout << "t = " << this->time << "  \t|  timestep: " << this->iter << "  \t|  U_max: " << this->getMaxVelocity() << endl;
+            cout << "CUPS = " << this->CellUpdatesPerSecond << endl;
             cout << "r_rho = "  << residual.rho  << "\t ";
             cout << "r_rhoU = " << residual.rhoU << "\t ";
             cout << "r_rhoV = " << residual.rhoV << "\t ";
@@ -123,9 +129,6 @@ void GKSSolver::iterate()
     //              End of Time Loop
     // ========================================================================
     // ========================================================================
-    
-    chrono::high_resolution_clock::time_point endTime = chrono::high_resolution_clock::now();
-    this->computationTime = chrono::duration_cast<chrono::seconds>( endTime - startTime ).count();
 
     cout << "Time to Solution: " << this->computationTime << " s" << endl;
 }
@@ -1048,6 +1051,11 @@ double GKSSolver::getComputationTime()
 double GKSSolver::getIter()
 {
     return this->iter;
+}
+
+double GKSSolver::getCellUpdatesPerSecond()
+{
+    return this->CellUpdatesPerSecond;
 }
 
 FluidParameter GKSSolver::getFluidParam()

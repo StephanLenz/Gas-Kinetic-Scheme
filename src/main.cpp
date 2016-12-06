@@ -67,18 +67,19 @@ int main(int argc, char* argv[])
 
         param.numberOfIterations = 200000000;            // maximal number of Iterations
         param.outputIntervalVTK  = 10000;              // Output interval for VTK Files (and .dat files)
-        param.outputInterval     = 1000;              // Output interval for Output on the screen
+        param.outputInterval     = 100;              // Output interval for Output on the screen
 
         // Abortion criteria for the different conserved variables
         // These are thresholds for relative residual changes
         // ||W^n+1 - W^n||_L2 / ||W^n||_L2
-        param.convergenceCriterium[0] = 1.0;
+        param.convergenceCriterium[0] = 1.0e-10;
         param.convergenceCriterium[1] = 1.0e-10;
-        param.convergenceCriterium[2] = 1.0;
-        param.convergenceCriterium[3] = 1.0;
+        param.convergenceCriterium[2] = 1.0e-10;
+        param.convergenceCriterium[3] = 1.0e-10;
 
-        param.CFL = 0.01;                                // CFL number for time step computation
-        
+        param.CFL = 0.7;                                // CFL number for time step computation
+        //param.CFL = atof( argv[1] );
+
         // ========================================================================
         //                  Fluid and domain parameters
         // ========================================================================
@@ -114,7 +115,7 @@ int main(int argc, char* argv[])
 
         GKSSolver* solverPush = new GKSSolverPush(param, fluidParam);
 
-        if( ! solverPush->readProblem("msh/TurekBenchmark.mesh.fine") )
+        if( ! solverPush->readProblem("msh/TurekBenchmark/TurekBenchmark.mesh.fine") )
         //if( ! solverPush->readProblem("msh/TurekPeriodic/TurekPeriodic.mesh") )
         //if( ! solverPush->readProblem("msh/Channel/Channel_64x32") )
         {

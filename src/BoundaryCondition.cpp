@@ -64,7 +64,7 @@ bcInflowParabolic::bcInflowParabolic(double U, double V, double L, Vec2 p0, Vec2
 
 bcInflowUniform::bcInflowUniform(double U, double V, double L) : U(U), V(V), L(L) {}
 
-bcOutflow::bcOutflow() {}
+bcOutflow::bcOutflow(double p) : p(p) {}
 
 // ============================================================================
 
@@ -151,7 +151,7 @@ void bcOutflow::setGhostCell(GKSSolver & solver, idType cell)
     PrimitiveVariable primNeighbor = solver.getPrim( NeighborCell[cell] );
     PrimitiveVariable prim;
 
-    prim.rho = primNeighbor.rho;
+    prim.rho = 2.0 * ( 2.0 * p * primNeighbor.L ) - primNeighbor.rho;
     prim.U   = primNeighbor.U;
     prim.V   = primNeighbor.V;
     prim.L   = primNeighbor.L;

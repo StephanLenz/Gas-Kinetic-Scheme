@@ -238,6 +238,7 @@ void outputWriter::writeOverview(string filename, GKSSolver & solver)
     file << endl;
     file << "Real Time simulated : " << solver.getTime() << " s" << endl;
     file << "Time to solution:     " << solver.getComputationTime() << " s" << endl;
+    file << "CellUpadtesPerSecond: " << solver.getCellUpdatesPerSecond() << endl;
     file.close();
 
 cout << "done!" << endl;
