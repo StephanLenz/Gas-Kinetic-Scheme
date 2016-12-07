@@ -81,7 +81,7 @@ void GKSSolver::iterate()
             chrono::high_resolution_clock::time_point endTime = chrono::high_resolution_clock::now();
             this->computationTime = chrono::duration_cast<chrono::seconds>( endTime - startTime ).count();
 
-            this->CellUpdatesPerSecond = this->getNumberOfCells()*this->iter / this->computationTime;
+            this->CellUpdatesPerSecond = double( this->getNumberOfCells() ) * double( this->iter ) / double( this->computationTime );
 
             ConservedVariable residual = this->getL2GlobalResidual();
 
