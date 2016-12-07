@@ -115,9 +115,8 @@ int main(int argc, char* argv[])
 
         GKSSolver* solverPush = new GKSSolverPush(param, fluidParam);
 
-        if( ! solverPush->readProblem("msh/TurekBenchmark/TurekBenchmark.mesh.medium") )
-        //if( ! solverPush->readProblem("msh/TurekPeriodic/TurekPeriodic.mesh") )
-        //if( ! solverPush->readProblem("msh/Channel/Channel_64x32") )
+        //if( ! solverPush->readProblem("msh/TurekBenchmark/TurekBenchmark.mesh.medium") )
+        if( ! solverPush->readProblem("msh/Channel/TurekChannel") )
         {
             system("pause");
             return false;
