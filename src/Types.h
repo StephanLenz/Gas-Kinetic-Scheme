@@ -1,3 +1,4 @@
+#include <string>
 
 #ifndef TYPES_H
 #define TYPES_H
@@ -64,31 +65,24 @@ struct FluidParameter
     double nu;  // viscosity
     double R;   // spez gasconstant
     Node Force;
-    Node BoussinesqForce;
-    double rhoReference;
-    double uReference;
-    double vReference;
-    double lambdaReference;
+    Node relativeForce;
+    PrimitiveVariable referencePrim;
     double Pr;
 };
 
 struct Parameters
 {
+    std::string simulationName;
+
 	unsigned long int numberOfIterations;
     unsigned long int outputInterval;
     unsigned long int outputIntervalVTK;
 
-    double convergenceCriterium[4];
-    
-    bool resOutput;
-    bool fluxOutput;
-    bool ghostOutput;
-    bool csvOutput;
+    double maxTime;
 
-    double L;
+    ConservedVariable convergenceCriterium;
+
 	double CFL;
-
-    bool verbose;
 };
 
 enum InterfaceType

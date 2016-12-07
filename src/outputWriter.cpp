@@ -93,8 +93,6 @@ void outputWriter::writeCellVTK(string filename, GKSSolver& solver)
 
 void outputWriter::writeFaceVTK(string filename, GKSSolver& solver)
 {
-    cout << "Wrinting file " << filename << " ... ";
-	// open file stream
 	ofstream file;
     open( file, filename );
     
@@ -204,10 +202,10 @@ void outputWriter::writeOverview(string filename, GKSSolver & solver)
     file << "Max Number of Iteratios:               " << solver.getParameters().numberOfIterations << endl;
     file << "VTK-File Output Interval:              " << solver.getParameters().outputIntervalVTK << endl;
     file << "Convergence History Output Interval:   " << solver.getParameters().outputInterval << endl;
-    file << "Convergence Criterium:               ( " << solver.getParameters().convergenceCriterium[0] << ", "
-                                                      << solver.getParameters().convergenceCriterium[1] << ", "
-                                                      << solver.getParameters().convergenceCriterium[2] << ", "
-                                                      << solver.getParameters().convergenceCriterium[3] << " )" << endl;
+    file << "Convergence Criterium:               ( " << solver.getParameters().convergenceCriterium.rho  << ", "
+                                                      << solver.getParameters().convergenceCriterium.rhoU << ", "
+                                                      << solver.getParameters().convergenceCriterium.rhoV << ", "
+                                                      << solver.getParameters().convergenceCriterium.rhoE << " )" << endl;
     file << "CFL =\t" << solver.getParameters().CFL << endl;
     file << endl;
 

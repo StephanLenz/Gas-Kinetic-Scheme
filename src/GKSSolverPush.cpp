@@ -107,10 +107,10 @@ bool GKSSolverPush::readProblem(string filename)
     for( idType cell = 0; cell < numberOfCells; ++cell )
     {
         PrimitiveVariable prim;
-        prim.rho = this->fluidParam.rhoReference;
-        prim.U   = 0.0;//this->fluidParam.uReference;
-        prim.V   = 0.0;//this->fluidParam.vReference;
-        prim.L   = this->fluidParam.lambdaReference;
+        prim.rho = this->fluidParam.referencePrim.rho;
+        prim.U   = 0.0;
+        prim.V   = 0.0;
+        prim.L   = this->fluidParam.referencePrim.L;
 
         ConservedVariable cons = prim2cons( prim );
 

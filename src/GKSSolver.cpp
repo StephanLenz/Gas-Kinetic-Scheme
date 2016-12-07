@@ -46,10 +46,10 @@ void GKSSolver::iterate()
         BC->setGhostCells(*this);
     }
 
-    outputWriter::writeCellVTK( string("out/Solver_") + to_string(this->iter) + string(".vtk"), *this);
+    outputWriter::writeCellVTK( string("out/") + param.simulationName + string(".") + to_string(this->iter) + string(".vtk"), *this);
 
-    outputWriter::initFile( "out/DragLift.dat" );
-    outputWriter::initFile( "out/SolverConvHistory.dat" );
+    outputWriter::initFile( string("out/") + param.simulationName + string(".DragLift.dat" ) );
+    outputWriter::initFile( string("out/") + param.simulationName + string(".ConvHist.dat" ) );
 
     chrono::high_resolution_clock::time_point startTime = chrono::high_resolution_clock::now();
 
@@ -58,7 +58,7 @@ void GKSSolver::iterate()
     //              Time Loop
     // ========================================================================
     // ========================================================================
-    while (this->iter < this->param.numberOfIterations)
+    while (this->iter < this->param.numberOfIterations && this->time < this->param.maxTime)
     {
         // ====================================================================
         this->iter++;
@@ -97,23 +97,22 @@ void GKSSolver::iterate()
             {
                 currentFaceAnalyzer->analyze(*this);
                 currentFaceAnalyzer->print();
-                currentFaceAnalyzer->write( "out/DragLift.dat", this->time );
+                currentFaceAnalyzer->write( string("out/") + param.simulationName + string(".DragLift.dat" ), this->time );
             }
 
             //this->convergenceHistory.push_back(residual);
 
-            outputWriter::writeOverview( "out/SolverOverview.txt", *this );
+            outputWriter::writeOverview( string("out/") + param.simulationName + string(".Overview.dat" ), *this );
 
-            outputWriter::writeConvergenceHistory( "out/SolverConvHistory.dat", *this );
+            outputWriter::writeConvergenceHistory( string("out/") + param.simulationName + string(".ConvHist.dat" ), *this );
 
             if ( this->isConverged(residual) )
             {
                 cout << endl << " ========== Simulation converged! ==========" << endl;
-                cout << "Remaining residual change less than " << this->param.convergenceCriterium << endl;
                 cout << "Timesteps: " << this->iter << endl;
                 cout << "Time: " << this->time << endl;
 
-                outputWriter::writeCellVTK("out/SolverResult.vtk", *this);
+                outputWriter::writeCellVTK( string("out/") + param.simulationName + string(".Result.vtk"), *this);
 
                 break;
             }
@@ -121,7 +120,7 @@ void GKSSolver::iterate()
         // ====================================================================
         if ( this->iter % this->param.outputIntervalVTK == 0 )
         {
-            outputWriter::writeCellVTK( string("out/Solver_") + to_string(this->iter) + string(".vtk"), *this );
+            outputWriter::writeCellVTK( string("out/") + param.simulationName + string(".") + to_string(this->iter) + string(".vtk"), *this);
         }
     }
     // ========================================================================
@@ -184,10 +183,10 @@ bool GKSSolver::isConverged(ConservedVariable residual)
 {
     bool flag = true;
 
-    flag = flag && ( residual.rho  < this->param.convergenceCriterium[0] );
-    flag = flag && ( residual.rhoU < this->param.convergenceCriterium[1] );
-    flag = flag && ( residual.rhoV < this->param.convergenceCriterium[2] );
-    flag = flag && ( residual.rhoE < this->param.convergenceCriterium[3] );
+    flag = flag && ( residual.rho  < this->param.convergenceCriterium.rho  );
+    flag = flag && ( residual.rhoU < this->param.convergenceCriterium.rhoU );
+    flag = flag && ( residual.rhoV < this->param.convergenceCriterium.rhoV );
+    flag = flag && ( residual.rhoE < this->param.convergenceCriterium.rhoE );
 
     return flag;
 }

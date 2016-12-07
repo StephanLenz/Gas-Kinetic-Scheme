@@ -125,6 +125,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\mshReader.cpp" />
     <ClCompile Include="src\outputWriter.cpp" />
+    <ClCompile Include="src\paramReader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\BoundaryCondition.h" />
@@ -133,6 +134,7 @@
     <ClInclude Include="src\GKSSolverPush.h" />
     <ClInclude Include="src\mshReader.h" />
     <ClInclude Include="src\outputWriter.h" />
+    <ClInclude Include="src\paramReader.h" />
     <ClInclude Include="src\Types.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
