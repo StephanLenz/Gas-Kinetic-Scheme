@@ -142,9 +142,9 @@ public:
     //              Util
     // ========================================================================
 
-    PrimitiveVariable cons2prim(ConservedVariable& cons);
+    PrimitiveVariable cons2prim(const ConservedVariable & cons);
 
-    ConservedVariable prim2cons(PrimitiveVariable& prim);
+    ConservedVariable prim2cons(const PrimitiveVariable & prim);
 
     void local2global(const idType id, PrimitiveVariable& prim);
     void local2global(const idType id, ConservedVariable& cons);
@@ -166,7 +166,7 @@ public:
 
     virtual Vec2   getCellCenter(idType id) = 0;
     virtual double getCellMinDx(idType id) = 0;
-    virtual array<double,3> getCellLSCoeff(idType id) = 0;
+    virtual array<double, 3> getCellLSCoeff(idType id) = 0;
 
     virtual int getCellBoundaryCondition(idType id) = 0;
 
@@ -187,7 +187,7 @@ public:
 
     virtual Vec2 getNode(idType node) = 0;
 
-    virtual array<idType,4> getCell2Node(idType cell) = 0;
+    virtual array<idType, 4> getCell2Node(idType cell) = 0;
 
     virtual PrimitiveVariable  getPrim(idType id);
 

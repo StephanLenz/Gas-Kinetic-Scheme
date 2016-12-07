@@ -16,7 +16,7 @@ class paramReader
 public:
     static bool read(string filename, Parameters& param, FluidParameter& fluidParam);
 
-    static void default(Parameters& param, FluidParameter& fluidParam);
+    static void defaultValues(Parameters& param, FluidParameter& fluidParam);
 };
 
 #endif

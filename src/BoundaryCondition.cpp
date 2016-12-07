@@ -2,6 +2,7 @@
 #include "GKSSolver.h"
 #include "mshReader.h"
 #include <sstream>
+#include <cmath>
 
 void BoundaryCondition::addCell(idType id)
 {

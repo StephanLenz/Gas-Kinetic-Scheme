@@ -7,7 +7,7 @@
 
 bool paramReader::read(string filename, Parameters & param, FluidParameter & fluidParam)
 {
-    paramReader::default(param, fluidParam);
+    paramReader::defaultValues(param, fluidParam);
 
     cout << "Start reading: " << filename << endl;
     ifstream file;
@@ -107,7 +107,7 @@ bool paramReader::read(string filename, Parameters & param, FluidParameter & flu
     return true;
 }
 
-void paramReader::default(Parameters& param, FluidParameter& fluidParam)
+void paramReader::defaultValues(Parameters& param, FluidParameter& fluidParam)
 {
     param.numberOfIterations = 1000000;
     param.outputInterval     = 10000;

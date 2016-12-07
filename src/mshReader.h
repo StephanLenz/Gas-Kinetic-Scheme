@@ -17,19 +17,19 @@ public:
     vector<Vec2> Nodes;
     
     vector< CellType >      Cell2Type;
-    vector< array<idType,4> >  Cell2Node;
-    vector< array<idType,4> >  Cell2Face;
+    vector< array<idType, 4> >  Cell2Node;
+    vector< array<idType, 4> >  Cell2Face;
     vector< idType >           Cell2BC;
                             
-    vector< array<idType,2> >  Face2Cell;
-    vector< array<idType,2> >  Face2Node;
+    vector< array<idType, 2> >  Face2Cell;
+    vector< array<idType, 2> >  Face2Node;
     vector< idType >           Face2PhysicalName;
     vector< array<bool,2> > Face2CellAdd;
 
     vector<Vec2>   CellCenter;
     vector<double> CellVolume;
     vector<double> CellMinDx;
-    vector< array<double,3> > CellLSCoeff;
+    vector< array<double, 3> > CellLSCoeff;
 
     vector<Vec2>   FaceCenter;
     vector<Vec2>   FaceNormal;

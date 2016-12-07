@@ -942,7 +942,7 @@ double GKSSolver::getMaxMa()
     return maxMa;
 }
 
-PrimitiveVariable GKSSolver::cons2prim(ConservedVariable& cons)
+PrimitiveVariable GKSSolver::cons2prim(const ConservedVariable & cons)
 {
     PrimitiveVariable prim;
     prim.rho = cons.rho;
@@ -954,7 +954,7 @@ PrimitiveVariable GKSSolver::cons2prim(ConservedVariable& cons)
     return prim;
 }
 
-ConservedVariable GKSSolver::prim2cons(PrimitiveVariable & prim)
+ConservedVariable GKSSolver::prim2cons(const PrimitiveVariable & prim)
 {
     ConservedVariable cons;
 
