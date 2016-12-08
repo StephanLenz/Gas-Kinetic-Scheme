@@ -129,7 +129,21 @@ void GKSSolver::iterate()
     // ========================================================================
     // ========================================================================
     outputWriter::writeCellVTK( string("out/") + param.simulationName + string(".Result.vtk"), *this);
+    outputWriter::writeOverview( string("out/") + param.simulationName + string(".Overview.dat" ), *this );
+
     cout << "Time to Solution: " << this->computationTime << " s" << endl;
+    cout << "Timesteps: " << this->iter << endl;
+    cout << "Time: " << this->time << endl;
+
+    ConservedVariable residual = this->getL2GlobalResidual();
+
+    cout << "t = " << this->time << "  \t|  timestep: " << this->iter << "  \t|  U_max: " << this->getMaxVelocity() << endl;
+    cout << "CUPS = " << this->CellUpdatesPerSecond << endl;
+    cout << "r_rho = "  << residual.rho  << "\t ";
+    cout << "r_rhoU = " << residual.rhoU << "\t ";
+    cout << "r_rhoV = " << residual.rhoV << "\t ";
+    cout << "r_rhoE = " << residual.rhoE << "\t ";
+    cout << endl;
 }
 
 // ============================================================================
