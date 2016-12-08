@@ -11,7 +11,7 @@ bool paramReader::read(string filename, Parameters & param, FluidParameter & flu
 
     cout << "Start reading: " << filename << endl;
     ifstream file;
-    file.open(filename + string( ".gksparam" ));
+    file.open( filename.c_str() );
 
     if ( !file.is_open() ) {
         cout << " File cound not be opened.\n\nERROR!\n\n\n";
@@ -23,7 +23,7 @@ bool paramReader::read(string filename, Parameters & param, FluidParameter & flu
     while( getline(file, buffer) )
     {
         stringstream bufferStream(buffer);
-        
+
         string name, type;
         bufferStream >> name;
 
@@ -112,6 +112,8 @@ void paramReader::defaultValues(Parameters& param, FluidParameter& fluidParam)
     param.numberOfIterations = 1000000;
     param.outputInterval     = 10000;
     param.outputIntervalVTK  = 10000;
+
+    param.maxTime = 100.0;
 
     param.convergenceCriterium.rho  = 1.0e-10;
     param.convergenceCriterium.rhoU = 1.0e-10;

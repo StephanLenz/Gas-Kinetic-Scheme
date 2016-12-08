@@ -93,7 +93,7 @@ public:
 
     GKSSolverPush(Parameters param, FluidParameter fluidParam);
 
-	~GKSSolverPush();
+	virtual ~GKSSolverPush();
 
     // ========================================================================
     //              Communication methods
@@ -128,7 +128,7 @@ public:
     virtual ConservedVariable getCellGradientY(idType id);
 
     virtual idType getCell2Interface( idType cell, idType face );
-    
+
     virtual Vec2   getCellCenter(idType id);
     virtual double getCellMinDx(idType id);
     virtual array<double,3> getCellLSCoeff(idType id);
@@ -150,7 +150,7 @@ public:
     virtual void setCellGradientY(idType id, ConservedVariable dWdy);
 
     virtual Vec2 getNode(idType node);
-    
+
     virtual idType getNumberOfNodes();
     virtual idType getNumberOfCells();
     virtual idType getNumberOfInterfaces();

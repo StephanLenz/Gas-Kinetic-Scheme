@@ -50,7 +50,7 @@ protected:
     // ========================================================================
 
     FluidParameter fluidParam;
-    
+
     // ========================================================================
     //              Simulation Parameters/Data
     // ========================================================================
@@ -79,7 +79,7 @@ public:
 
     GKSSolver(Parameters param, FluidParameter fluidParam);
 
-	~GKSSolver();
+	virtual ~GKSSolver() = 0;
 
     // ========================================================================
     //              Communication methods
@@ -199,7 +199,7 @@ public:
 
     FluidParameter getFluidParam();
     Parameters     getParameters();
-    
+
     virtual idType getNumberOfNodes() = 0;
     virtual idType getNumberOfCells() = 0;
     virtual idType getNumberOfInterfaces() = 0;

@@ -28,10 +28,10 @@ GKSSolver::GKSSolver(Parameters param, FluidParameter fluidParam)
 GKSSolver::~GKSSolver()
 {
     for( BoundaryCondition* bc : this->BoundaryConditionList ) delete bc;
-}  
+}
 
 // ============================================================================
-//      This method perform the iteration and controls the solution process. 
+//      This method perform the iteration and controls the solution process.
 //      It also call the file output and checks the convergence.
 // ============================================================================
 void GKSSolver::iterate()
@@ -40,7 +40,7 @@ void GKSSolver::iterate()
     this->time = 0.0;
 
     this->timeList.push_back(this->time);
-    
+
     for( BoundaryCondition* BC : BoundaryConditionList )
     {
         BC->setGhostCells(*this);
@@ -71,13 +71,13 @@ void GKSSolver::iterate()
         // ====================================================================
 
         this->time += this->dt;
-        
+
         // ====================================================================
         if ( this->iter % this->param.outputInterval == 0 )
         {
             this->dtList.push_back(this->dt);
             this->timeList.push_back(this->time);
-    
+
             chrono::high_resolution_clock::time_point endTime = chrono::high_resolution_clock::now();
             this->computationTime = chrono::duration_cast<chrono::seconds>( endTime - startTime ).count();
 
@@ -112,7 +112,7 @@ void GKSSolver::iterate()
                 cout << "Timesteps: " << this->iter << endl;
                 cout << "Time: " << this->time << endl;
 
-                outputWriter::writeCellVTK( string("out/") + param.simulationName + string(".Result.vtk"), *this);
+                // outputWriter::writeCellVTK( string("out/") + param.simulationName + string(".Result.vtk"), *this);
 
                 break;
             }
@@ -128,7 +128,7 @@ void GKSSolver::iterate()
     //              End of Time Loop
     // ========================================================================
     // ========================================================================
-
+    outputWriter::writeCellVTK( string("out/") + param.simulationName + string(".Result.vtk"), *this);
     cout << "Time to Solution: " << this->computationTime << " s" << endl;
 }
 
@@ -139,13 +139,13 @@ void GKSSolver::iterate()
 void GKSSolver::timeStep()
 {
     this->computeGlobalTimestep();
-    
+
     #pragma omp parallel for
     for ( int id = 0; id < numberOfCells; ++id )
     {
         if ( !isGhostCell(id) ) applyForcing(id);
     }
-    
+
     for( BoundaryCondition* BC : BoundaryConditionList )
     {
         BC->setGhostCells(*this);
@@ -165,7 +165,7 @@ void GKSSolver::timeStep()
     #pragma omp parallel for
     for ( int id = 0; id < numberOfInterfaces; ++id )
     {
-        computeFlux(id);  
+        computeFlux(id);
     }
 
     int breakPoint = 0;
@@ -173,7 +173,7 @@ void GKSSolver::timeStep()
     #pragma omp parallel for
     for ( int id = 0; id < numberOfCells; ++id )
     {
-        if ( !isGhostCell(id) ) updateCell(id);   
+        if ( !isGhostCell(id) ) updateCell(id);
     }
 
     breakPoint = 0;
@@ -222,7 +222,7 @@ void GKSSolver::computeGlobalTimestep()
 void GKSSolver::applyForcing(idType id)
 {
     this->storeDataOld(id);
-    
+
     // ========================================================================
     //                  Compute Primitive Variables (esp. Temp before forcing)
     // ========================================================================
@@ -274,14 +274,14 @@ void GKSSolver::computeFlux(const idType id)
     // ========================================================================
     prim = this->reconstructPrimPiecewiseConstant(id);
     // ========================================================================
-    
+
     // ========================================================================
     //          compute spacial gradients of the conservative varibles
     // ========================================================================
     //normalGradCons = differentiateConsNormal(id, prim.rho);
     this->computeInterfaceGradient( id, prim.rho, normalGradCons, tangentialGradCons );
     // ========================================================================
-    
+
     // ========================================================================
     //          Momentum Transformation in local coordinate system
     // ========================================================================
@@ -289,7 +289,7 @@ void GKSSolver::computeFlux(const idType id)
     this->global2local(id, normalGradCons);
     this->global2local(id, tangentialGradCons);
     // ========================================================================
-    
+
     // ========================================================================
     //          compute spacial micro slopes
     //              a = a1 + a2 u + a3 v + 0.5 a4 (u^2 + v^2 + xi^2)
@@ -297,7 +297,7 @@ void GKSSolver::computeFlux(const idType id)
     this->computeMicroSlope(prim, normalGradCons, a);
     this->computeMicroSlope(prim, tangentialGradCons, b);
     // ========================================================================
-    
+
     // ========================================================================
     //          comoute moments of the equilibrium distribution
     // ========================================================================
@@ -318,7 +318,7 @@ void GKSSolver::computeFlux(const idType id)
     // ========================================================================
     double tau = 2.0*prim.L * this->fluidParam.nu;
     // ========================================================================
-    
+
     // ========================================================================
     //          compute time integration Coefficients
     // ========================================================================
@@ -394,13 +394,13 @@ void GKSSolver::computeCellGradient(idType id)
         tmpCellGradientX.rhoU += w1 * ( this->getCellData( neighborCell ).rhoU - this->getCellData( id ).rhoU );
         tmpCellGradientX.rhoV += w1 * ( this->getCellData( neighborCell ).rhoV - this->getCellData( id ).rhoV );
         tmpCellGradientX.rhoE += w1 * ( this->getCellData( neighborCell ).rhoE - this->getCellData( id ).rhoE );
-        
+
         tmpCellGradientY.rho  += w2 * ( this->getCellData( neighborCell ).rho  - this->getCellData( id ).rho  );
         tmpCellGradientY.rhoU += w2 * ( this->getCellData( neighborCell ).rhoU - this->getCellData( id ).rhoU );
         tmpCellGradientY.rhoV += w2 * ( this->getCellData( neighborCell ).rhoV - this->getCellData( id ).rhoV );
         tmpCellGradientY.rhoE += w2 * ( this->getCellData( neighborCell ).rhoE - this->getCellData( id ).rhoE );
     }
-    
+
     this->setCellGradientX( id, tmpCellGradientX );
     this->setCellGradientY( id, tmpCellGradientY );
 }
@@ -452,13 +452,13 @@ void GKSSolver::computeInterfaceGradient(idType id, double rho, ConservedVariabl
     interpolatedGradientX.rhoU = 0.5 * ( this->getCellGradientX( this->getPosCell( id ) ).rhoU + this->getCellGradientX( this->getNegCell( id ) ).rhoU );
     interpolatedGradientX.rhoV = 0.5 * ( this->getCellGradientX( this->getPosCell( id ) ).rhoV + this->getCellGradientX( this->getNegCell( id ) ).rhoV );
     interpolatedGradientX.rhoE = 0.5 * ( this->getCellGradientX( this->getPosCell( id ) ).rhoE + this->getCellGradientX( this->getNegCell( id ) ).rhoE );
-    
+
     interpolatedGradientY.rho  = 0.5 * ( this->getCellGradientY( this->getPosCell( id ) ).rho  + this->getCellGradientY( this->getNegCell( id ) ).rho  );
     interpolatedGradientY.rhoU = 0.5 * ( this->getCellGradientY( this->getPosCell( id ) ).rhoU + this->getCellGradientY( this->getNegCell( id ) ).rhoU );
     interpolatedGradientY.rhoV = 0.5 * ( this->getCellGradientY( this->getPosCell( id ) ).rhoV + this->getCellGradientY( this->getNegCell( id ) ).rhoV );
     interpolatedGradientY.rhoE = 0.5 * ( this->getCellGradientY( this->getPosCell( id ) ).rhoE + this->getCellGradientY( this->getNegCell( id ) ).rhoE );
     // ========================================================================
-    
+
     // ========================================================================
     // Decoupling correction as given in Blazeks Book
     // ========================================================================
@@ -488,7 +488,7 @@ void GKSSolver::computeInterfaceGradient(idType id, double rho, ConservedVariabl
     InterfaceGradientY.rhoV = interpolatedGradientY.rhoV - ( interpolatedGradientX.rhoV * tx + interpolatedGradientY.rhoV * ty - directionalGradient.rhoV ) * ty;
     InterfaceGradientY.rhoE = interpolatedGradientY.rhoE - ( interpolatedGradientX.rhoE * tx + interpolatedGradientY.rhoE * ty - directionalGradient.rhoE ) * ty;
     // ========================================================================
-    
+
     // ========================================================================
     // transformation from global into local coordinatesystem and normalization
     //    by projection onto normal and tangential vectors
@@ -578,7 +578,7 @@ ConservedVariable GKSSolver::computeTimeDerivative(double * MomentU, double * Mo
                  //+ 2.0 * prim[3] * ( MomentU[0]*MomentV[0] * prim[2] - MomentU[0]*MomentV[1] ) * this->fluidParam.Force.y
                  ;
     // ========================================================================
-    
+
     // ========================================================================
     timeGrad.rhoU = a[0] * MomentU[2] * MomentV[0]
                   + a[1] * MomentU[3] * MomentV[0]
@@ -593,7 +593,7 @@ ConservedVariable GKSSolver::computeTimeDerivative(double * MomentU, double * Mo
                   //+ 2.0 * prim[3] * ( MomentU[1]*MomentV[0] * prim[2] - MomentU[1]*MomentV[1] ) * this->fluidParam.Force.y
                   ;
     // ========================================================================
-    
+
     // ========================================================================
     timeGrad.rhoV = a[0] * MomentU[1] * MomentV[1]
                   + a[1] * MomentU[2] * MomentV[1]
@@ -608,7 +608,7 @@ ConservedVariable GKSSolver::computeTimeDerivative(double * MomentU, double * Mo
                   //+ 2.0 * prim[3] * ( MomentU[0]*MomentV[1] * prim[2] - MomentU[0]*MomentV[2] ) * this->fluidParam.Force.y
                   ;
     // ========================================================================
-    
+
     // ========================================================================
     timeGrad.rhoE = a[0] * 0.50 * ( MomentU[3] * MomentV[0] + MomentU[1] * MomentV[2] + MomentU[1] * MomentV[0] * MomentXi[2] )
                   + a[1] * 0.50 * ( MomentU[4] * MomentV[0] + MomentU[2] * MomentV[2] + MomentU[2] * MomentV[0] * MomentXi[2] )
@@ -627,11 +627,11 @@ ConservedVariable GKSSolver::computeTimeDerivative(double * MomentU, double * Mo
                                   + 2.0 * MomentV[3] * MomentXi[2]
                                   )
     // this part comes from the inclusion of the forcing into the flux computation
-                  //+ prim[3] * ( ( MomentU[2] + MomentV[2] + MomentXi[2] ) * prim[1] 
+                  //+ prim[3] * ( ( MomentU[2] + MomentV[2] + MomentXi[2] ) * prim[1]
                   //            - ( MomentU[3] * MomentV[0] + MomentU[1] * MomentV[2] + MomentU[1] * MomentV[0] * MomentXi[2] )
                   //            ) * this->fluidParam.Force.x
-                  //+ prim[3] * ( ( MomentU[2] + MomentV[2] + MomentXi[2] ) * prim[2] 
-                  //            - ( MomentU[2] * MomentV[1] + MomentU[0] * MomentV[3] + MomentU[0] * MomentV[1] * MomentXi[2] ) 
+                  //+ prim[3] * ( ( MomentU[2] + MomentV[2] + MomentXi[2] ) * prim[2]
+                  //            - ( MomentU[2] * MomentV[1] + MomentU[0] * MomentV[3] + MomentU[0] * MomentV[1] * MomentXi[2] )
                   //            ) * this->fluidParam.Force.y
                   ;
     // ========================================================================
@@ -651,16 +651,16 @@ ConservedVariable GKSSolver::assembleFlux(double * MomentU, double * MomentV, do
     ConservedVariable Flux_3;
 
     ConservedVariable Flux;
-    
+
     // ================================================================================================================================================
     Flux_1.rho  = MomentU[0+1] * MomentV[0];
     Flux_1.rhoU = MomentU[1+1] * MomentV[0];
     Flux_1.rhoV = MomentU[0+1] * MomentV[1];
     Flux_1.rhoE = 0.5 * ( MomentU[2+1] * MomentV[0]
-                        + MomentU[0+1] * MomentV[2] 
+                        + MomentU[0+1] * MomentV[2]
                         + MomentU[0+1] * MomentV[0] * MomentXi[2] );
     // ================================================================================================================================================
-    
+
     // ================================================================================================================================================
     // ================================================================================================================================================
     // ================================================================================================================================================
@@ -670,13 +670,13 @@ ConservedVariable GKSSolver::assembleFlux(double * MomentU, double * MomentV, do
                  + a[1] * MomentU[2+1] * MomentV[0]
                  + a[2] * MomentU[1+1] * MomentV[1]
                  + a[3] * 0.5 * ( MomentU[3+1] * MomentV[0]
-                                + MomentU[1+1] * MomentV[2] 
+                                + MomentU[1+1] * MomentV[2]
                                 + MomentU[1+1] * MomentV[0] * MomentXi[2] )
                  + b[0] * MomentU[0+1] * MomentV[1]
                  + b[1] * MomentU[1+1] * MomentV[1]
                  + b[2] * MomentU[0+1] * MomentV[2]
-                 + b[3] * 0.5 * ( MomentU[2+1] * MomentV[1] 
-                                + MomentU[0+1] * MomentV[3] 
+                 + b[3] * 0.5 * ( MomentU[2+1] * MomentV[1]
+                                + MomentU[0+1] * MomentV[3]
                                 + MomentU[0+1] * MomentV[1] * MomentXi[2] )
                  )
     // this part comes from the inclusion of the forcing into the flux computation
@@ -684,19 +684,19 @@ ConservedVariable GKSSolver::assembleFlux(double * MomentU, double * MomentV, do
                //+ 2.0 * prim[3] * ( MomentU[0+1]*MomentV[0] * prim[2] - MomentU[0+1]*MomentV[1] ) * this->fluidParam.Force.y
                ;
     // ================================================================================================================================================
-    
+
     // ================================================================================================================================================
     Flux_2.rhoU = ( a[0] * MomentU[2+1] * MomentV[0]
                   + a[1] * MomentU[3+1] * MomentV[0]
                   + a[2] * MomentU[2+1] * MomentV[1]
-                  + a[3] * 0.5 * ( MomentU[4+1] * MomentV[0] 
-                                 + MomentU[2+1] * MomentV[2] 
+                  + a[3] * 0.5 * ( MomentU[4+1] * MomentV[0]
+                                 + MomentU[2+1] * MomentV[2]
                                  + MomentU[2+1] * MomentV[0] * MomentXi[2] )
                   + b[0] * MomentU[1+1] * MomentV[1]
                   + b[1] * MomentU[2+1] * MomentV[1]
                   + b[2] * MomentU[1+1] * MomentV[2]
-                  + b[3] * 0.5 * ( MomentU[3+1] * MomentV[1] 
-                                 + MomentU[1+1] * MomentV[3] 
+                  + b[3] * 0.5 * ( MomentU[3+1] * MomentV[1]
+                                 + MomentU[1+1] * MomentV[3]
                                  + MomentU[1+1] * MomentV[1] * MomentXi[2] )
                   )
     // this part comes from the inclusion of the forcing into the flux computation
@@ -704,7 +704,7 @@ ConservedVariable GKSSolver::assembleFlux(double * MomentU, double * MomentV, do
                 //+ 2.0 * prim[3] * ( MomentU[1+1]*MomentV[0] * prim[2] - MomentU[1+1]*MomentV[1] ) * this->fluidParam.Force.y
                 ;
     // ================================================================================================================================================
-    
+
     // ================================================================================================================================================
     Flux_2.rhoV = ( a[0] * MomentU[1+1] * MomentV[1]
                   + a[1] * MomentU[2+1] * MomentV[1]
@@ -724,9 +724,9 @@ ConservedVariable GKSSolver::assembleFlux(double * MomentU, double * MomentV, do
                 //+ 2.0 * prim[3] * ( MomentU[0+1]*MomentV[1] * prim[2] - MomentU[0+1]*MomentV[2] ) * this->fluidParam.Force.y
                 ;
     // ================================================================================================================================================
-    
+
     // ================================================================================================================================================
-    Flux_2.rhoE = 0.5 * ( a[0] * ( MomentU[3+1] * MomentV[0] 
+    Flux_2.rhoE = 0.5 * ( a[0] * ( MomentU[3+1] * MomentV[0]
                                  + MomentU[1+1] * MomentV[2]
                                  + MomentU[1+1] * MomentV[0] * MomentXi[2] )
                         + a[1] * ( MomentU[4+1] * MomentV[0]
@@ -740,9 +740,9 @@ ConservedVariable GKSSolver::assembleFlux(double * MomentU, double * MomentV, do
                                          + MomentU[1+1] * MomentV[0] * MomentXi[4] )
                                  +       ( MomentU[3+1] * MomentV[2]
                                          + MomentU[3+1] * MomentV[0] * MomentXi[2]
-                                         + MomentU[1+1] * MomentV[2] * MomentXi[2] ) 
+                                         + MomentU[1+1] * MomentV[2] * MomentXi[2] )
                                  )
-                        + b[0] * ( MomentU[2+1] * MomentV[1] 
+                        + b[0] * ( MomentU[2+1] * MomentV[1]
                                  + MomentU[0+1] * MomentV[3]
                                  + MomentU[0+1] * MomentV[1] * MomentXi[2] )
                         + b[1] * ( MomentU[3+1] * MomentV[1]
@@ -751,7 +751,7 @@ ConservedVariable GKSSolver::assembleFlux(double * MomentU, double * MomentV, do
                         + b[2] * ( MomentU[2+1] * MomentV[2]
                                  + MomentU[0+1] * MomentV[4]
                                  + MomentU[0+1] * MomentV[2] * MomentXi[2] )
-                        + b[3] * ( 0.5 * ( MomentU[4+1] * MomentV[1] 
+                        + b[3] * ( 0.5 * ( MomentU[4+1] * MomentV[1]
                                          + MomentU[0+1] * MomentV[5]
                                          + MomentU[0+1] * MomentV[1] * MomentXi[4] )
                                  +       ( MomentU[2+1] * MomentV[3]
@@ -760,15 +760,15 @@ ConservedVariable GKSSolver::assembleFlux(double * MomentU, double * MomentV, do
                                  )
                         )
     // this part comes from the inclusion of the forcing into the flux computation
-                      //+ prim[3] * ( ( MomentU[2+1] * MomentV[0] + MomentU[0+1] * MomentV[2] + MomentU[0+1] * MomentV[0] * MomentXi[2] ) * prim[1] 
+                      //+ prim[3] * ( ( MomentU[2+1] * MomentV[0] + MomentU[0+1] * MomentV[2] + MomentU[0+1] * MomentV[0] * MomentXi[2] ) * prim[1]
                       //            - ( MomentU[3+1] * MomentV[0] + MomentU[1+1] * MomentV[2] + MomentU[1+1] * MomentV[0] * MomentXi[2] )
                       //            ) * this->fluidParam.Force.x
-                      //+ prim[3] * ( ( MomentU[2+1] * MomentV[0] + MomentU[0+1] * MomentV[2] + MomentU[0+1] * MomentV[0] * MomentXi[2] ) * prim[2] 
-                      //            - ( MomentU[2+1] * MomentV[1] + MomentU[0+1] * MomentV[3] + MomentU[0+1] * MomentV[1] * MomentXi[2] ) 
+                      //+ prim[3] * ( ( MomentU[2+1] * MomentV[0] + MomentU[0+1] * MomentV[2] + MomentU[0+1] * MomentV[0] * MomentXi[2] ) * prim[2]
+                      //            - ( MomentU[2+1] * MomentV[1] + MomentU[0+1] * MomentV[3] + MomentU[0+1] * MomentV[1] * MomentXi[2] )
                       //            ) * this->fluidParam.Force.y
                       ;
     // ================================================================================================================================================
-    
+
     // ================================================================================================================================================
     // ================================================================================================================================================
     // ================================================================================================================================================
@@ -782,7 +782,7 @@ ConservedVariable GKSSolver::assembleFlux(double * MomentU, double * MomentV, do
                                 + MomentU[0+1]*MomentV[0]*MomentXi[2] )
                  );
     // ================================================================================================================================================
-    
+
     // ================================================================================================================================================
     Flux_3.rhoU = ( A[0] * MomentU[1+1] * MomentV[0]
                   + A[1] * MomentU[2+1] * MomentV[0]
@@ -792,7 +792,7 @@ ConservedVariable GKSSolver::assembleFlux(double * MomentU, double * MomentV, do
                                  + MomentU[1+1]*MomentV[0]*MomentXi[2] )
                   );
     // ================================================================================================================================================
-    
+
     // ================================================================================================================================================
     Flux_3.rhoV = ( A[0] * MomentU[0+1] * MomentV[1]
                   + A[1] * MomentU[1+1] * MomentV[1]
@@ -802,7 +802,7 @@ ConservedVariable GKSSolver::assembleFlux(double * MomentU, double * MomentV, do
                                  + MomentU[0+1]*MomentV[1]*MomentXi[2] )
                   );
     // ================================================================================================================================================
-    
+
     // ================================================================================================================================================
     Flux_3.rhoE = 0.5 * ( A[0] * ( MomentU[2+1] * MomentV[0]
                                  + MomentU[0+1] * MomentV[2]
@@ -818,11 +818,11 @@ ConservedVariable GKSSolver::assembleFlux(double * MomentU, double * MomentV, do
                                          + MomentU[0+1] * MomentV[0] * MomentXi[4] )
                                  +       ( MomentU[2+1] * MomentV[2]
                                          + MomentU[2+1] * MomentV[0] * MomentXi[2]
-                                         + MomentU[0+1] * MomentV[2] * MomentXi[2] ) 
+                                         + MomentU[0+1] * MomentV[2] * MomentXi[2] )
                                  )
                         );
     // ================================================================================================================================================
-    
+
     // ================================================================================================================================================
     // ================================================================================================================================================
     // ================================================================================================================================================
@@ -841,7 +841,7 @@ ConservedVariable GKSSolver::assembleFlux(double * MomentU, double * MomentV, do
 
     Flux.rhoE += ( 1.0/this->fluidParam.Pr - 1.0 ) * q;
     // ================================================================================================================================================
-    
+
     // ================================================================================================================================================
     //                              Pressure Conditioning
     // ================================================================================================================================================
@@ -913,7 +913,7 @@ double GKSSolver::getMaxVelocity()
         if ( ! isGhostCell(id) )
         {
             PrimitiveVariable prim = cons2prim( this->getCellData(id) );
-            localVelocity = sqrt( prim.U * prim.U 
+            localVelocity = sqrt( prim.U * prim.U
                                 + prim.V * prim.V );
             maxVelocity = max(maxVelocity, localVelocity);
         }
@@ -932,7 +932,7 @@ double GKSSolver::getMaxMa()
         if ( ! isGhostCell(id) )
         {
             PrimitiveVariable prim = cons2prim( this->getCellData(id) );
-            localVelocity = sqrt( prim.U * prim.U 
+            localVelocity = sqrt( prim.U * prim.U
                                 + prim.V * prim.V );
             localMa = localVelocity * sqrt( 2.0 * prim.L );
             maxMa = max(maxMa, localMa);
@@ -959,7 +959,7 @@ ConservedVariable GKSSolver::prim2cons(const PrimitiveVariable & prim)
     ConservedVariable cons;
 
     cons.rho  = prim.rho;
-    cons.rhoU = prim.rho * prim.U; 
+    cons.rhoU = prim.rho * prim.U;
     cons.rhoV = prim.rho * prim.V;
     cons.rhoE = prim.rho * (this->fluidParam.K + 2.0) / (4.0*prim.L) + 0.5 * prim.rho * ( prim.U*prim.U + prim.V*prim.V );
 

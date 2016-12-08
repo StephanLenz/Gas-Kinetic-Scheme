@@ -202,6 +202,7 @@ void outputWriter::writeOverview(string filename, GKSSolver & solver)
     file << "Max Number of Iteratios:               " << solver.getParameters().numberOfIterations << endl;
     file << "VTK-File Output Interval:              " << solver.getParameters().outputIntervalVTK << endl;
     file << "Convergence History Output Interval:   " << solver.getParameters().outputInterval << endl;
+    file << "Maximal Simulation Time:               " << solver.getParameters().maxTime << endl;
     file << "Convergence Criterium:               ( " << solver.getParameters().convergenceCriterium.rho  << ", "
                                                       << solver.getParameters().convergenceCriterium.rhoU << ", "
                                                       << solver.getParameters().convergenceCriterium.rhoV << ", "

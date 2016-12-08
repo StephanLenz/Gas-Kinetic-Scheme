@@ -13,7 +13,7 @@ void FaceAnalyzer::addFace(idType id)
 }
 
 DragAndLiftCalculator::DragAndLiftCalculator(double U, double D)
-                      : lift(0.0), drag(0.0), U(U), D(D)
+                      : drag(0.0), lift(0.0), U(U), D(D)
 {
 }
 
@@ -89,14 +89,14 @@ ConservedVariable DragAndLiftCalculator::computeTimeAveragedFlux(GKSSolver & sol
     // ========================================================================
     prim = solver.reconstructPrimPiecewiseConstant(face);
     // ========================================================================
-    
+
     // ========================================================================
     //          compute spacial gradients of the conservative varibles
     // ========================================================================
     //normalGradCons = differentiateConsNormal(id, prim.rho);
     solver.computeInterfaceGradient( face, prim.rho, normalGradCons, tangentialGradCons );
     // ========================================================================
-    
+
     // ========================================================================
     //          Momentum Transformation in local coordinate system
     // ========================================================================
@@ -104,7 +104,7 @@ ConservedVariable DragAndLiftCalculator::computeTimeAveragedFlux(GKSSolver & sol
     solver.global2local(face, normalGradCons);
     solver.global2local(face, tangentialGradCons);
     // ========================================================================
-    
+
     // ========================================================================
     //          compute spacial micro slopes
     //              a = a1 + a2 u + a3 v + 0.5 a4 (u^2 + v^2 + xi^2)
@@ -112,7 +112,7 @@ ConservedVariable DragAndLiftCalculator::computeTimeAveragedFlux(GKSSolver & sol
     solver.computeMicroSlope(prim, normalGradCons, a);
     solver.computeMicroSlope(prim, tangentialGradCons, b);
     // ========================================================================
-    
+
     // ========================================================================
     //          comoute moments of the equilibrium distribution
     // ========================================================================
@@ -133,7 +133,7 @@ ConservedVariable DragAndLiftCalculator::computeTimeAveragedFlux(GKSSolver & sol
     // ========================================================================
     double tau = 2.0*prim.L * solver.getFluidParam().nu;
     // ========================================================================
-    
+
     // ========================================================================
     //          compute time integration Coefficients
     // ========================================================================

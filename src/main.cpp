@@ -34,12 +34,12 @@ int main(int argc, char* argv[])
 
     param.simulationName = argv[1];
 
-    if( ! paramReader::read( string("msh/") + param.simulationName, param, fluidParam ) )
+    if( ! paramReader::read( string("msh/") + param.simulationName + string(".gksparam"), param, fluidParam ) )
     {
         system("pause");
         return 1;
     }
-    
+
     GKSSolver* solverPush = new GKSSolverPush(param, fluidParam);
 
     if( ! solverPush->readProblem( string("msh/") + param.simulationName ) )

@@ -4,6 +4,16 @@
 #include <sstream>
 #include <cmath>
 
+BoundaryCondition::~BoundaryCondition(){}
+bcWall::~bcWall(){}
+bcIsothermalWall::~bcIsothermalWall(){}
+bcPeriodicGhost::~bcPeriodicGhost(){}
+bcInflowParabolic::~bcInflowParabolic(){}
+bcInflowUniform::~bcInflowUniform(){}
+bcOutflow::~bcOutflow(){}
+
+// ============================================================================
+
 void BoundaryCondition::addCell(idType id)
 {
     this->Cell.push_back(id);
@@ -25,7 +35,7 @@ void BoundaryCondition::findNeighborCells(mshReader& reader)
 }
 
 void BoundaryCondition::setGhostCells(GKSSolver & solver)
-{    
+{
     #pragma omp parallel for
     for( int cell = 0; cell < Cell.size(); ++cell )
     {
@@ -78,7 +88,7 @@ void bcWall::setGhostCell(GKSSolver & solver, idType cell)
     prim.U   = 2.0*this->U - primNeighbor.U;
     prim.V   = 2.0*this->V - primNeighbor.V;
     prim.L   = primNeighbor.L;
-        
+
     solver.setData(Cell[cell], prim);
 }
 
@@ -91,7 +101,7 @@ void bcIsothermalWall::setGhostCell(GKSSolver & solver, idType cell)
     prim.U   = 2.0*this->U - primNeighbor.U;
     prim.V   = 2.0*this->V - primNeighbor.V;
     prim.L   = 2.0*this->L - primNeighbor.L;
-        
+
     solver.setData(Cell[cell], prim);
 }
 
@@ -99,12 +109,12 @@ void bcPeriodicGhost::setGhostCell(GKSSolver & solver, idType cell)
 {
     PrimitiveVariable primNeighbor = solver.getPrim( NeighborCell[cell] );
     PrimitiveVariable prim;
-    
+
     prim.rho = primNeighbor.rho;
     prim.U   = primNeighbor.U;
     prim.V   = primNeighbor.V;
     prim.L   = primNeighbor.L;
-        
+
     solver.setData(Cell[cell], prim);
 }
 
@@ -118,7 +128,7 @@ void bcInflowParabolic::setGhostCell(GKSSolver & solver, idType cell)
     double H = sqrt( bcVector.x * bcVector.x + bcVector.y * bcVector.y );
 
     Vec2 cellCenter = solver.getCellCenter( this->NeighborCell[cell] );
-    
+
     Vec2 cellVector( cellCenter.x - this->p0.x, cellCenter.y - this->p0.y );
 
     double z = ( cellVector.x * bcVector.x + cellVector.y * bcVector.y ) / ( H * H );
@@ -130,7 +140,7 @@ void bcInflowParabolic::setGhostCell(GKSSolver & solver, idType cell)
     prim.U   = 2.0*U_Inflow - primNeighbor.U;
     prim.V   = 2.0*V_Inflow - primNeighbor.V;
     prim.L   = 2.0*this->L  - primNeighbor.L;
-        
+
     solver.setData(Cell[cell], prim);
 }
 
@@ -143,7 +153,7 @@ void bcInflowUniform::setGhostCell(GKSSolver & solver, idType cell)
     prim.U   = 2.0*this->U - primNeighbor.U;
     prim.V   = 2.0*this->V - primNeighbor.V;
     prim.L   = 2.0*this->L - primNeighbor.L;
-        
+
     solver.setData(Cell[cell], prim);
 }
 
@@ -156,7 +166,7 @@ void bcOutflow::setGhostCell(GKSSolver & solver, idType cell)
     prim.U   = primNeighbor.U;
     prim.V   = primNeighbor.V;
     prim.L   = primNeighbor.L;
-        
+
     solver.setData(Cell[cell], prim);
 }
 

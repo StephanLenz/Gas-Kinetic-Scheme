@@ -15,12 +15,12 @@ class mshReader
 {
 public:
     vector<Vec2> Nodes;
-    
+
     vector< CellType >      Cell2Type;
     vector< array<idType, 4> >  Cell2Node;
     vector< array<idType, 4> >  Cell2Face;
     vector< idType >           Cell2BC;
-                            
+
     vector< array<idType, 2> >  Face2Cell;
     vector< array<idType, 2> >  Face2Node;
     vector< idType >           Face2PhysicalName;
@@ -94,6 +94,8 @@ public:
     bool FaceCheck();
 
     // ================================ Util ==================================
+
+    string getKey(string buffer);
 
     template <typename T>
     idType findIndex(vector<T> _vector, T _value);

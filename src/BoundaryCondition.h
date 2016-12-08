@@ -15,6 +15,8 @@ protected:
     vector<idType> NeighborCell;
 
 public:
+    virtual ~BoundaryCondition();
+
     void addCell(idType id);
     virtual void findNeighborCells( mshReader& reader );
 
@@ -30,6 +32,7 @@ private:
     double U;
     double V;
 public:
+    virtual ~bcWall();
     bcWall( double U, double V );
     virtual void setGhostCell(GKSSolver& solver, idType cell);
     virtual void setGradientGhostCells(GKSSolver& solver);
@@ -42,6 +45,7 @@ private:
     double V;
     double L;
 public:
+    virtual ~bcIsothermalWall();
     bcIsothermalWall( double U, double V, double L );
     virtual void setGhostCell(GKSSolver& solver, idType cell);
     virtual void setGradientGhostCells(GKSSolver& solver);
@@ -50,6 +54,7 @@ public:
 class bcPeriodicGhost : public BoundaryCondition
 {
 public:
+    virtual ~bcPeriodicGhost();
     bcPeriodicGhost( );
     virtual void findNeighborCells( mshReader& reader );
     virtual void setGhostCell(GKSSolver& solver, idType cell);
@@ -65,6 +70,7 @@ private:
     Vec2 p0;
     Vec2 p1;
 public:
+    virtual ~bcInflowParabolic();
     bcInflowParabolic( double U, double V, double L, Vec2 p0, Vec2 p1 );
     virtual void setGhostCell(GKSSolver& solver, idType cell);
     virtual void setGradientGhostCells(GKSSolver& solver);
@@ -77,6 +83,7 @@ private:
     double V;
     double L;
 public:
+    virtual ~bcInflowUniform();
     bcInflowUniform( double U, double V, double L );
     virtual void setGhostCell(GKSSolver& solver, idType cell);
     virtual void setGradientGhostCells(GKSSolver& solver);
@@ -87,10 +94,10 @@ class bcOutflow : public BoundaryCondition
 private:
     double p;
 public:
+    virtual ~bcOutflow();
     bcOutflow( double p );
     virtual void setGhostCell(GKSSolver& solver, idType cell);
     virtual void setGradientGhostCells(GKSSolver& solver);
 };
 
 #endif
-
