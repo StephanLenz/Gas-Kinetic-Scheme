@@ -51,8 +51,6 @@ private:
     vector<ConservedVariable> CellGradientX;
     vector<ConservedVariable> CellGradientY;
 
-    vector<ConservedVariable> InterfaceFlux;
-
     // ========================================================================
     //              Connectivity
     // ========================================================================
@@ -63,8 +61,6 @@ private:
 
     vector< array<idType, 2> > Interface2Node;
     vector< array<idType, 2> > Interface2Cell;
-
-    vector< array<bool, 2> > InterfaceAdd2Cell;
 
     // ========================================================================
     //              Geometry

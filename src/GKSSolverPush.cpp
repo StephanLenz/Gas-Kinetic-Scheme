@@ -60,8 +60,6 @@ bool GKSSolverPush::readProblem(string filename)
     this->CellMinDx.resize( numberOfCells );
     this->CellLSCoeff.resize( numberOfCells );
 
-    this->InterfaceFlux.resize( numberOfInterfaces );
-
     this->Interface2Node.resize( numberOfInterfaces );
     this->Interface2Cell.resize( numberOfInterfaces );
 
@@ -70,8 +68,6 @@ bool GKSSolverPush::readProblem(string filename)
     this->InterfaceArea.resize( numberOfInterfaces );
     this->InterfaceDistance.resize( numberOfInterfaces );
     this->Interface2CellCenterDistance.resize( numberOfInterfaces );
-
-    this->InterfaceAdd2Cell.resize( numberOfInterfaces );
 
     this->BoundaryConditionList.resize( reader.BCs.size() );
     this->FaceAnalyzerList.resize( reader.FaceAnalyzers.size() );
@@ -146,9 +142,6 @@ bool GKSSolverPush::readProblem(string filename)
         this->InterfaceNormal  [interface] = reader.FaceNormal  [interface];
         this->InterfaceArea    [interface] = reader.FaceArea    [interface];
         this->InterfaceDistance[interface] = reader.FaceDistance[interface];
-
-        this->InterfaceAdd2Cell[interface][0] = reader.Face2CellAdd[interface][0];
-        this->InterfaceAdd2Cell[interface][1] = reader.Face2CellAdd[interface][1];
     }
     // ========================================================================
 
@@ -186,31 +179,23 @@ void GKSSolverPush::updateCell(const idType id)
 
 void GKSSolverPush::applyFlux(idType id, ConservedVariable flux)
 {
-    if( this->InterfaceAdd2Cell[id][0] )
-    {
-        #pragma omp atomic
-        this->CellUpdate[ Interface2Cell[id][0] ].rho  += flux.rho ;
-        #pragma omp atomic
-        this->CellUpdate[ Interface2Cell[id][0] ].rhoU += flux.rhoU;
-        #pragma omp atomic
-        this->CellUpdate[ Interface2Cell[id][0] ].rhoV += flux.rhoV;
-        #pragma omp atomic
-        this->CellUpdate[ Interface2Cell[id][0] ].rhoE += flux.rhoE;
-    }
-    
-    if( this->InterfaceAdd2Cell[id][1] )
-    {
-        #pragma omp atomic
-        this->CellUpdate[ Interface2Cell[id][1] ].rho  -= flux.rho ;
-        #pragma omp atomic
-        this->CellUpdate[ Interface2Cell[id][1] ].rhoU -= flux.rhoU;
-        #pragma omp atomic
-        this->CellUpdate[ Interface2Cell[id][1] ].rhoV -= flux.rhoV;
-        #pragma omp atomic
-        this->CellUpdate[ Interface2Cell[id][1] ].rhoE -= flux.rhoE;
-    }
+    #pragma omp atomic
+    this->CellUpdate[ Interface2Cell[id][0] ].rho  += flux.rho ;
+    #pragma omp atomic
+    this->CellUpdate[ Interface2Cell[id][0] ].rhoU += flux.rhoU;
+    #pragma omp atomic
+    this->CellUpdate[ Interface2Cell[id][0] ].rhoV += flux.rhoV;
+    #pragma omp atomic
+    this->CellUpdate[ Interface2Cell[id][0] ].rhoE += flux.rhoE;
 
-    this->InterfaceFlux[id] = flux;
+    #pragma omp atomic
+    this->CellUpdate[ Interface2Cell[id][1] ].rho  -= flux.rho ;
+    #pragma omp atomic
+    this->CellUpdate[ Interface2Cell[id][1] ].rhoU -= flux.rhoU;
+    #pragma omp atomic
+    this->CellUpdate[ Interface2Cell[id][1] ].rhoV -= flux.rhoV;
+    #pragma omp atomic
+    this->CellUpdate[ Interface2Cell[id][1] ].rhoE -= flux.rhoE;
 }
 
 bool GKSSolverPush::isGhostCell(const idType & id)
