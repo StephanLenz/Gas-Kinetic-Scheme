@@ -35,6 +35,9 @@ bool GKSSolverPush::readProblem(string filename)
 
     this->numberOfCells        = reader.Cell2Node.size();
 
+    this->numberOfFluidCells = 0;
+    for( idType Cell2BC : reader.Cell2BC ) if( Cell2BC == -1 ) this->numberOfFluidCells++;
+
     this->numberOfInterfaces   = reader.Face2Node.size();
 
     // ========================================================================
@@ -53,7 +56,6 @@ bool GKSSolverPush::readProblem(string filename)
 
     this->Cell2Node.resize( numberOfCells );
     this->Cell2Interface.resize( numberOfCells );
-    this->CellBoundaryCondition.resize( numberOfCells );
 
     this->CellCenter.resize( numberOfCells );
     this->CellVolume.resize( numberOfCells );
@@ -121,8 +123,6 @@ bool GKSSolverPush::readProblem(string filename)
         this->CellVolume [cell] = reader.CellVolume [cell];
         this->CellMinDx  [cell] = reader.CellMinDx  [cell];
         this->CellLSCoeff[cell] = reader.CellLSCoeff[cell];
-
-        this->CellBoundaryCondition[cell] = reader.Cell2BC[cell];
     }
     // ========================================================================
 
@@ -200,7 +200,7 @@ void GKSSolverPush::applyFlux(idType id, ConservedVariable flux)
 
 bool GKSSolverPush::isGhostCell(const idType & id)
 {
-    return this->CellBoundaryCondition[id] != -1;
+    return id >= this->numberOfFluidCells;
 }
 
 ConservedVariable GKSSolverPush::getCellData(idType id)
@@ -241,11 +241,6 @@ double GKSSolverPush::getCellMinDx(idType id)
 array<double, 3> GKSSolverPush::getCellLSCoeff(idType id)
 {
     return this->CellLSCoeff[id];
-}
-
-int GKSSolverPush::getCellBoundaryCondition(idType id)
-{
-    return this->CellBoundaryCondition[id];
 }
 
 double GKSSolverPush::getInterfaceArea(idType id)
@@ -296,21 +291,6 @@ void GKSSolverPush::setCellGradientY(idType id, ConservedVariable dWdy)
 Vec2 GKSSolverPush::getNode(idType node)
 {
     return this->NodeCenter[node];
-}
-
-idType GKSSolverPush::getNumberOfNodes()
-{
-    return this->numberOfNodes;
-}
-
-idType GKSSolverPush::getNumberOfCells()
-{
-    return this->numberOfCells;
-}
-
-idType GKSSolverPush::getNumberOfInterfaces()
-{
-    return this->numberOfInterfaces;
 }
 
 array<idType, 4> GKSSolverPush::getCell2Node(idType cell)

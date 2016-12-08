@@ -40,6 +40,7 @@ class GKSSolver
 protected:
     idType numberOfNodes;
     idType numberOfCells;
+    idType numberOfFluidCells;
     idType numberOfInterfaces;
 
     vector<BoundaryCondition*> BoundaryConditionList;
@@ -168,8 +169,6 @@ public:
     virtual double getCellMinDx(idType id) = 0;
     virtual array<double, 3> getCellLSCoeff(idType id) = 0;
 
-    virtual int getCellBoundaryCondition(idType id) = 0;
-
     virtual double getInterfaceArea(idType id) = 0;
     virtual double getInterfaceDistance(idType id) = 0;
 
@@ -200,9 +199,9 @@ public:
     FluidParameter getFluidParam();
     Parameters     getParameters();
 
-    virtual idType getNumberOfNodes() = 0;
-    virtual idType getNumberOfCells() = 0;
-    virtual idType getNumberOfInterfaces() = 0;
+    virtual idType getNumberOfNodes();
+    virtual idType getNumberOfCells();
+    virtual idType getNumberOfInterfaces();
 };
 
 #endif

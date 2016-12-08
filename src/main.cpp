@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
     if( argc == 1 )
     {
         cout << "Error: No Simulation Name given." << endl;
-        system("pause");
+        //system("pause");
         return 1;
     }
 
@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
 
     if( ! paramReader::read( string("msh/") + param.simulationName + string(".gksparam"), param, fluidParam ) )
     {
-        system("pause");
+        //system("pause");
         return 1;
     }
 
@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
 
     if( ! solverPush->readProblem( string("msh/") + param.simulationName ) )
     {
-        system("pause");
+        //system("pause");
         return 1;
     }
 
@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
 
     solverPush->iterate();
 
-    system("pause");
+    //system("pause");
     delete solverPush;
     return 0;
 }

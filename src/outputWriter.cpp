@@ -77,7 +77,7 @@ void outputWriter::writeCellVTK(string filename, GKSSolver& solver)
     file << "BC 1 " << solver.getNumberOfCells() << " int\n";
     for (int cell = 0; cell < solver.getNumberOfCells(); ++cell)
     {
-        file << solver.getCellBoundaryCondition(cell) << endl;
+        file << solver.isGhostCell(cell) << endl;
     }
 
     file << "VECTORS Velocity double\n";

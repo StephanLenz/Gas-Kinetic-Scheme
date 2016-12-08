@@ -57,7 +57,6 @@ private:
 
     vector< array<idType, 4> > Cell2Node;
     vector< array<idType, 4> > Cell2Interface;
-    vector< idType >           CellBoundaryCondition;
 
     vector< array<idType, 2> > Interface2Node;
     vector< array<idType, 2> > Interface2Cell;
@@ -129,8 +128,6 @@ public:
     virtual double getCellMinDx(idType id);
     virtual array<double,3> getCellLSCoeff(idType id);
 
-    virtual int getCellBoundaryCondition(idType id);
-
     virtual double getInterfaceArea(idType id);
     virtual double getInterfaceDistance(idType id);
 
@@ -146,10 +143,6 @@ public:
     virtual void setCellGradientY(idType id, ConservedVariable dWdy);
 
     virtual Vec2 getNode(idType node);
-
-    virtual idType getNumberOfNodes();
-    virtual idType getNumberOfCells();
-    virtual idType getNumberOfInterfaces();
 
     virtual array<idType,4> getCell2Node(idType cell);
 };

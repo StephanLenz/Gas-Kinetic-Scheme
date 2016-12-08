@@ -155,9 +155,9 @@ void GKSSolver::timeStep()
     this->computeGlobalTimestep();
 
     #pragma omp parallel for
-    for ( int id = 0; id < numberOfCells; ++id )
+    for ( int id = 0; id < numberOfFluidCells; ++id )
     {
-        if ( !isGhostCell(id) ) applyForcing(id);
+        applyForcing(id);
     }
 
     for( BoundaryCondition* BC : BoundaryConditionList )
@@ -185,9 +185,9 @@ void GKSSolver::timeStep()
     int breakPoint = 0;
 
     #pragma omp parallel for
-    for ( int id = 0; id < numberOfCells; ++id )
+    for ( int id = 0; id < numberOfFluidCells; ++id )
     {
-        if ( !isGhostCell(id) ) updateCell(id);
+        updateCell(id);
     }
 
     breakPoint = 0;
@@ -212,20 +212,17 @@ bool GKSSolver::isConverged(ConservedVariable residual)
 void GKSSolver::computeGlobalTimestep()
 {
     this->dt = 1.0e99;
-    for (int id = 0; id < this->numberOfCells; ++id)
+    for (int id = 0; id < this->numberOfFluidCells; ++id)
     {
-        if ( ! isGhostCell(id) )
-        {
-            PrimitiveVariable prim = this->cons2prim( this->getCellData(id) );
+        PrimitiveVariable prim = this->cons2prim( this->getCellData(id) );
 
-            double U_max = sqrt(prim.U*prim.U + prim.V*prim.V);
-            double c_s   = sqrt( 1.0 / ( 2.0*prim.L ) );           // c_s = sqrt(RT) = c_s = sqrt(1/2lambda)
-            double minDx = this->getCellMinDx(id);
+        double U_max = sqrt(prim.U*prim.U + prim.V*prim.V);
+        double c_s   = sqrt( 1.0 / ( 2.0*prim.L ) );           // c_s = sqrt(RT) = c_s = sqrt(1/2lambda)
+        double minDx = this->getCellMinDx(id);
 
-            double localTimestep = minDx / ( U_max + c_s + 2.0*this->fluidParam.nu / minDx );
+        double localTimestep = minDx / ( U_max + c_s + 2.0*this->fluidParam.nu / minDx );
 
-            this->dt = min( localTimestep, this->dt );
-        }
+        this->dt = min( localTimestep, this->dt );
     }
     this->dt *= this->param.CFL;
 }
@@ -894,20 +891,17 @@ ConservedVariable GKSSolver::getL2GlobalResidual()
     consSquare.rhoV = 0.0;
     consSquare.rhoE = 0.0;
 
-    for ( int id = 0; id < this->numberOfCells; ++id )
+    for ( int id = 0; id < this->numberOfFluidCells; ++id )
     {
-        if ( ! isGhostCell(id) )
-        {
-            residualSquare.rho  +=  ( this->getCellDataOld(id).rho  - this->getCellData(id).rho  ) * ( this->getCellDataOld(id).rho  - this->getCellData(id).rho  );
-            residualSquare.rhoU +=  ( this->getCellDataOld(id).rhoU - this->getCellData(id).rhoU ) * ( this->getCellDataOld(id).rhoU - this->getCellData(id).rhoU );
-            residualSquare.rhoV +=  ( this->getCellDataOld(id).rhoV - this->getCellData(id).rhoV ) * ( this->getCellDataOld(id).rhoV - this->getCellData(id).rhoV );
-            residualSquare.rhoE +=  ( this->getCellDataOld(id).rhoE - this->getCellData(id).rhoE ) * ( this->getCellDataOld(id).rhoE - this->getCellData(id).rhoE );
+        residualSquare.rho  +=  ( this->getCellDataOld(id).rho  - this->getCellData(id).rho  ) * ( this->getCellDataOld(id).rho  - this->getCellData(id).rho  );
+        residualSquare.rhoU +=  ( this->getCellDataOld(id).rhoU - this->getCellData(id).rhoU ) * ( this->getCellDataOld(id).rhoU - this->getCellData(id).rhoU );
+        residualSquare.rhoV +=  ( this->getCellDataOld(id).rhoV - this->getCellData(id).rhoV ) * ( this->getCellDataOld(id).rhoV - this->getCellData(id).rhoV );
+        residualSquare.rhoE +=  ( this->getCellDataOld(id).rhoE - this->getCellData(id).rhoE ) * ( this->getCellDataOld(id).rhoE - this->getCellData(id).rhoE );
 
-            consSquare.rho  +=  this->getCellData(id).rho  * this->getCellData(id).rho ;
-            consSquare.rhoU +=  this->getCellData(id).rhoU * this->getCellData(id).rhoU;
-            consSquare.rhoV +=  this->getCellData(id).rhoV * this->getCellData(id).rhoV;
-            consSquare.rhoE +=  this->getCellData(id).rhoE * this->getCellData(id).rhoE;
-        }
+        consSquare.rho  +=  this->getCellData(id).rho  * this->getCellData(id).rho ;
+        consSquare.rhoU +=  this->getCellData(id).rhoU * this->getCellData(id).rhoU;
+        consSquare.rhoV +=  this->getCellData(id).rhoV * this->getCellData(id).rhoV;
+        consSquare.rhoE +=  this->getCellData(id).rhoE * this->getCellData(id).rhoE;
     }
 
     residual.rho  = sqrt( residualSquare.rho  ) / sqrt( consSquare.rho  );
@@ -922,15 +916,12 @@ double GKSSolver::getMaxVelocity()
 {
     double maxVelocity = 0.0;
     double localVelocity;
-    for ( int id = 0; id < this->numberOfCells; ++id )
+    for ( int id = 0; id < this->numberOfFluidCells; ++id )
     {
-        if ( ! isGhostCell(id) )
-        {
-            PrimitiveVariable prim = cons2prim( this->getCellData(id) );
-            localVelocity = sqrt( prim.U * prim.U
-                                + prim.V * prim.V );
-            maxVelocity = max(maxVelocity, localVelocity);
-        }
+        PrimitiveVariable prim = cons2prim( this->getCellData(id) );
+        localVelocity = sqrt( prim.U * prim.U
+                            + prim.V * prim.V );
+        maxVelocity = max(maxVelocity, localVelocity);
     }
 
     return maxVelocity;
@@ -941,16 +932,13 @@ double GKSSolver::getMaxMa()
     double maxMa = 0.0;
     double localVelocity;
     double localMa;
-    for ( int id = 0; id < this->numberOfCells; ++id )
+    for ( int id = 0; id < this->numberOfFluidCells; ++id )
     {
-        if ( ! isGhostCell(id) )
-        {
-            PrimitiveVariable prim = cons2prim( this->getCellData(id) );
-            localVelocity = sqrt( prim.U * prim.U
-                                + prim.V * prim.V );
-            localMa = localVelocity * sqrt( 2.0 * prim.L );
-            maxMa = max(maxMa, localMa);
-        }
+        PrimitiveVariable prim = cons2prim( this->getCellData(id) );
+        localVelocity = sqrt( prim.U * prim.U
+                            + prim.V * prim.V );
+        localMa = localVelocity * sqrt( 2.0 * prim.L );
+        maxMa = max(maxMa, localMa);
     }
 
     return maxMa;
@@ -1086,4 +1074,19 @@ idType GKSSolver::getNeighborCell(idType face, idType askingCell)
     if      ( this->getPosCell( face ) == askingCell ) return this->getNegCell( face );
     else if ( this->getNegCell( face ) == askingCell ) return this->getPosCell( face );
     return -1;
+}
+
+idType GKSSolver::getNumberOfNodes()
+{
+    return this->numberOfNodes;
+}
+
+idType GKSSolver::getNumberOfCells()
+{
+    return this->numberOfCells;
+}
+
+idType GKSSolver::getNumberOfInterfaces()
+{
+    return this->numberOfInterfaces;
 }
