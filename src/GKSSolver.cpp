@@ -356,7 +356,7 @@ void GKSSolver::computeCellGradient(idType id)
 {
     if( this->isGhostCell(id) )
     {
-        idType neighborCell = this->getNeighborCell( this->getCell2Interface(id, 0), id);
+        idType neighborCell = this->getNeighborCell( id, 0 );
 
         double dx = this->getCellCenter( neighborCell ).x - this->getCellCenter( id ).x;
         double dy = this->getCellCenter( neighborCell ).y - this->getCellCenter( id ).y;
@@ -381,8 +381,8 @@ void GKSSolver::computeCellGradient(idType id)
     }
 
     idType nNeighbors;
-    if   ( this->getCell2Interface(id, 3) == -1  ) nNeighbors = 3;
-    else                                           nNeighbors = 4;
+    if   ( this->getNeighborCell(id, 3) == -1  ) nNeighbors = 3;
+    else                                         nNeighbors = 4;
 
     ConservedVariable tmpCellGradientX;
     ConservedVariable tmpCellGradientY;
@@ -393,7 +393,7 @@ void GKSSolver::computeCellGradient(idType id)
 
     for(int face = 0; face < nNeighbors; ++face)
     {
-        idType neighborCell = this->getNeighborCell( this->getCell2Interface(id, face), id);
+        idType neighborCell = this->getNeighborCell( id, face );
 
         double dx = this->getCellCenter( neighborCell ).x - this->getCellCenter( id ).x;
         double dy = this->getCellCenter( neighborCell ).y - this->getCellCenter( id ).y;
@@ -1067,13 +1067,6 @@ FluidParameter GKSSolver::getFluidParam()
 Parameters GKSSolver::getParameters()
 {
     return this->param;
-}
-
-idType GKSSolver::getNeighborCell(idType face, idType askingCell)
-{
-    if      ( this->getPosCell( face ) == askingCell ) return this->getNegCell( face );
-    else if ( this->getNegCell( face ) == askingCell ) return this->getPosCell( face );
-    return -1;
 }
 
 idType GKSSolver::getNumberOfNodes()

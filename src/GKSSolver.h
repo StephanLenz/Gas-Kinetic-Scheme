@@ -161,9 +161,7 @@ public:
     virtual ConservedVariable getCellGradientX(idType id) = 0;
     virtual ConservedVariable getCellGradientY(idType id) = 0;
 
-    virtual idType getCell2Interface( idType cell, idType face ) = 0;
-
-    idType getNeighborCell( idType face, idType askingCell );
+    virtual idType getNeighborCell( idType cell, idType face ) = 0;
 
     virtual Vec2   getCellCenter(idType id) = 0;
     virtual double getCellMinDx(idType id) = 0;

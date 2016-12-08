@@ -55,7 +55,7 @@ bool GKSSolverPush::readProblem(string filename)
     this->CellGradientY.resize( numberOfCells );
 
     this->Cell2Node.resize( numberOfCells );
-    this->Cell2Interface.resize( numberOfCells );
+    this->Cell2Cell.resize( numberOfCells );
 
     this->CellCenter.resize( numberOfCells );
     this->CellVolume.resize( numberOfCells );
@@ -117,7 +117,21 @@ bool GKSSolverPush::readProblem(string filename)
 
         this->Cell2Node[cell] = reader.Cell2Node[cell];
 
-        this->Cell2Interface[cell] = reader.Cell2Face[cell];
+        for( idType face = 0; face < 4; ++face )
+        {
+            if( reader.Cell2Face[cell][face] == -1 )
+            {
+                this->Cell2Cell[cell][face] = -1;
+            }
+            else if( reader.Face2Cell[ reader.Cell2Face[cell][face] ][0] == cell )
+            {
+                this->Cell2Cell[cell][face] = reader.Face2Cell[ reader.Cell2Face[cell][face] ][1];
+            }
+            else
+            {
+                this->Cell2Cell[cell][face] = reader.Face2Cell[ reader.Cell2Face[cell][face] ][0];
+            }
+        }
 
         this->CellCenter [cell] = reader.CellCenter [cell];
         this->CellVolume [cell] = reader.CellVolume [cell];
@@ -223,9 +237,9 @@ ConservedVariable GKSSolverPush::getCellGradientY(idType id)
     return this->CellGradientY[id];
 }
 
-idType GKSSolverPush::getCell2Interface(idType cell, idType face)
+idType GKSSolverPush::getNeighborCell(idType cell, idType face)
 {
-    return this->Cell2Interface[cell][face];
+    return this->Cell2Cell[cell][face];
 }
 
 Vec2 GKSSolverPush::getCellCenter(idType id)

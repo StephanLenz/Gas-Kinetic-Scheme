@@ -56,7 +56,7 @@ private:
     // ========================================================================
 
     vector< array<idType, 4> > Cell2Node;
-    vector< array<idType, 4> > Cell2Interface;
+    vector< array<idType, 4> > Cell2Cell;
 
     vector< array<idType, 2> > Interface2Node;
     vector< array<idType, 2> > Interface2Cell;
@@ -122,7 +122,7 @@ public:
     virtual ConservedVariable getCellGradientX(idType id);
     virtual ConservedVariable getCellGradientY(idType id);
 
-    virtual idType getCell2Interface( idType cell, idType face );
+    virtual idType getNeighborCell( idType cell, idType face );
 
     virtual Vec2   getCellCenter(idType id);
     virtual double getCellMinDx(idType id);
