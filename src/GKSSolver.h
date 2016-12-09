@@ -65,7 +65,7 @@ protected:
     vector<double> dtList;
     vector<double> timeList;
 
-    vector<ConservedVariable> convergenceHistory;
+    ConservedVariable residual;
 
     chrono::high_resolution_clock::time_point startTime;
     long long computationTime;

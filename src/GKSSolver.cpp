@@ -118,7 +118,6 @@ void GKSSolver::OutputInterval(ConservedVariable residual)
          << "r_rhoV = " << residual.rhoV << "\t "
          << "r_rhoE = " << residual.rhoE << "\t "
          << endl;
-    cout << "====================================================================================================" << endl;
 
     for( FaceAnalyzer* currentFaceAnalyzer : this->FaceAnalyzerList )
     {
@@ -130,6 +129,7 @@ void GKSSolver::OutputInterval(ConservedVariable residual)
     outputWriter::writeOverview( string("out/") + param.simulationName, *this );
 
     outputWriter::writeConvergenceHistory( string("out/") + param.simulationName, *this );
+    cout << "====================================================================================================" << endl;
 }
 
 // ============================================================================
