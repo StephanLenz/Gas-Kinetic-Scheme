@@ -15,9 +15,17 @@ IF(POLICY CMP0042)
   CMAKE_POLICY(SET CMP0042 NEW)
 ENDIF()
 
+if(UNIX)
+	SET(ENV{CXX} "icpc")
+endif()
+
 project(Gas-Kinetic-Scheme)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+
+if(UNIX)
+	set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++11")
+endif()
 
 if(MSVC)
    set(PLATFORM MSVC2015)
@@ -34,7 +42,6 @@ include (${CMAKE_SOURCE_DIR}/cmake/general/LibUtilities.cmake)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries")
 SharedLibs()
 
-
 #############################################################
 ###		GENERAL INCLUDE DIRECTORIES						  ###
 #############################################################
@@ -48,7 +55,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(BUILD_TEST_SOURCE_GROUPS_WITH_SUBFOLDERS OFF CACHE BOOL "Test source groups with subfolders")
 
 #############################################################
-###		GENERAL FILE TYPES FOR LANGUAGE									  ###
+###		GENERAL FILE TYPES FOR LANGUAGE					  ###
 #############################################################
 
 include(${CMAKE_SOURCE_DIR}/cmake/general/LanguageFileTypes.cmake)
