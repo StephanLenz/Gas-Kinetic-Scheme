@@ -46,12 +46,12 @@ void GKSSolver::iterate()
         BC->setGhostCells(*this);
     }
 
-    outputWriter::writeCellVTK( string("out/") + param.simulationName + string(".") + to_string(this->iter) + string(".vtk"), *this);
+    outputWriter::writeCellVTK( string("out/") + param.simulationName + string(".") + to_string(this->iter), *this);
 
     outputWriter::initFile( string("out/") + param.simulationName + string(".DragLift.dat" ) );
     outputWriter::initFile( string("out/") + param.simulationName + string(".ConvHist.dat" ) );
 
-    chrono::high_resolution_clock::time_point startTime = chrono::high_resolution_clock::now();
+    this->startTime = chrono::high_resolution_clock::now();
 
     // ========================================================================
     // ========================================================================
@@ -60,9 +60,7 @@ void GKSSolver::iterate()
     // ========================================================================
     while (this->iter < this->param.numberOfIterations && this->time < this->param.maxTime)
     {
-        // ====================================================================
         this->iter++;
-        // ====================================================================
 
         // ====================================================================
         //          Perform one timestep
@@ -72,52 +70,17 @@ void GKSSolver::iterate()
 
         this->time += this->dt;
 
-        // ====================================================================
         if ( this->iter % this->param.outputInterval == 0 )
         {
-            this->dtList.push_back(this->dt);
-            this->timeList.push_back(this->time);
-
-            chrono::high_resolution_clock::time_point endTime = chrono::high_resolution_clock::now();
-            this->computationTime = chrono::duration_cast<chrono::seconds>( endTime - startTime ).count();
-
-            this->CellUpdatesPerSecond = double( this->getNumberOfCells() ) * double( this->iter ) / double( this->computationTime );
-
             ConservedVariable residual = this->getL2GlobalResidual();
-
-            cout << "t = " << this->time << "  \t|  timestep: " << this->iter << "  \t|  U_max: " << this->getMaxVelocity() << endl;
-            cout << "CUPS = " << this->CellUpdatesPerSecond << endl;
-            cout << "r_rho = "  << residual.rho  << "\t ";
-            cout << "r_rhoU = " << residual.rhoU << "\t ";
-            cout << "r_rhoV = " << residual.rhoV << "\t ";
-            cout << "r_rhoE = " << residual.rhoE << "\t ";
-            cout << endl;
-
-            for( FaceAnalyzer* currentFaceAnalyzer : this->FaceAnalyzerList )
-            {
-                currentFaceAnalyzer->analyze(*this);
-                currentFaceAnalyzer->print();
-                currentFaceAnalyzer->write( string("out/") + param.simulationName + string(".DragLift.dat" ), this->time );
-            }
-
-            //this->convergenceHistory.push_back(residual);
-
-            outputWriter::writeOverview( string("out/") + param.simulationName + string(".Overview.dat" ), *this );
-
-            outputWriter::writeConvergenceHistory( string("out/") + param.simulationName + string(".ConvHist.dat" ), *this );
-
             if ( this->isConverged(residual) )
             {
                 cout << endl << " ========== Simulation converged! ==========" << endl;
-                cout << "Timesteps: " << this->iter << endl;
-                cout << "Time: " << this->time << endl;
-
-                // outputWriter::writeCellVTK( string("out/") + param.simulationName + string(".Result.vtk"), *this);
-
                 break;
             }
+            this->OutputInterval(residual);
         }
-        // ====================================================================
+
         if ( this->iter % this->param.outputIntervalVTK == 0 )
         {
             outputWriter::writeCellVTK( string("out/") + param.simulationName + string(".") + to_string(this->iter) + string(".vtk"), *this);
@@ -128,22 +91,45 @@ void GKSSolver::iterate()
     //              End of Time Loop
     // ========================================================================
     // ========================================================================
-    outputWriter::writeCellVTK( string("out/") + param.simulationName + string(".Result.vtk"), *this);
-    outputWriter::writeOverview( string("out/") + param.simulationName + string(".Overview.dat" ), *this );
-
-    cout << "Time to Solution: " << this->computationTime << " s" << endl;
-    cout << "Timesteps: " << this->iter << endl;
-    cout << "Time: " << this->time << endl;
 
     ConservedVariable residual = this->getL2GlobalResidual();
+    this->OutputInterval(residual);
+}
 
-    cout << "t = " << this->time << "  \t|  timestep: " << this->iter << "  \t|  U_max: " << this->getMaxVelocity() << endl;
-    cout << "CUPS = " << this->CellUpdatesPerSecond << endl;
-    cout << "r_rho = "  << residual.rho  << "\t ";
-    cout << "r_rhoU = " << residual.rhoU << "\t ";
-    cout << "r_rhoV = " << residual.rhoV << "\t ";
-    cout << "r_rhoE = " << residual.rhoE << "\t ";
+void GKSSolver::OutputInterval(ConservedVariable residual)
+{
+    this->dtList.push_back(this->dt);
+    this->timeList.push_back(this->time);
+
+    this->computationTime = chrono::duration_cast<chrono::seconds>( chrono::high_resolution_clock::now() - startTime ).count();
+
+    this->CellUpdatesPerSecond = double( this->getNumberOfCells() ) * double( this->iter ) / double( this->computationTime );
+
     cout << endl;
+    cout << "====================================================================================================" << endl;
+    cout << "Timesteps:        " << this->iter << endl;
+    cout << "Time:             " << this->time << endl;
+    cout << "Time to Solution: " << this->computationTime << " s" << endl;
+    cout << "CUPS:             " << this->CellUpdatesPerSecond << endl;
+    cout << "U_max:            " << this->getMaxVelocity() << endl;
+
+    cout << "r_rho = "  << residual.rho  << "\t "
+         << "r_rhoU = " << residual.rhoU << "\t "
+         << "r_rhoV = " << residual.rhoV << "\t "
+         << "r_rhoE = " << residual.rhoE << "\t "
+         << endl;
+    cout << "====================================================================================================" << endl;
+
+    for( FaceAnalyzer* currentFaceAnalyzer : this->FaceAnalyzerList )
+    {
+        currentFaceAnalyzer->analyze(*this);
+        currentFaceAnalyzer->print();
+        currentFaceAnalyzer->write( string("out/") + param.simulationName, this->time );
+    }
+
+    outputWriter::writeOverview( string("out/") + param.simulationName, *this );
+
+    outputWriter::writeConvergenceHistory( string("out/") + param.simulationName, *this );
 }
 
 // ============================================================================

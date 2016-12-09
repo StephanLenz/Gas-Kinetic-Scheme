@@ -67,6 +67,7 @@ protected:
 
     vector<ConservedVariable> convergenceHistory;
 
+    chrono::high_resolution_clock::time_point startTime;
     long long computationTime;
     double CellUpdatesPerSecond;
 
@@ -93,6 +94,8 @@ public:
     // ========================================================================
 
     void iterate();
+
+    void OutputInterval(ConservedVariable residual);
 
     void timeStep();
 

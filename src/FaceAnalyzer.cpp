@@ -51,7 +51,7 @@ void DragAndLiftCalculator::write(string filename, double t)
 	// open file stream
 	ofstream file;
     file.precision(15);
-	file.open(filename.c_str(), fstream::app);
+	file.open( ( filename + string(".DragLift.dat" ) ).c_str(), fstream::app);
 
 	if (!file.is_open()) {
 		cout << " File cound not be opened.\n\nERROR!\n\n\n";

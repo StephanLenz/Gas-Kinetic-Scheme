@@ -4,7 +4,7 @@
 void outputWriter::writeCellVTK(string filename, GKSSolver& solver)
 {
 	ofstream file;
-	open(file, filename);
+	open(file, filename + string(".vtk"));
     
     // write VTK Header
     file << "# vtk DataFile Version 1.0\n";
@@ -185,7 +185,7 @@ bool outputWriter::open(ofstream& file, string filename)
 void outputWriter::writeOverview(string filename, GKSSolver & solver)
 {
     ofstream file;
-    open(file, filename);
+    open( file, filename + string(".Overview.dat" ) );
 
     file << " ========== Fluid Parameters ==========";
     file << endl;
@@ -246,7 +246,7 @@ cout << "done!" << endl;
 void outputWriter::writeConvergenceHistory(string filename, GKSSolver& solver)
 {
     ofstream file;
-    file.open( filename.c_str(), std::fstream::app );
+    file.open( ( filename + string(".ConvHist.dat" ) ).c_str(), std::fstream::app );
 
     ConservedVariable residual = solver.getL2GlobalResidual();
     file << residual.rho  << ' '
