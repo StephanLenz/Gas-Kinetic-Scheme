@@ -1,0 +1,8 @@
+macro(linkBoost TARGET_NAME)
+
+	FIND_PACKAGE( Boost REQUIRED )
+	INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
+
+	TARGET_LINK_LIBRARIES( ${TARGET_NAME} ${Boost_LIBRARIES} )
+
+endmacro(linkBoost)
