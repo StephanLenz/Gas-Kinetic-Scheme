@@ -48,8 +48,8 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    outputWriter::writeCellVTK(string("out/") + param.simulationName + string(".mesh.vtk" ), *solverPush);
-    outputWriter::writeFaceVTK(string("out/") + param.simulationName + string(".connectivity.vtk" ), *solverPush);
+    outputWriter::writeCellVTK(string("out/") + param.simulationName + string(".mesh" ), *solverPush);
+    outputWriter::writeFaceVTK(string("out/") + param.simulationName + string(".connectivity" ), *solverPush);
 
     solverPush->iterate();
 
